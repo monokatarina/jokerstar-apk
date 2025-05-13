@@ -674,7 +674,7 @@ const ReactionAnimation = styled.div`
   z-index: 10;
 `;
 
-const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isSquareView = false }) => {
+const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFullScreen = false }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
