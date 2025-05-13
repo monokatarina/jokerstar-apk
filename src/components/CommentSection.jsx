@@ -1398,6 +1398,8 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const velocity = useRef(0);
   const lastY = useRef(0);
   const lastTime = useRef(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeout = useRef(null);
 
   // Funções auxiliares independentes
   const findComment = useCallback((comments, commentId) => {
@@ -1444,15 +1446,11 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   // Função de scroll com throttling e momentum detection
   const handleScroll = useThrottle(() => {
     setIsScrolling(true);
-    setMomentumScrolling(true);
-    
     clearTimeout(scrollTimeout.current);
     scrollTimeout.current = setTimeout(() => {
       setIsScrolling(false);
-      setMomentumScrolling(false);
-    }, 150);
-  }, 50);
-
+    }, 100);
+  }, 100);
   // Efeito principal para scroll personalizado
   useEffect(() => {
     const list = commentListRef.current;
@@ -1638,6 +1636,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     }
   }, [isScrolling]);
 
+  
   const loadMoreReplies = async (commentId) => {
     if (expandedReplies[commentId]) return;
     setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
