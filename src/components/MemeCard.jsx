@@ -102,17 +102,35 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform: translateY(calc(${props => props.$offset}px + ${props => props.$isOpen ? '0%' : '100%'}));
   
+  /* Novo estilo para o handle de arraste */
   &::before {
     content: '';
     position: absolute;
-    top: 8px;
+    top: 12px; /* Aumentado de 8px para 12px */
     left: 50%;
     transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
+    width: 60px; /* Aumentado de 40px para 60px */
+    height: 6px; /* Aumentado de 4px para 6px */
     background: var(--text-light);
-    border-radius: 2px;
+    border-radius: 3px; /* Aumentado de 2px para 3px */
     opacity: ${props => 1 - (props.$offset / 100)};
+  }
+`;
+
+const DragHandle = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px; /* Área maior para arraste */
+  z-index: 5;
+  cursor: grab;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  &:active {
+    cursor: grabbing;
   }
 `;
 
@@ -434,6 +452,13 @@ const ResponsiveImage = styled.img`
   transition: var(--transition);
   border-radius: var(--radius-md);
   
+  @media (max-width: 768px) {
+    object-fit: cover; /* Preenche o espaço quadrado sem distorcer */
+    width: 100%;
+    height: 100vw; /* Quadrado baseado na largura da tela */
+    max-height: 80vh; /* Limite máximo opcional */
+  }
+  
   &:hover {
     transform: scale(1.03);
     filter: saturate(1.2) brightness(1.05);
@@ -449,6 +474,13 @@ const ResponsiveVideo = styled.video`
   border-radius: var(--radius-md);
   z-index: 1;
   transition: var(--transition);
+  
+  @media (max-width: 768px) {
+    object-fit: cover; /* Preenche o espaço quadrado sem distorcer */
+    width: 100%;
+    height: 100vw; /* Quadrado baseado na largura da tela */
+    max-height: 80vh; /* Limite máximo opcional */
+  }
   
   &:hover {
     transform: scale(1.03);
@@ -467,7 +499,14 @@ const MediaContainer = styled.div`
   align-items: center;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 100vw; /* Quadrado baseado na largura da tela */
+    max-height: 80vh; /* Limite máximo opcional */
+  }
 `;
+
 
 const VideoContainer = styled.div`
   position: relative;
@@ -1256,6 +1295,12 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
+            <DragHandle 
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            />
+            
             <CommentSectionContainer 
               ref={commentSectionRef}
               onScroll={() => setIsDragging(false)}
