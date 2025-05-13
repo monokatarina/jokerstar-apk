@@ -50,6 +50,38 @@ const slideDown = keyframes`
 `;
 
 // Estilos
+
+const CommentOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: ${props => props.$visible ? 1 : 0};
+  transition: opacity 0.3s ease;
+  pointer-events: ${props => props.$visible ? 'auto' : 'none'};
+`;
+
+const ImprovedMobileCommentSection = styled(MobileCommentSection)`
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateY(calc(${props => props.$offset}px + ${props => props.$isOpen ? '0%' : '100%'}));
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--text-light);
+    border-radius: 2px;
+    opacity: ${props => 1 - (props.$offset / 100)};
+  }
+`;
+
 const MobileCommentSection = styled.div`
   @media (max-width: 768px) {
     position: fixed;
@@ -698,7 +730,8 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   const videoRef = useRef(null);
   const commentSectionRef = useRef(null);
   const touchStartY = useRef(null);
-
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   useEffect(() => {
     const processMentions = async () => {
       if (meme.caption) {
@@ -945,23 +978,27 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
 
   const handleTouchStart = (e) => {
     touchStartY.current = e.touches[0].clientY;
+    setIsDragging(true);
   };
 
   const handleTouchMove = (e) => {
-    if (!touchStartY.current) return;
+    if (!isDragging) return;
     
     const touchY = e.touches[0].clientY;
     const deltaY = touchY - touchStartY.current;
     
-    // Se o usuário estiver arrastando para baixo com força suficiente
-    if (deltaY > 50) {
-      setShowComments(false);
-      touchStartY.current = null;
+    if (deltaY > 0) {
+      setDragOffset(Math.min(deltaY, 100));
     }
   };
 
   const handleTouchEnd = () => {
-    touchStartY.current = null;
+    setIsDragging(false);
+    
+    if (dragOffset > 40) {
+      setShowComments(false);
+    }
+    setDragOffset(0);
   };
 
   return (
@@ -1206,23 +1243,35 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   
       {/* Seção de comentários mobile */}
       {showComments && (
-        <MobileCommentSection
-          $isOpen={showComments}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <CloseCommentsButton onClick={toggleComments}>
-            <FiChevronDown size={24} />
-          </CloseCommentsButton>
-          <CommentSectionContainer ref={commentSectionRef}>
-            <CommentSection 
-              memeId={meme._id}
-              onCommentSubmit={handleCommentSubmit}
-              onCommentCountChange={onCommentCountChange} 
-            />
-          </CommentSectionContainer>
-        </MobileCommentSection>
+        <>
+          <CommentOverlay 
+            $visible={showComments}
+            onClick={toggleComments}
+          />
+
+          <ImprovedMobileCommentSection
+            $isOpen={showComments}
+            $offset={dragOffset}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <CommentSectionContainer 
+              ref={commentSectionRef}
+              onScroll={() => setIsDragging(false)}
+            >
+              <CloseCommentsButton onClick={toggleComments}>
+                <FiChevronDown size={24} />
+              </CloseCommentsButton>
+              
+              <CommentSection 
+                memeId={meme._id}
+                onCommentSubmit={handleCommentSubmit}
+                onCommentCountChange={onCommentCountChange} 
+              />
+            </CommentSectionContainer>
+          </ImprovedMobileCommentSection>
+        </>
       )}
   
       {showConfirmDialog && (
