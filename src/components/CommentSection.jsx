@@ -87,9 +87,10 @@ const CommentList = styled.div`
   
   @media (max-width: 768px) {
     max-height: none;
-    height: 60vh;
-    padding-right: 0;
-    margin-bottom: 0.5rem;
+    height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
+    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
+    margin-bottom: 0;
+    transition: all 0.3s ease;
   }
 
   &::-webkit-scrollbar {
@@ -230,24 +231,26 @@ const CommentForm = styled.form`
   border-radius: var(--radius-lg);
   padding: 0.25rem;
   box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+  transition: all 0.3s ease;
   border: 1px solid var(--border-light);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 
   @media (max-width: 768px) {
-    position: sticky;
-    bottom: 0;
-    margin-top: 0.5rem;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : '0'};
+    margin: 0;
     border-radius: 0;
     border-left: none;
     border-right: none;
     border-bottom: none;
     background: var(--card-bg);
     padding: 0.5rem;
-  }
-
-  &:focus-within {
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
-    border-color: var(--primary);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    transition: bottom 0.3s ease;
   }
 `;
 
@@ -1400,6 +1403,9 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const lastTime = useRef(0);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeout = useRef(null);
+  
+  const commentFormRef = useRef(null);
+
 
   // Funções auxiliares independentes
   const findComment = useCallback((comments, commentId) => {
@@ -1442,6 +1448,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
 
   // Estado para tracking de momentum scroll
   const [momentumScrolling, setMomentumScrolling] = useState(false);
+  
 
   // Função de scroll com throttling e momentum detection
   const handleScroll = useThrottle(() => {
@@ -1636,7 +1643,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     }
   }, [isScrolling]);
 
-  
+
   const loadMoreReplies = async (commentId) => {
     if (expandedReplies[commentId]) return;
     setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
@@ -2025,6 +2032,51 @@ const isMobile = useMemo(() => {
 // Estado para controle do teclado virtual
 const [keyboardActive, setKeyboardActive] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.innerWidth > 768) return;
+
+    const handleResize = () => {
+      const visualViewport = window.visualViewport;
+      if (visualViewport) {
+        const viewportHeight = visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardVisible = viewportHeight < windowHeight * 0.8;
+        
+        setKeyboardActive(keyboardVisible);
+        setKeyboardHeight(windowHeight - viewportHeight);
+        
+        if (keyboardVisible && commentFormRef.current) {
+          // Rola até o formulário quando o teclado aparece
+          commentFormRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }
+    };
+
+    const visualViewport = window.visualViewport;
+    if (visualViewport) {
+      visualViewport.addEventListener('resize', handleResize);
+    }
+
+    return () => {
+      if (visualViewport) {
+        visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, []);
+
+
+useEffect(() => {
+  if (keyboardActive) {
+    const input = document.getElementById('main-comment-input');
+    if (input) {
+      input.focus();
+    }
+  }
+}, [keyboardActive]);
+
 // Efeito para lidar com o teclado em mobile
 useEffect(() => {
   if (!isMobile) return;
@@ -2104,6 +2156,8 @@ const EndOfListMessage = styled.div`
       
       <CommentList 
         ref={commentListRef}
+        $keyboardHeight={keyboardHeight}
+        $keyboardActive={keyboardActive}
       >
         {loading ? (
           <LoadingMessage aria-busy="true">
@@ -2165,7 +2219,11 @@ const EndOfListMessage = styled.div`
 
     {currentUser && (
       <>
-        <CommentForm onSubmit={handleSubmit} role="form">
+        <CommentForm onSubmit={handleSubmit} role="form"
+        ref={commentFormRef}
+        $keyboardActive={keyboardActive}
+        $keyboardHeight={keyboardHeight}
+        >
           <CommentInput
             type="text"
             id="main-comment-input"
