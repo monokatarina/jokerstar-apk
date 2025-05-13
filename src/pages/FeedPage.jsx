@@ -12,73 +12,71 @@ const FeedContainer = styled.div`
   width: 100%;
   padding: 0;
   background-color: var(--background);
+  min-height: 100vh;
 `;
 
 const FeedGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 8px;
   width: 100%;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-  }
+  max-width: 600px;
+  margin: 0 auto;
 `;
 
-const SquareMemeContainer = styled.div`
-  position: relative;
-  width: 100%;
-  padding-bottom: 100%; /* Mantém aspecto quadrado */
+const MemeWrapper = styled.div`
+  border-radius: 16px;
   overflow: hidden;
-  background: #000;
-`;
-
-const SquareMemeContent = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: var(--card-bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: relative;
 `;
 
 const EmptyFeed = styled.div`
-  width: 100%;
-  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  padding: 20px;
   text-align: center;
-  color: var(--text-light);
-  
+
   h3 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
+    color: var(--text);
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: var(--text-light);
+    margin-bottom: 24px;
   }
 `;
 
 const LoadingIndicator = styled.div`
-  width: 100%;
+  display: flex;
+  justify-content: center;
   padding: 40px;
-  text-align: center;
   color: var(--text-light);
 `;
 
 const ErrorMessage = styled.div`
-  width: 100%;
-  padding: 20px;
+  padding: 40px 20px;
   text-align: center;
-  color: var(--dislike-color);
-  
+  color: var(--danger);
+
   button {
-    margin-top: 15px;
-    padding: 8px 16px;
+    margin-top: 20px;
+    padding: 12px 24px;
+    border-radius: 24px;
     background: var(--primary);
     color: white;
     border: none;
-    border-radius: 20px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    font-weight: 500;
   }
 `;
 
@@ -146,26 +144,24 @@ const FeedPage = () => {
       <FeedGrid>
         {memes.length === 0 ? (
           <EmptyFeed>
-            <h3>Nenhum post encontrado</h3>
-            <p>Seja o primeiro a postar!</p>
-            <UploadButton />
+            <h3>Nenhum meme encontrado</h3>
+            <p>Seja o primeiro a compartilhar sua criação!</p>
+            <UploadButton size="large" />
           </EmptyFeed>
         ) : (
           memes.map(meme => (
-            <SquareMemeContainer key={meme._id}>
-              <SquareMemeContent>
-                <MemeCard 
-                  meme={meme}
-                  onDelete={handleMemeDeleted}
-                  onCommentCountChange={(newCount) => {
-                    setMemes(prevMemes => prevMemes.map(m => 
-                      m._id === meme._id ? { ...m, commentCount: newCount } : m
-                    ))}
-                  }
-                  isSquareView
-                />
-              </SquareMemeContent>
-            </SquareMemeContainer>
+            <MemeWrapper key={meme._id}>
+              <MemeCard 
+                meme={meme}
+                onDelete={handleMemeDeleted}
+                onCommentCountChange={(newCount) => {
+                  setMemes(prevMemes => prevMemes.map(m => 
+                    m._id === meme._id ? { ...m, commentCount: newCount } : m
+                  ))}
+                }
+                isSquareView={false}
+              />
+            </MemeWrapper>
           ))
         )}
       </FeedGrid>
