@@ -674,7 +674,7 @@ const ReactionAnimation = styled.div`
   z-index: 10;
 `;
 
-const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange,isFullScreen = false }) => {
+const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isSquareView = false }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
@@ -966,13 +966,42 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange,isFul
 
   return (
     <>
-      <Card $deleting={isDeleting}style={isFullScreen ? {
+      <Card $deleting={isDeleting} style={isSquareView ? {
         width: '100%',
         height: '100%',
-        marginBottom: 0,
+        margin: 0,
         borderRadius: 0,
         border: 'none',
-        boxShadow: 'none'
+        boxShadow: 'none',
+        
+        // Esconde elementos não essenciais na visualização quadrada
+        '& > header, & > p, & > div:not(:first-child)': {
+          display: 'none'
+        },
+        
+        // Estilo específico para o container de mídia
+        [MediaContainer]: {
+          height: '100%',
+          minHeight: 'auto',
+          borderRadius: 0
+        },
+        
+        // Ajusta a imagem/vídeo para preencher o quadrado
+        [ResponsiveImage]: {
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          borderRadius: 0,
+          transform: 'none',
+          filter: 'none'
+        },
+        
+        [ResponsiveVideo]: {
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          borderRadius: 0
+        }
       } : {}}>
         {isDeleting && (
           <div style={{
