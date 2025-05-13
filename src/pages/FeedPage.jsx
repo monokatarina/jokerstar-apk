@@ -21,17 +21,17 @@ const FeedContainer = styled.div`
 
 const FeedGrid = styled.div`
   display: inline-flex;
-  gap: 16px;
+  gap: 24px;
   padding: 0 16px;
   height: 100%;
 `;
 
 const MemeWrapper = styled.div`
   display: inline-block;
-  width: 90vw;
-  max-width: 400px;
-  height: 90vh;
-  max-height: 700px;
+  width: 95vw;
+  max-width: 500px;
+  height: 95vh;
+  max-height: 800px;
   scroll-snap-align: start;
   position: relative;
   border-radius: 12px;
@@ -173,6 +173,11 @@ const FeedPage = () => {
                   ))}
                 }
                 isSquareView={true}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '12px' // Mantém o border-radius consistente
+                }}
               />
             </MemeWrapper>
           ))
