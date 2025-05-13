@@ -1383,6 +1383,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const commentListRef = useRef(null);
   const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeout = useRef(null);
 
   // Funções auxiliares independentes
   const findComment = useCallback((comments, commentId) => {
