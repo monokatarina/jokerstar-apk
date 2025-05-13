@@ -603,21 +603,33 @@ const ModalOverlay = styled.div`
 
 const ModalContent = styled.div`
   background: var(--card-bg);
-  border-radius: 12px;
-  width: 80%;
+  border-radius: ${props => props.$isMobile ? '0' : '12px'};
+  width: ${props => props.$isMobile ? '100%' : '80%'};
   max-width: 800px;
-  max-height: 80vh;
+  max-height: ${props => props.$isMobile ? '90vh' : '80vh'};
+  height: ${props => props.$isMobile ? '90vh' : 'auto'};
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: ${props => props.$isMobile ? 'fixed' : 'relative'};
+  bottom: ${props => props.$isMobile ? '0' : 'auto'};
 `;
 
 const ModalHeader = styled.div`
-  padding: 16px;
+  padding: ${props => props.$isMobile ? '12px 16px' : '16px'};
   border-bottom: 1px solid var(--background);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+  z-index: 10;
+`;
+
+const ModalTitle = styled.h3`
+  font-size: ${props => props.$isMobile ? '1rem' : '1.25rem'};
+  margin: 0;
 `;
 
 const CloseButton = styled.button`
@@ -625,19 +637,25 @@ const CloseButton = styled.button`
   border: none;
   cursor: pointer;
   color: var(--text-light);
+  padding: ${props => props.$isMobile ? '4px' : '8px'};
 `;
 
 const MemeGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 8px;
-  padding: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(${props => props.$isMobile ? '100px' : '120px'}, 1fr));
+  gap: ${props => props.$isMobile ? '6px' : '8px'};
+  padding: ${props => props.$isMobile ? '12px' : '16px'};
   overflow-y: auto;
+`;
+
+const MemeItem = styled.div`
+  position: relative;
+  aspect-ratio: 1;
 `;
 
 const MemeThumbnail = styled.img`
   width: 100%;
-  height: 120px;
+  height: 100%;
   object-fit: cover;
   border-radius: 4px;
   cursor: pointer;
@@ -645,26 +663,60 @@ const MemeThumbnail = styled.img`
   transition: all 0.2s;
 
   &:hover {
-    transform: scale(1.05);
+    transform: ${props => props.$isMobile ? 'none' : 'scale(1.05)'};
   }
 `;
 
 const ModalActions = styled.div`
-  padding: 16px;
+  padding: ${props => props.$isMobile ? '12px' : '16px'};
   border-top: 1px solid var(--background);
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: ${props => props.$isMobile ? '6px' : '8px'};
+  position: sticky;
+  bottom: 0;
+  background: var(--card-bg);
+`;
+
+const MemeVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid ${props => props.$selected ? '#ff4500' : 'transparent'};
+  transition: all 0.2s;
+  background: #000;
+
+  &:hover {
+    transform: ${props => props.$isMobile ? 'none' : 'scale(1.05)'};
+  }
+`;
+
+const MemeCaption = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: ${props => props.$isMobile ? '2px 4px' : '4px'};
+  font-size: ${props => props.$isMobile ? '0.6rem' : '0.7rem'};
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 `;
 
 const ModalButton = styled.button`
-  padding: 8px 16px;
+  padding: ${props => props.$isMobile ? '6px 12px' : '8px 16px'};
+  font-size: ${props => props.$isMobile ? '0.9rem' : '1rem'};
   border-radius: 4px;
   border: none;
   cursor: pointer;
   background: ${props => props.$primary ? '#ff4500' : 'var(--background)'};
   color: ${props => props.$primary ? 'white' : 'var(--text)'};
   transition: all 0.2s;
+  min-width: ${props => props.$isMobile ? '100px' : 'auto'};
 
   &:hover {
     background: ${props => props.$primary ? '#e03d00' : '#e0e0e0'};
@@ -675,18 +727,75 @@ const ModalButton = styled.button`
     cursor: not-allowed;
   }
 `;
-
 // ============ MediaPreview Component ============
 const MediaPreview = ({ file, meme, onRemove }) => {
+  // Verifica se é mobile
+  const isMobile = useMemo(() => window.innerWidth <= 768, []);
+
+  // Estilos para o botão de remover
+  const removeButtonStyle = {
+    position: 'absolute',
+    top: isMobile ? '8px' : '5px',
+    right: isMobile ? '8px' : '5px',
+    background: 'rgba(0,0,0,0.7)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: isMobile ? '32px' : '24px',
+    height: isMobile ? '32px' : '24px',
+    cursor: 'pointer',
+    fontSize: isMobile ? '18px' : '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    transition: 'transform 0.2s',
+    ':hover': {
+      transform: 'scale(1.1)'
+    },
+    ':active': {
+      transform: 'scale(0.95)'
+    }
+  };
+
+  // Container otimizado para mobile
+  const MobileOptimizedContainer = styled(SharedMemeContainer)`
+    max-width: 100%;
+    margin: ${isMobile ? '8px 0' : '12px 0'};
+    border-radius: ${isMobile ? '8px' : '12px'};
+    overflow: hidden;
+    position: relative;
+    
+    video, img {
+      width: 100%;
+      max-height: ${isMobile ? '50vh' : '60vh'};
+      object-fit: contain;
+      background: #f0f0f0;
+    }
+  `;
+
+  // Caption otimizado para mobile
+  const MobileCaption = styled(SharedMemeCaption)`
+    padding: ${isMobile ? '10px' : '8px'};
+    font-size: ${isMobile ? '0.9rem' : '0.8rem'};
+    background: ${isMobile ? 'rgba(0,0,0,0.7)' : '#f9f9f9'};
+    color: ${isMobile ? 'white' : 'var(--text-light)'};
+  `;
+
   if (meme) {
     const isVideo = meme.mediaUrl?.endsWith('.mp4') || meme.mediaUrl?.includes('video/');
     
     return (
-      <SharedMemeContainer>
+      <MobileOptimizedContainer>
         {isVideo ? (
           <video 
             controls 
-            style={{ width: '100%', display: 'block' }}
+            playsInline
+            style={{ 
+              width: '100%', 
+              display: 'block',
+              maxHeight: isMobile ? '50vh' : '60vh'
+            }}
             crossOrigin="anonymous"
           >
             <source src={buildUrl(meme.mediaUrl)} type="video/mp4" />
@@ -697,30 +806,21 @@ const MediaPreview = ({ file, meme, onRemove }) => {
             src={buildUrl(meme.mediaUrl)}
             alt={meme.caption || 'Meme compartilhado'}
             crossOrigin="anonymous"
+            style={{ maxHeight: isMobile ? '50vh' : '60vh' }}
             onError={(e) => {
               e.target.style.display = 'none';
             }}
           />
         )}
-        {meme.caption && <SharedMemeCaption>{meme.caption}</SharedMemeCaption>}
+        {meme.caption && <MobileCaption>{meme.caption}</MobileCaption>}
         <button 
           onClick={onRemove}
-          style={{
-            position: 'absolute',
-            top: '5px',
-            right: '5px',
-            background: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '24px',
-            height: '24px',
-            cursor: 'pointer'
-          }}
+          style={removeButtonStyle}
+          aria-label="Remover mídia"
         >
           ×
         </button>
-      </SharedMemeContainer>
+      </MobileOptimizedContainer>
     );
   }
 
@@ -729,11 +829,16 @@ const MediaPreview = ({ file, meme, onRemove }) => {
     const url = URL.createObjectURL(file);
     
     return (
-      <SharedMemeContainer>
+      <MobileOptimizedContainer>
         {isVideo ? (
           <video 
             controls 
-            style={{ width: '100%', display: 'block' }}
+            playsInline
+            style={{ 
+              width: '100%', 
+              display: 'block',
+              maxHeight: isMobile ? '50vh' : '60vh'
+            }}
           >
             <source src={url} type={file.type} />
             Seu navegador não suporta vídeos HTML5.
@@ -742,7 +847,11 @@ const MediaPreview = ({ file, meme, onRemove }) => {
           <img
             src={url}
             alt="Preview"
-            style={{ width: '100%', display: 'block' }}
+            style={{ 
+              width: '100%', 
+              display: 'block',
+              maxHeight: isMobile ? '50vh' : '60vh'
+            }}
             onError={(e) => {
               e.target.style.display = 'none';
             }}
@@ -751,24 +860,14 @@ const MediaPreview = ({ file, meme, onRemove }) => {
         <button 
           onClick={() => {
             onRemove();
-            URL.revokeObjectURL(url); // Libera a memória
+            URL.revokeObjectURL(url);
           }}
-          style={{
-            position: 'absolute',
-            top: '5px',
-            right: '5px',
-            background: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            width: '24px',
-            height: '24px',
-            cursor: 'pointer'
-          }}
+          style={removeButtonStyle}
+          aria-label="Remover mídia"
         >
           ×
         </button>
-      </SharedMemeContainer>
+      </MobileOptimizedContainer>
     );
   }
   
@@ -1180,16 +1279,19 @@ const MemeSelectorModal = ({
   onClose,
   isForReply = false 
 }) => {
+  const isMobile = useMemo(() => window.innerWidth <= 768, []);
+
   return (
     <ModalOverlay>
-      <ModalContent>
-        <ModalHeader>
-          <h3>Selecione um meme para compartilhar</h3>
-          <CloseButton onClick={onClose} aria-label="Fechar">
-            <FiX size={24} />
+      <ModalContent $isMobile={isMobile}>
+        <ModalHeader $isMobile={isMobile}>
+          <ModalTitle $isMobile={isMobile}>Selecione um meme para compartilhar</ModalTitle>
+          <CloseButton onClick={onClose} aria-label="Fechar" $isMobile={isMobile}>
+            <FiX size={isMobile ? 20 : 24} />
           </CloseButton>
         </ModalHeader>
-        <MemeGrid>
+        
+        <MemeGrid $isMobile={isMobile}>
           {memes.map(meme => {
             const isVideo = meme.mediaType === 'video' || meme.mediaUrl?.endsWith('.mp4');
             const memeUrl = meme.mediaUrl.startsWith('https') 
@@ -1197,55 +1299,41 @@ const MemeSelectorModal = ({
               : `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}${meme.mediaUrl}`;
             
             return (
-              <div key={meme._id} style={{ position: 'relative' }}>
+              <MemeItem key={meme._id} $isMobile={isMobile}>
                 {isVideo ? (
-                  <video
-                    style={{
-                      width: '100%',
-                      height: '120px',
-                      objectFit: 'cover',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      border: selectedMeme === meme._id ? '2px solid #ff4500' : '2px solid transparent',
-                      transition: 'all 0.2s'
-                    }}
+                  <MemeVideo
+                    $isMobile={isMobile}
+                    $selected={selectedMeme === meme._id}
                     onClick={() => onSelect(meme._id, isForReply)}
                     crossOrigin="anonymous"
                   >
                     <source src={memeUrl} type="video/mp4" />
-                  </video>
+                  </MemeVideo>
                 ) : (
                   <MemeThumbnail 
                     src={memeUrl}
                     onClick={() => onSelect(meme._id, isForReply)}
                     $selected={selectedMeme === meme._id}
+                    $isMobile={isMobile}
                     crossOrigin="anonymous"
                     alt={meme.caption || 'Meme'}
                   />
                 )}
                 {meme.caption && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    background: 'rgba(0,0,0,0.7)',
-                    color: 'white',
-                    padding: '4px',
-                    fontSize: '0.7rem',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden'
-                  }}>
+                  <MemeCaption $isMobile={isMobile}>
                     {meme.caption}
-                  </div>
+                  </MemeCaption>
                 )}
-              </div>
+              </MemeItem>
             );
           })}
         </MemeGrid>
-        <ModalActions>
-          <ModalButton onClick={onClose}>
+        
+        <ModalActions $isMobile={isMobile}>
+          <ModalButton 
+            onClick={onClose}
+            $isMobile={isMobile}
+          >
             Cancelar
           </ModalButton>
           <ModalButton 
@@ -1255,6 +1343,7 @@ const MemeSelectorModal = ({
               onClose();
             }}
             disabled={!selectedMeme}
+            $isMobile={isMobile}
           >
             {isForReply ? 'Compartilhar na Resposta' : 'Compartilhar'}
           </ModalButton>
