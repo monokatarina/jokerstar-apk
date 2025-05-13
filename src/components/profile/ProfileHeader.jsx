@@ -25,7 +25,7 @@ const loading = keyframes`
 // Styled Components
 const HeaderContainer = styled.div`
   position: relative;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--card-bg);
@@ -46,7 +46,7 @@ const Skeleton = styled.div`
 `;
 
 const CoverPhoto = styled.div`
-  height: 280px;
+  height: 180px;
   position: relative;
   overflow: hidden;
   transition: var(--transition);
@@ -60,10 +60,6 @@ const CoverPhoto = styled.div`
     right: 0;
     bottom: 0;
     background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.5));
-  }
-
-  @media (max-width: 768px) {
-    height: 200px;
   }
 `;
 
@@ -79,22 +75,22 @@ const ProfileInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: -90px;
+  margin-top: -70px;
   position: relative;
   z-index: 2;
-  padding: 0 20px 30px;
+  padding: 0 15px 20px;
   text-align: center;
 `;
 
 const AvatarContainer = styled.div`
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
-  border: 5px solid var(--card-bg);
+  border: 4px solid var(--card-bg);
   background: linear-gradient(135deg, var(--secondary), #9b59b6);
   box-shadow: var(--shadow);
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   transition: var(--transition);
   overflow: hidden;
 
@@ -128,12 +124,12 @@ const DefaultAvatar = styled.div`
   align-items: center;
   justify-content: center;
   color: var(--text-inverse);
-  font-size: 70px;
+  font-size: 50px;
 `;
 
 const Username = styled.h1`
-  margin: 10px 0 5px;
-  font-size: 32px;
+  margin: 8px 0 4px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--text);
   letter-spacing: -0.5px;
@@ -142,45 +138,39 @@ const Username = styled.h1`
   background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-
-  @media (max-width: 768px) {
-    font-size: 28px;
-  }
 `;
 
 const Bio = styled.p`
   margin: 0 auto;
   color: var(--text-light);
-  max-width: 600px;
-  line-height: 1.6;
-  font-size: 16px;
-  padding: 0 20px;
+  max-width: 100%;
+  line-height: 1.5;
+  font-size: 14px;
+  padding: 0 15px;
 `;
 
 const StatsContainer = styled.div`
   display: flex;
-  gap: 40px;
-  margin: 30px 0;
+  gap: 15px;
+  margin: 20px 0;
   flex-wrap: wrap;
   justify-content: center;
-
-  @media (max-width: 768px) {
-    gap: 25px;
-  }
+  width: 100%;
 `;
 
 const StatItem = styled.div`
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
-  min-width: 80px;
-  padding: 10px 15px;
+  min-width: 70px;
+  padding: 8px 10px;
   border-radius: var(--radius-md);
   background: var(--reply-bg);
   backdrop-filter: blur(5px);
+  flex: 1;
 
   &:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
     background: var(--input-bg);
     box-shadow: var(--shadow-hover);
   }
@@ -188,23 +178,23 @@ const StatItem = styled.div`
 
 const StatNumber = styled.div`
   font-weight: 800;
-  font-size: 24px;
+  font-size: 18px;
   color: var(--text);
   margin-bottom: 2px;
 `;
 
 const StatLabel = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-lighter);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 `;
 
 const DaysBadge = styled.div`
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 12px;
+  left: 12px;
   background: ${props => {
     if (props.days >= 365) return 'linear-gradient(135deg, #f39c12, #e67e22)';
     if (props.days >= 180) return 'linear-gradient(135deg, #2ecc71, #27ae60)';
@@ -212,13 +202,13 @@ const DaysBadge = styled.div`
     return 'linear-gradient(135deg, #9b59b6, #8e44ad)';
   }};
   color: var(--text-inverse);
-  padding: 8px 15px;
-  border-radius: 20px;
-  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   box-shadow: var(--shadow);
   z-index: 3;
   animation: ${pulse} 2s infinite;
@@ -226,14 +216,7 @@ const DaysBadge = styled.div`
   backdrop-filter: blur(5px);
   
   & > svg {
-    font-size: 16px;
-  }
-
-  @media (max-width: 768px) {
-    top: 15px;
-    left: 15px;
-    padding: 6px 12px;
-    font-size: 12px;
+    font-size: 14px;
   }
 `;
 
@@ -243,10 +226,10 @@ const Tooltip = styled.div`
   left: 0;
   background: var(--card-bg);
   color: var(--text);
-  padding: 12px;
+  padding: 10px;
   border-radius: var(--radius-md);
-  font-size: 13px;
-  width: 220px;
+  font-size: 12px;
+  width: 180px;
   box-shadow: var(--shadow-hover);
   opacity: 0;
   visibility: hidden;
@@ -263,55 +246,50 @@ const Tooltip = styled.div`
 
 const EditButton = styled.button`
   position: absolute;
-  top: 25px;
-  right: 25px;
+  top: 15px;
+  right: 15px;
   background: var(--input-bg);
   color: var(--text);
   border: none;
-  padding: 12px 25px;
-  border-radius: 30px;
+  padding: 10px 20px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   transition: var(--transition);
   font-weight: 600;
   box-shadow: var(--shadow);
-  font-size: 15px;
+  font-size: 14px;
   
   &:hover {
     background: var(--comment-bg);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
-  }
-
-  @media (max-width: 768px) {
-    padding: 10px 20px;
-    font-size: 14px;
   }
 `;
 
 const FollowButton = styled.button`
-  margin-top: 20px;
-  padding: 14px 35px;
+  margin-top: 15px;
+  padding: 12px 25px;
   background: ${props => props.$isFollowing ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : 'linear-gradient(135deg, var(--secondary), var(--secondary-hover))'};
   color: var(--text-inverse);
   border: none;
-  border-radius: 30px;
+  border-radius: 24px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
   transition: var(--transition);
   font-weight: 600;
-  box-shadow: ${props => props.$isFollowing ? '0 5px 20px rgba(231, 76, 60, 0.3)' : 'var(--shadow)'};
-  font-size: 16px;
+  box-shadow: ${props => props.$isFollowing ? '0 4px 15px rgba(231, 76, 60, 0.3)' : 'var(--shadow)'};
+  font-size: 14px;
   position: relative;
   overflow: hidden;
   
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: ${props => props.$isFollowing ? '0 8px 25px rgba(231, 76, 60, 0.4)' : 'var(--shadow-hover)'};
+    transform: translateY(-2px);
+    box-shadow: ${props => props.$isFollowing ? '0 6px 20px rgba(231, 76, 60, 0.4)' : 'var(--shadow-hover)'};
   }
 
   &:disabled {
@@ -328,11 +306,6 @@ const FollowButton = styled.button`
     height: 100%;
     background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
     pointer-events: none;
-  }
-
-  @media (max-width: 768px) {
-    padding: 12px 30px;
-    font-size: 15px;
   }
 `;
 
@@ -354,36 +327,32 @@ const Modal = styled.div`
 const ModalContent = styled.div`
   background: var(--card-bg);
   color: var(--text);
-  padding: 40px;
+  padding: 30px 15px;
   border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 700px;
+  width: 95%;
+  max-width: 100%;
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: var(--shadow-hover);
   position: relative;
   animation: ${fadeIn} 0.4s ease-out;
-
-  @media (max-width: 768px) {
-    padding: 30px 20px;
-  }
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 10px;
+  right: 10px;
   background: var(--reply-bg);
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: var(--transition);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--text);
   
   &:hover {
@@ -396,7 +365,7 @@ const CloseButton = styled.button`
 const LoadingSpinner = styled.div`
   display: inline-block;
   animation: ${pulse} 1.5s infinite ease-in-out;
-  margin-left: 10px;
+  margin-left: 8px;
 `;
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
@@ -455,7 +424,7 @@ const useFollowStatus = (userId, isOwnProfile) => {
       setIsFollowing(!isFollowing);
     } catch (error) {
       console.error('Erro ao alternar follow:', error);
-      throw error; // Rejeita a promise para tratamento no componente
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -516,7 +485,6 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
       const wasFollowing = isFollowing;
       await toggleFollow();
       
-      // Atualiza a contagem local
       setStats(prev => ({
         ...prev,
         followers: wasFollowing ? prev.followers - 1 : prev.followers + 1
@@ -532,18 +500,18 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
         {getBadgeIcon()}
         {daysSinceJoin} dias
         <Tooltip>
-          <div style={{ fontWeight: 'bold', marginBottom: '5px', fontSize: '14px' }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '5px', fontSize: '13px' }}>
             {getMemberLevel()}
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-light)' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-light)' }}>
             Na plataforma há {daysSinceJoin} dia{daysSinceJoin !== 1 ? 's' : ''}
           </div>
           <div style={{ 
-            fontSize: '11px', 
-            marginTop: '8px', 
+            fontSize: '10px', 
+            marginTop: '6px', 
             color: 'var(--text-lighter)',
             borderTop: '1px solid var(--border)',
-            paddingTop: '8px'
+            paddingTop: '6px'
           }}>
             Desde {new Date(user.createdAt).toLocaleDateString()}
           </div>
@@ -595,8 +563,8 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
           <StatsContainer>
             {[1, 2, 3].map((i) => (
               <StatItem key={i}>
-                <StatNumber as={Skeleton} style={{ width: '40px', height: '24px', margin: '0 auto' }} />
-                <StatLabel as={Skeleton} style={{ width: '60px', height: '14px', margin: '0 auto' }} />
+                <StatNumber as={Skeleton} style={{ width: '30px', height: '18px', margin: '0 auto' }} />
+                <StatLabel as={Skeleton} style={{ width: '50px', height: '12px', margin: '0 auto' }} />
               </StatItem>
             ))}
           </StatsContainer>
@@ -661,13 +629,14 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
               ×
             </CloseButton>
             <h2 style={{ 
-              marginBottom: '25px', 
+              marginBottom: '20px', 
               color: 'var(--text)',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px'
+              gap: '8px',
+              fontSize: '18px'
             }}>
-              <FiUsers size={28} /> Seguidores
+              <FiUsers size={22} /> Seguidores
             </h2>
             <UserFollowers userId={user._id} />
           </ModalContent>
@@ -684,13 +653,14 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
               ×
             </CloseButton>
             <h2 style={{ 
-              marginBottom: '25px', 
+              marginBottom: '20px', 
               color: 'var(--text)',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px'
+              gap: '8px',
+              fontSize: '18px'
             }}>
-              <FiUsers size={28} /> Seguindo
+              <FiUsers size={22} /> Seguindo
             </h2>
             <UserFollowing userId={user._id} />
           </ModalContent>

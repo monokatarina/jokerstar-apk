@@ -29,6 +29,7 @@ const pulse = keyframes`
 // Styled Components
 const MobileNavbarContainer = styled.div`
   position: fixed;
+  top: env(safe-area-inset-top);
   top: 0;
   left: 0;
   right: 0;

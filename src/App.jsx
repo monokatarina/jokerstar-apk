@@ -30,10 +30,12 @@ const AppContainer = styled.div`
 const MainContent = styled.main`
   flex: 1;
   padding: ${Capacitor.isNativePlatform() ? '0' : '1rem'};
+  padding-top: ${Capacitor.isNativePlatform() ? '60px' : '0'};
   background-color: var(--background);
   overflow-x: hidden;
   
   @media (max-width: 768px) {
+    padding-top: ${Capacitor.isNativePlatform() ? '60px' : '0'};
     padding: 0;
   }
 `;
