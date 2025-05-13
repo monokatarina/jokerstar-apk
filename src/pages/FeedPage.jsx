@@ -31,7 +31,7 @@ const MemeWrapper = styled.div`
   width: 95vw;
   max-width: 500px;
   height: 95vh;
-  max-height: 800px;
+  max-height: 500px;
   scroll-snap-align: start;
   position: relative;
   border-radius: 12px;
