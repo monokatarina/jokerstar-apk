@@ -76,27 +76,35 @@ const CommentList = styled.div`
   overflow-y: auto;
   margin-bottom: 1rem;
   padding-right: 0.5rem;
-  scroll-behavior: smooth; /* Adiciona scroll suave */
-  -webkit-overflow-scrolling: touch; /* Melhora o scroll em iOS */
-
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  
+  /* Melhora a sensação de arraste */
+  scroll-snap-type: y proximity;
+  scrollbar-width: thin;
+  
   @media (max-width: 768px) {
     max-height: none;
-    height: 60vh; /* Altura fixa para mobile */
+    height: 60vh;
     padding-right: 0;
     margin-bottom: 0.5rem;
   }
 
-  /* Estilização da barra de scroll (opcional) */
   &::-webkit-scrollbar {
     width: 0.375rem;
   }
+  
   &::-webkit-scrollbar-track {
     background: var(--background);
     border-radius: 0.625rem;
   }
+  
   &::-webkit-scrollbar-thumb {
     background: var(--border-light);
     border-radius: 0.625rem;
+    
     &:hover {
       background: var(--primary);
     }
@@ -1382,8 +1390,14 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const [loadingReplies, setLoadingReplies] = useState({});
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const commentListRef = useRef(null);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimeout = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartY = useRef(0);
+  const scrollStartTop = useRef(0);
+  const animationFrameId = useRef(null);
+  const touchTimeout = useRef(null);
+  const velocity = useRef(0);
+  const lastY = useRef(0);
+  const lastTime = useRef(0);
 
   // Funções auxiliares independentes
   const findComment = useCallback((comments, commentId) => {
@@ -1397,38 +1411,219 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     return null;
   }, []);
 
-  // Hook para throttling (adicione isso fora do componente ou em um arquivo separado)
+  // Hook de throttling otimizado (pode ser colocado em um arquivo separado)
   const useThrottle = (callback, delay) => {
-    const lastCall = useRef(0);
+    const lastCallRef = useRef(0);
+    const pendingRef = useRef(false);
+    const argsRef = useRef();
+
     return useCallback((...args) => {
-      const now = new Date().getTime();
-      if (now - lastCall.current >= delay) {
-        lastCall.current = now;
-        callback(...args);
+      argsRef.current = args;
+      const now = Date.now();
+      const timeSinceLastCall = now - lastCallRef.current;
+
+      if (!pendingRef.current) {
+        if (timeSinceLastCall >= delay) {
+          lastCallRef.current = now;
+          callback(...args);
+        } else {
+          pendingRef.current = true;
+          setTimeout(() => {
+            lastCallRef.current = Date.now();
+            callback(...argsRef.current);
+            pendingRef.current = false;
+          }, delay - timeSinceLastCall);
+        }
       }
     }, [callback, delay]);
   };
 
-  // Função para lidar com o scroll
+  // Estado para tracking de momentum scroll
+  const [momentumScrolling, setMomentumScrolling] = useState(false);
+
+  // Função de scroll com throttling e momentum detection
   const handleScroll = useThrottle(() => {
     setIsScrolling(true);
+    setMomentumScrolling(true);
+    
     clearTimeout(scrollTimeout.current);
     scrollTimeout.current = setTimeout(() => {
       setIsScrolling(false);
-    }, 100);
-  }, 100);
+      setMomentumScrolling(false);
+    }, 150);
+  }, 50);
 
-  // Efeito para adicionar/remover o event listener
+  // Efeito principal para scroll personalizado
   useEffect(() => {
     const list = commentListRef.current;
-    if (list) {
-      list.addEventListener('scroll', handleScroll);
-      return () => {
-        list.removeEventListener('scroll', handleScroll);
-        clearTimeout(scrollTimeout.current);
-      };
-    }
-  }, [handleScroll]);
+    if (!list) return;
+
+    // Variáveis de estado do scroll
+    const state = {
+      isDragging: false,
+      startY: 0,
+      startScrollTop: 0,
+      lastY: 0,
+      lastTime: 0,
+      velocity: 0,
+      animationId: null,
+      touchActive: false
+    };
+
+    // Configurações ajustáveis
+    const config = {
+      deceleration: 0.94,
+      minVelocity: 0.2,
+      bounceStiffness: 0.2,
+      scrollEndDelay: 300,
+      maxDeltaY: 100
+    };
+
+    const handleStart = (y) => {
+      state.isDragging = true;
+      state.startY = y;
+      state.startScrollTop = list.scrollTop;
+      state.lastY = y;
+      state.lastTime = performance.now();
+      state.velocity = 0;
+      
+      cancelAnimationFrame(state.animationId);
+      list.style.scrollBehavior = 'auto';
+      setIsDragging(true);
+    };
+
+    const handleMove = (y) => {
+      if (!state.isDragging) return;
+      
+      const now = performance.now();
+      const deltaTime = now - state.lastTime;
+      
+      if (deltaTime > 0) {
+        const deltaY = y - state.lastY;
+        state.velocity = deltaY / deltaTime;
+        state.lastY = y;
+        state.lastTime = now;
+      }
+      
+      const deltaY = Math.min(config.maxDeltaY, Math.max(-config.maxDeltaY, y - state.startY));
+      let newScrollTop = state.startScrollTop - deltaY;
+      
+      // Limites com efeito elástico
+      const maxScroll = list.scrollHeight - list.clientHeight;
+      const atTop = newScrollTop < 0;
+      const atBottom = newScrollTop > maxScroll;
+      
+      if (atTop || atBottom) {
+        const overscroll = atTop ? -newScrollTop : newScrollTop - maxScroll;
+        newScrollTop = atTop 
+          ? -overscroll * config.bounceStiffness 
+          : maxScroll + overscroll * config.bounceStiffness;
+      }
+      
+      list.scrollTop = newScrollTop;
+    };
+
+    const applyMomentum = () => {
+      if (Math.abs(state.velocity) < config.minVelocity) {
+        state.animationId = null;
+        finishScroll();
+        return;
+      }
+      
+      const maxScroll = list.scrollHeight - list.clientHeight;
+      let newScrollTop = list.scrollTop - state.velocity * 16;
+      
+      // Limites com bounce
+      if (newScrollTop < 0) {
+        newScrollTop = 0;
+        state.velocity = 0;
+      } else if (newScrollTop > maxScroll) {
+        newScrollTop = maxScroll;
+        state.velocity = 0;
+      }
+      
+      list.scrollTop = newScrollTop;
+      state.velocity *= config.deceleration;
+      
+      state.animationId = requestAnimationFrame(applyMomentum);
+    };
+
+    const finishScroll = () => {
+      setTimeout(() => {
+        list.style.scrollBehavior = 'smooth';
+        setIsDragging(false);
+      }, config.scrollEndDelay);
+    };
+
+    const handleEnd = () => {
+      if (!state.isDragging) return;
+      state.isDragging = false;
+      
+      if (Math.abs(state.velocity) > config.minVelocity) {
+        state.animationId = requestAnimationFrame(applyMomentum);
+      } else {
+        finishScroll();
+      }
+    };
+
+    // Eventos de toque
+    const touchStart = (e) => {
+      if (e.touches.length !== 1) return;
+      state.touchActive = true;
+      handleStart(e.touches[0].clientY);
+      e.preventDefault();
+    };
+
+    const touchMove = (e) => {
+      if (!state.touchActive || e.touches.length !== 1) return;
+      handleMove(e.touches[0].clientY);
+      e.preventDefault();
+    };
+
+    const touchEnd = () => {
+      if (!state.touchActive) return;
+      state.touchActive = false;
+      handleEnd();
+    };
+
+    // Eventos de mouse
+    const mouseDown = (e) => {
+      if (e.button !== 0 || state.touchActive) return;
+      handleStart(e.clientY);
+      document.addEventListener('mousemove', mouseMove);
+      document.addEventListener('mouseup', mouseEnd);
+    };
+
+    const mouseMove = (e) => {
+      handleMove(e.clientY);
+      e.preventDefault();
+    };
+
+    const mouseEnd = () => {
+      document.removeEventListener('mousemove', mouseMove);
+      document.removeEventListener('mouseup', mouseEnd);
+      handleEnd();
+    };
+
+    // Adiciona listeners otimizados
+    const passiveOptions = { passive: false };
+    list.addEventListener('touchstart', touchStart, passiveOptions);
+    list.addEventListener('touchmove', touchMove, passiveOptions);
+    list.addEventListener('touchend', touchEnd);
+    list.addEventListener('mousedown', mouseDown);
+
+    // Cleanup completo
+    return () => {
+      list.removeEventListener('touchstart', touchStart);
+      list.removeEventListener('touchmove', touchMove);
+      list.removeEventListener('touchend', touchEnd);
+      list.removeEventListener('mousedown', mouseDown);
+      document.removeEventListener('mousemove', mouseMove);
+      document.removeEventListener('mouseup', mouseEnd);
+      cancelAnimationFrame(state.animationId);
+      clearTimeout(scrollTimeout.current);
+    };
+  }, []);
 
   // Função para scroll programático suave
   const scrollToComment = useCallback((commentId) => {
@@ -1910,7 +2105,6 @@ const EndOfListMessage = styled.div`
       
       <CommentList 
         ref={commentListRef}
-        $isScrolling={isScrolling}
       >
         {loading ? (
           <LoadingMessage aria-busy="true">
