@@ -674,7 +674,7 @@ const ReactionAnimation = styled.div`
   z-index: 10;
 `;
 
-const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange }) => {
+const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange,isFullScreen = false }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
@@ -966,7 +966,14 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange }) =>
 
   return (
     <>
-      <Card $deleting={isDeleting}>
+      <Card $deleting={isDeleting}style={isFullScreen ? {
+        width: '100%',
+        height: '100%',
+        marginBottom: 0,
+        borderRadius: 0,
+        border: 'none',
+        boxShadow: 'none'
+      } : {}}>
         {isDeleting && (
           <div style={{
             position: 'absolute',
