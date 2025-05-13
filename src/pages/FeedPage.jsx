@@ -8,29 +8,37 @@ import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
 
 const FeedContainer = styled.div`
-  max-width: 100%;
   width: 100%;
-  padding: 0;
+  height: 100vh;
   background-color: var(--background);
-  min-height: 100vh;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding: 16px 0;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
 `;
 
 const FeedGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 8px;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  display: inline-flex;
+  gap: 16px;
+  padding: 0 16px;
+  height: 100%;
 `;
 
 const MemeWrapper = styled.div`
-  border-radius: 16px;
+  display: inline-block;
+  width: 90vw;
+  max-width: 400px;
+  height: 90vh;
+  max-height: 700px;
+  scroll-snap-align: start;
+  position: relative;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--card-bg);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  position: relative;
+  flex-shrink: 0;
 `;
 
 const EmptyFeed = styled.div`
@@ -38,12 +46,12 @@ const EmptyFeed = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 80vh;
-  padding: 20px;
+  height: 100%;
+  width: 100vw;
   text-align: center;
+  color: var(--text);
 
   h3 {
-    color: var(--text);
     font-size: 1.5rem;
     margin-bottom: 16px;
   }
@@ -57,14 +65,19 @@ const EmptyFeed = styled.div`
 const LoadingIndicator = styled.div`
   display: flex;
   justify-content: center;
-  padding: 40px;
+  align-items: center;
+  height: 100vh;
   color: var(--text-light);
 `;
 
 const ErrorMessage = styled.div`
-  padding: 40px 20px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
   color: var(--danger);
+  padding: 20px;
 
   button {
     margin-top: 20px;
@@ -159,7 +172,7 @@ const FeedPage = () => {
                     m._id === meme._id ? { ...m, commentCount: newCount } : m
                   ))}
                 }
-                isSquareView={false}
+                isSquareView={true}
               />
             </MemeWrapper>
           ))
