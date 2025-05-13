@@ -64,24 +64,6 @@ const CommentOverlay = styled.div`
   pointer-events: ${props => props.$visible ? 'auto' : 'none'};
 `;
 
-const ImprovedMobileCommentSection = styled(MobileCommentSection)`
-  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
-  transform: translateY(calc(${props => props.$offset}px + ${props => props.$isOpen ? '0%' : '100%'}));
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--text-light);
-    border-radius: 2px;
-    opacity: ${props => 1 - (props.$offset / 100)};
-  }
-`;
-
 const MobileCommentSection = styled.div`
   @media (max-width: 768px) {
     position: fixed;
@@ -113,6 +95,24 @@ const MobileCommentSection = styled.div`
       border-radius: 2px;
       opacity: 0.5;
     }
+  }
+`;
+
+const ImprovedMobileCommentSection = styled(MobileCommentSection)`
+  transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateY(calc(${props => props.$offset}px + ${props => props.$isOpen ? '0%' : '100%'}));
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--text-light);
+    border-radius: 2px;
+    opacity: ${props => 1 - (props.$offset / 100)};
   }
 `;
 
