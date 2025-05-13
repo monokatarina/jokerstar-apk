@@ -76,13 +76,17 @@ const CommentList = styled.div`
   overflow-y: auto;
   margin-bottom: 1rem;
   padding-right: 0.5rem;
+  scroll-behavior: smooth; /* Adiciona scroll suave */
+  -webkit-overflow-scrolling: touch; /* Melhora o scroll em iOS */
 
   @media (max-width: 768px) {
     max-height: none;
+    height: 60vh; /* Altura fixa para mobile */
     padding-right: 0;
     margin-bottom: 0.5rem;
   }
 
+  /* Estilização da barra de scroll (opcional) */
   &::-webkit-scrollbar {
     width: 0.375rem;
   }
@@ -1377,7 +1381,8 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const [repliesPagination, setRepliesPagination] = useState({});
   const [loadingReplies, setLoadingReplies] = useState({});
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-
+  const commentListRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   // Funções auxiliares independentes
   const findComment = useCallback((comments, commentId) => {
@@ -1391,6 +1396,51 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     return null;
   }, []);
 
+  // Hook para throttling (adicione isso fora do componente ou em um arquivo separado)
+  const useThrottle = (callback, delay) => {
+    const lastCall = useRef(0);
+    return useCallback((...args) => {
+      const now = new Date().getTime();
+      if (now - lastCall.current >= delay) {
+        lastCall.current = now;
+        callback(...args);
+      }
+    }, [callback, delay]);
+  };
+
+  // Função para lidar com o scroll
+  const handleScroll = useThrottle(() => {
+    setIsScrolling(true);
+    clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = setTimeout(() => {
+      setIsScrolling(false);
+    }, 100);
+  }, 100);
+
+  // Efeito para adicionar/remover o event listener
+  useEffect(() => {
+    const list = commentListRef.current;
+    if (list) {
+      list.addEventListener('scroll', handleScroll);
+      return () => {
+        list.removeEventListener('scroll', handleScroll);
+        clearTimeout(scrollTimeout.current);
+      };
+    }
+  }, [handleScroll]);
+
+  // Função para scroll programático suave
+  const scrollToComment = useCallback((commentId) => {
+    if (isScrolling) return;
+    
+    const commentElement = document.getElementById(`comment-${commentId}`);
+    if (commentElement && commentListRef.current) {
+      commentElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    }
+  }, [isScrolling]);
 
   const loadMoreReplies = async (commentId) => {
     if (expandedReplies[commentId]) return;
@@ -1831,90 +1881,93 @@ const EndOfListMessage = styled.div`
   font-size: 0.9rem;
 `;
 
-return (
-  <CommentContainer 
-    data-testid="comment-section"
-    style={{
-      paddingBottom: keyboardActive ? '300px' : '0',
-      transition: 'padding-bottom 0.3s ease'
-    }}
-    aria-live="polite"
-    aria-atomic="true"
-  >
-    <CommentCount aria-live="polite">
-      {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
-    </CommentCount>
-    
-    {error && (
-      <ErrorMessage role="alert">
-        {error}
-        <RetryButton 
-          onClick={fetchComments}
-          aria-label="Tentar carregar comentários novamente"
-        >
-          Tentar novamente
-        </RetryButton>
-      </ErrorMessage>
-    )}
-    
-    <CommentList>
-      {loading ? (
-        <LoadingMessage aria-busy="true">
-          <div className="spinner" aria-hidden="true" />
-          Carregando comentários...
-        </LoadingMessage>
-      ) : !Array.isArray(comments) || comments.length === 0 ? (
-        <EmptyMessage>
-          Nenhum comentário ainda. Seja o primeiro!
-          {isMobile && (
-            <div style={{ marginTop: '10px' }}>
-              Role para baixo para comentar ↓
-            </div>
-          )}
-        </EmptyMessage>
-      ) : (
-        <div role="list">
-          {processedComments.map(comment => (
-            <Comment 
-              key={comment._id}
-              comment={comment}
-              depth={0}
-              currentUser={currentUser}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onReply={handleReply}
-              onReaction={handleReaction}
-              editingId={editingId}
-              editText={editText}
-              onEditChange={setEditText}
-              onSaveEdit={handleSaveEdit}
-              replyingTo={replyingTo}
-              replyTexts={replyTexts} 
-              onReplyChange={handleReplyChange}
-              onReplySubmit={handleReplySubmit}
-              showOptions={showOptions}
-              onToggleOptions={setShowOptions}
-              isPopular={comment.isPopular || false}
-              onReplyMediaChange={handleReplyMediaChange}
-              onReplyMemeChange={handleReplyMemeChange}
-              replyMedia={replyMedia}
-              replySelectedMeme={replySelectedMeme}
-              onOpenMemeSelector={handleOpenMemeSelectorForReply}
-              userMemes={userMemes}
-              loadMoreReplies={loadMoreReplies}
-              loadingReplies={loadingReplies}
-              expandedReplies={expandedReplies}
-              setExpandedReplies={setExpandedReplies}
-            />
-          ))}
-          {isMobile && comments.length > 3 && (
-            <EndOfListMessage>
-              Você chegou ao fim. Role para cima ↑
-            </EndOfListMessage>
-          )}
-        </div>
+  return (
+    <CommentContainer 
+      data-testid="comment-section"
+      style={{
+        paddingBottom: keyboardActive ? '300px' : '0',
+        transition: 'padding-bottom 0.3s ease'
+      }}
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <CommentCount aria-live="polite">
+        {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
+      </CommentCount>
+      
+      {error && (
+        <ErrorMessage role="alert">
+          {error}
+          <RetryButton 
+            onClick={fetchComments}
+            aria-label="Tentar carregar comentários novamente"
+          >
+            Tentar novamente
+          </RetryButton>
+        </ErrorMessage>
       )}
-    </CommentList>
+      
+      <CommentList 
+        ref={commentListRef}
+        $isScrolling={isScrolling}
+      >
+        {loading ? (
+          <LoadingMessage aria-busy="true">
+            <div className="spinner" aria-hidden="true" />
+            Carregando comentários...
+          </LoadingMessage>
+        ) : !Array.isArray(comments) || comments.length === 0 ? (
+          <EmptyMessage>
+            Nenhum comentário ainda. Seja o primeiro!
+            {isMobile && (
+              <div style={{ marginTop: '10px' }}>
+                Role para baixo para comentar ↓
+              </div>
+            )}
+          </EmptyMessage>
+        ) : (
+          <div role="list">
+            {processedComments.map(comment => (
+              <Comment 
+                key={comment._id}
+                comment={comment}
+                depth={0}
+                currentUser={currentUser}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onReply={handleReply}
+                onReaction={handleReaction}
+                editingId={editingId}
+                editText={editText}
+                onEditChange={setEditText}
+                onSaveEdit={handleSaveEdit}
+                replyingTo={replyingTo}
+                replyTexts={replyTexts} 
+                onReplyChange={handleReplyChange}
+                onReplySubmit={handleReplySubmit}
+                showOptions={showOptions}
+                onToggleOptions={setShowOptions}
+                isPopular={comment.isPopular || false}
+                onReplyMediaChange={handleReplyMediaChange}
+                onReplyMemeChange={handleReplyMemeChange}
+                replyMedia={replyMedia}
+                replySelectedMeme={replySelectedMeme}
+                onOpenMemeSelector={handleOpenMemeSelectorForReply}
+                userMemes={userMemes}
+                loadMoreReplies={loadMoreReplies}
+                loadingReplies={loadingReplies}
+                expandedReplies={expandedReplies}
+                setExpandedReplies={setExpandedReplies}
+              />
+            ))}
+            {isMobile && comments.length > 3 && (
+              <EndOfListMessage>
+                Você chegou ao fim. Role para cima ↑
+              </EndOfListMessage>
+            )}
+          </div>
+        )}
+      </CommentList>
 
     {currentUser && (
       <>
