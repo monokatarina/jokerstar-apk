@@ -394,19 +394,12 @@ const Username = styled.span`
 `;
 
 const ResponsiveImage = styled.img`
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  transition: var(--transition);
-  border-radius: var(--radius-md);
-  
-  &:hover {
-    transform: scale(1.03);
-    filter: saturate(1.2) brightness(1.05);
-  }
+  pointer-events: none;
 `;
+
 
 const ResponsiveVideo = styled.video`
   max-width: 100%;
@@ -426,27 +419,16 @@ const ResponsiveVideo = styled.video`
 
 const MediaContainer = styled.div`
   width: 100%;
-  max-height: 43.75rem;
-  min-height: 18.75rem;
-  background: var(--background);
-  color: var(--text);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  height: 85vh;
   position: relative;
-  overflow: hidden;
+  background: #000;
+  touch-action: pan-y;
 `;
 
 const VideoContainer = styled.div`
-  position: relative;
   width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  overflow: hidden;
-  border-radius: var(--radius-md);
+  height: 85vh;
+  position: relative;
 `;
 
 const PlayButton = styled.div`
@@ -960,9 +942,19 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isSq
     }
   };
 
-  const handleTouchEnd = () => {
-    touchStartY.current = null;
+  const handleTouchEnd = (e) => {
+    if(!touchStartY.current) return;
+    
+    const touchY = e.changedTouches[0].clientY;
+    const deltaY = touchY - touchStartY.current;
+    
+    if(Math.abs(deltaY) > 50) {
+      if(deltaY > 0 && onScroll) onScroll('up');
+      if(deltaY < 0 && onScroll) onScroll('down');
+    }
   };
+
+
 
   return (
     <>
@@ -1104,7 +1096,10 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isSq
           </Username>
         </Header>
         
-        <MediaContainer>
+        <MediaContainer 
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          >
           {meme.mediaType === 'image' ? (
             <ResponsiveImage 
               src={buildUrl(meme.mediaUrl)}

@@ -2,84 +2,42 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import api from '../services/api';
 import MemeCard from '../components/MemeCard';
-import UploadButton from '../components/UploadButton';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
 
 const FeedContainer = styled.div`
-  max-width: 100%;
   width: 100%;
-  padding: 0;
-  background-color: var(--background);
-`;
-
-const FeedGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1px;
-  width: 100%;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-  }
-`;
-
-const SquareMemeContainer = styled.div`
-  position: relative;
-  width: 100%;
-  padding-bottom: 100%; /* Mantém aspecto quadrado */
-  overflow: hidden;
+  height: 100vh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
   background: #000;
 `;
 
-const SquareMemeContent = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
+const MemeSlide = styled.div`
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  scroll-snap-align: start;
+  position: relative;
+  background: #000;
+`;
+
+const ProgressIndicator = styled.div`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: center;
-  align-items: center;
+  gap: 8px;
+  z-index: 100;
 `;
 
-const EmptyFeed = styled.div`
-  width: 100%;
-  padding: 40px 20px;
-  text-align: center;
-  color: var(--text-light);
-  
-  h3 {
-    font-size: 1.2rem;
-    margin-bottom: 10px;
-  }
-`;
-
-const LoadingIndicator = styled.div`
-  width: 100%;
-  padding: 40px;
-  text-align: center;
-  color: var(--text-light);
-`;
-
-const ErrorMessage = styled.div`
-  width: 100%;
-  padding: 20px;
-  text-align: center;
-  color: var(--dislike-color);
-  
-  button {
-    margin-top: 15px;
-    padding: 8px 16px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
+const ProgressDot = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${props => props.$active ? '#fff' : 'rgba(255,255,255,0.3)'};
+  transition: all 0.3s ease;
 `;
 
 const FeedPage = () => {
@@ -143,32 +101,25 @@ const FeedPage = () => {
 
   return (
     <FeedContainer>
-      <FeedGrid>
-        {memes.length === 0 ? (
-          <EmptyFeed>
-            <h3>Nenhum post encontrado</h3>
-            <p>Seja o primeiro a postar!</p>
-            <UploadButton />
-          </EmptyFeed>
-        ) : (
-          memes.map(meme => (
-            <SquareMemeContainer key={meme._id}>
-              <SquareMemeContent>
-                <MemeCard 
-                  meme={meme}
-                  onDelete={handleMemeDeleted}
-                  onCommentCountChange={(newCount) => {
-                    setMemes(prevMemes => prevMemes.map(m => 
-                      m._id === meme._id ? { ...m, commentCount: newCount } : m
-                    ))}
-                  }
-                  isSquareView
-                />
-              </SquareMemeContent>
-            </SquareMemeContainer>
-          ))
-        )}
-      </FeedGrid>
+      <ProgressIndicator>
+        {memes.map((_, index) => (
+          <ProgressDot key={index} $active={currentIndex === index} />
+        ))}
+      </ProgressIndicator>
+
+      {memes.map((meme, index) => (
+        <MemeSlide key={meme._id}>
+          <MemeCard 
+            meme={meme}
+            isFullScreen
+            onDelete={handleMemeDeleted}
+            onScroll={(direction) => {
+              if(direction === 'up' && index > 0) setCurrentIndex(index - 1);
+              if(direction === 'down' && index < memes.length - 1) setCurrentIndex(index + 1);
+            }}
+          />
+        </MemeSlide>
+      ))}
     </FeedContainer>
   );
 };
