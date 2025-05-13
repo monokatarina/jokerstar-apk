@@ -64,9 +64,12 @@ const CommentContainer = styled.div`
   background: var(--card-bg);
   border-top: 1px solid var(--border-light);
   padding: 1rem;
+  padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '1rem'};
+  transition: padding-bottom 0.3s ease;
 
   @media (max-width: 768px) {
     padding: 0.5rem;
+    padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '0.5rem'};
     border-top: none;
   }
 `;
@@ -251,6 +254,7 @@ const CommentForm = styled.form`
     padding: 0.5rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     transition: bottom 0.3s ease;
+    z-index: 1000; // Adicionar z-index alto
   }
 `;
 
@@ -268,7 +272,9 @@ const CommentInput = styled.input`
   @media (max-width: 768px) {
     padding: 0.75rem;
     font-size: 16px; // Prevent zoom on iOS
-    min-height: 44px; // Tamanho mínimo para toque
+    min-height: 44px;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
   &:focus {
@@ -2032,40 +2038,42 @@ const isMobile = useMemo(() => {
 // Estado para controle do teclado virtual
 const [keyboardActive, setKeyboardActive] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || window.innerWidth > 768) return;
+useEffect(() => {
+  if (typeof window === 'undefined' || window.innerWidth > 768) return;
 
-    const handleResize = () => {
-      const visualViewport = window.visualViewport;
-      if (visualViewport) {
-        const viewportHeight = visualViewport.height;
-        const windowHeight = window.innerHeight;
-        const keyboardVisible = viewportHeight < windowHeight * 0.8;
-        
-        setKeyboardActive(keyboardVisible);
-        setKeyboardHeight(windowHeight - viewportHeight);
-        
-        if (keyboardVisible && commentFormRef.current) {
-          // Rola até o formulário quando o teclado aparece
-          commentFormRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }
-      }
-    };
-
+  const handleResize = () => {
     const visualViewport = window.visualViewport;
     if (visualViewport) {
-      visualViewport.addEventListener('resize', handleResize);
-    }
+      const viewportHeight = visualViewport.height;
+      const windowHeight = window.innerHeight;
+      const keyboardHeight = windowHeight - viewportHeight;
+      
+      // Ajuste mais preciso para diferentes dispositivos
+      setKeyboardHeight(Math.max(keyboardHeight, 300)); // Mínimo de 300px
+      setKeyboardActive(keyboardHeight > 50);
 
-    return () => {
-      if (visualViewport) {
-        visualViewport.removeEventListener('resize', handleResize);
+      if (commentFormRef.current && keyboardHeight > 50) {
+        setTimeout(() => {
+          commentFormRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'end'
+          });
+        }, 300);
       }
-    };
-  }, []);
+    }
+  };
+
+  const visualViewport = window.visualViewport;
+  if (visualViewport) {
+    visualViewport.addEventListener('resize', handleResize);
+  }
+
+  return () => {
+    if (visualViewport) {
+      visualViewport.removeEventListener('resize', handleResize);
+    }
+  };
+}, []);
 
 
 useEffect(() => {
@@ -2081,29 +2089,31 @@ useEffect(() => {
 useEffect(() => {
   if (!isMobile) return;
 
-  const handleFocus = () => setKeyboardActive(true);
-  const handleBlur = () => setKeyboardActive(false);
+  const handleFocus = (e) => {
+    if (e.target.id === 'main-comment-input') {
+      setKeyboardActive(true);
+      setTimeout(() => {
+        commentFormRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 500);
+    }
+  };
 
   const input = document.getElementById('main-comment-input');
-  const fileInput = document.getElementById('comment-file-input');
-
   if (input) {
     input.addEventListener('focus', handleFocus);
-    input.addEventListener('blur', handleBlur);
+    input.addEventListener('blur', () => setKeyboardActive(false));
   }
 
   return () => {
     if (input) {
       input.removeEventListener('focus', handleFocus);
-      input.removeEventListener('blur', handleBlur);
-    }
-    if (fileInput) {
-      fileInput.removeEventListener('focus', handleFocus);
-      fileInput.removeEventListener('blur', handleBlur);
+      input.removeEventListener('blur', () => setKeyboardActive(false));
     }
   };
 }, [isMobile]);
-
 // Componente para o botão de tentar novamente
 const RetryButton = styled.button`
   margin-left: 10px;
