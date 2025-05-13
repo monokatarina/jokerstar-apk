@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FiMessageSquare, FiShare2, FiRepeat, FiTrash2, FiX, FiCheck } from 'react-icons/fi';
+import { FiMessageSquare, FiShare2, FiRepeat, FiTrash2, FiX, FiCheck, FiChevronDown } from 'react-icons/fi';
 import { FaSmile, FaAngry, FaCheck, FaEllipsisH } from 'react-icons/fa';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,10 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { renderMentions } from '../utils/renderMentions';
 import { extractMentions } from '../utils/mentionUtils';
 
-
 // Animations
-
-
 const popIn = keyframes`
   0% { transform: scale(0.5); opacity: 0; }
   70% { transform: scale(1.2); opacity: 0.7; }
@@ -47,7 +44,105 @@ const slideUp = keyframes`
   to { transform: translateY(0); opacity: 1; }
 `;
 
+const slideDown = keyframes`
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(100%); opacity: 0; }
+`;
+
 // Estilos
+const MobileCommentSection = styled.div`
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70vh;
+    max-height: 70vh;
+    background: var(--card-bg);
+    z-index: 1000;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(${props => props.$isOpen ? '0' : '100%'});
+    transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    touch-action: pan-y;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: var(--text-light);
+      border-radius: 2px;
+      opacity: 0.5;
+    }
+  }
+`;
+
+const CommentSectionContainer = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 0;
+`;
+
+const CommentFormContainer = styled.div`
+  position: sticky;
+  bottom: 0;
+  padding: 12px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-light);
+`;
+
+const CloseCommentsButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  z-index: 10;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(0,0,0,0.1);
+  }
+`;
+
+const CommentToggleButton = styled.button`
+  position: relative;
+  background: none;
+  border: none;
+  padding: 8px;
+  color: ${props => props.$active ? 'var(--primary)' : 'var(--text-light)'};
+  display: flex;
+  align-items: center;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 2px;
+    background: var(--primary);
+    opacity: ${({ $active }) => ($active ? 1 : 0)};
+    transition: opacity 0.3s ease;
+  }
+`;
+
 const OptionsButton = styled.button`
   position: absolute;
   top: 5px;
@@ -579,7 +674,7 @@ const ReactionAnimation = styled.div`
   z-index: 10;
 `;
 
-const MemeCard = ({ meme, isRepost = false, onDelete ,onCommentCountChange}) => {
+const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
@@ -596,28 +691,28 @@ const MemeCard = ({ meme, isRepost = false, onDelete ,onCommentCountChange}) => 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [deletionProgress, setDeletionProgress] = useState(0);
   const [mentionMap, setMentionMap] = useState({});
-  // Estados para o player de vídeo customizado
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef(null);
+  const commentSectionRef = useRef(null);
+  const touchStartY = useRef(null);
 
-
-useEffect(() => {
-  const processMentions = async () => {
-    if (meme.caption) {
-      try {
-        const result = await extractMentions(meme.caption);
-        setMentionMap(result.mentionMap || {});
-      } catch (error) {
-        console.error('Error processing mentions:', error);
-        setMentionMap({});
+  useEffect(() => {
+    const processMentions = async () => {
+      if (meme.caption) {
+        try {
+          const result = await extractMentions(meme.caption);
+          setMentionMap(result.mentionMap || {});
+        } catch (error) {
+          console.error('Error processing mentions:', error);
+          setMentionMap({});
+        }
       }
-    }
-  };
-  
-  processMentions();
+    };
+    
+    processMentions();
 
     if (user && meme.likes) {
       setIsLiked(meme.likes.some(like => like.toString() === user._id));
@@ -632,13 +727,11 @@ useEffect(() => {
     }
   }, [meme, user]);
 
-
   const handleDelete = async () => {
     setShowConfirmDialog(false);
     setIsDeleting(true);
     
     try {
-      // Barra de progresso simulada (opcional)
       const interval = setInterval(() => {
         setDeletionProgress(prev => {
           if (prev >= 90) {
@@ -674,7 +767,6 @@ useEffect(() => {
       console.error('Erro ao deletar meme:', err);
       
       if (err.response?.status === 410) {
-        // Se o meme já foi deletado, apenas remova do frontend
         if (onDelete) onDelete(meme._id);
         alert('Este meme já foi deletado anteriormente');
       } else {
@@ -686,12 +778,10 @@ useEffect(() => {
     }
   };
 
-  // diálogo de confirmação
   const openDeleteConfirmation = () => {
     setShowOptions(false);
     setShowConfirmDialog(true);
   };
-
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -831,65 +921,52 @@ useEffect(() => {
   const buildUrl = (url) => {
     if (!url) {
       console.warn('URL is empty or undefined');
-      return 'https://i.pravatar.cc/150?img=3'; // Fallback HTTPS
+      return 'https://i.pravatar.cc/150?img=3';
     }
   
-    // Forçar HTTPS se for HTTP
     if (url.startsWith('http://')) {
       url = 'https://' + url.substring(7);
     }
     
-    // Se já for HTTPS ou blob, retorna diretamente
     if (url.startsWith('https://') || url.startsWith('blob:')) {
       return url;
     }
   
-    // Normalizar caminho (garantir que comece com /)
     const normalizedPath = url.startsWith('/') ? url : `/${url}`;
-    
-    // Usar API URL com HTTPS
     const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
     const fullUrl = `${apiUrl}${normalizedPath}`;
     
     return fullUrl;
   };
-  const renderDeleteOverlay = () => {
-    if (isDeleting) {
-      return (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          zIndex: 5,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <div style={{
-            width: '80%',
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '10px',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              width: `${deletionProgress}%`,
-              height: '6px',
-              background: 'var(--primary)',
-              transition: 'width 0.3s ease'
-            }} />
-          </div>
-        </div>
-      );
-    }
-    return null;
+
+  const toggleComments = () => {
+    setShowComments(!showComments);
   };
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartY.current) return;
+    
+    const touchY = e.touches[0].clientY;
+    const deltaY = touchY - touchStartY.current;
+    
+    // Se o usuário estiver arrastando para baixo com força suficiente
+    if (deltaY > 50) {
+      setShowComments(false);
+      touchStartY.current = null;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
+  };
+
   return (
     <>
       <Card $deleting={isDeleting}>
-        {/* Overlay de deleção em progresso */}
         {isDeleting && (
           <div style={{
             position: 'absolute',
@@ -919,7 +996,6 @@ useEffect(() => {
           </div>
         )}
   
-        {/* Mensagem de sucesso após deletar */}
         {showSuccess && (
           <SuccessMessage>
             <FaCheck size={18} />
@@ -927,7 +1003,6 @@ useEffect(() => {
           </SuccessMessage>
         )}
   
-        {/* Menu de opções */}
         {user?._id === meme.author?._id && (
           <div style={{ position: 'relative' }}>
             <OptionsButton 
@@ -950,14 +1025,12 @@ useEffect(() => {
           </div>
         )}
   
-        {/* Badge de repost */}
         {isRepost && (
           <RepostBadge>
             <FiRepeat /> Repostado por @{meme.repostedBy?.username || 'usuário'}
           </RepostBadge>
         )}
         
-        {/* Animação de reação */}
         {reaction && (
           <ReactionAnimation style={{
             top: '50%',
@@ -974,7 +1047,6 @@ useEffect(() => {
           </ReactionAnimation>
         )}
         
-        {/* Cabeçalho com avatar e nome de usuário */}
         <Header>
           <Avatar 
             src={
@@ -996,7 +1068,6 @@ useEffect(() => {
           </Username>
         </Header>
         
-        {/* Container de mídia (imagem ou vídeo) */}
         <MediaContainer>
           {meme.mediaType === 'image' ? (
             <ResponsiveImage 
@@ -1065,14 +1136,12 @@ useEffect(() => {
           )}
         </MediaContainer>
   
-        {/* Legenda do meme */}
         {meme.caption && (
           <Caption>
             {React.Children.toArray(renderMentions(meme.caption, mentionMap, navigate))}
           </Caption>
         )}
         
-        {/* Tags do meme */}
         {meme.tags?.length > 0 && (
           <Tags>
             {meme.tags.map(tag => (
@@ -1081,7 +1150,6 @@ useEffect(() => {
           </Tags>
         )}
   
-        {/* Ações (like, comentário, repost, etc) */}
         <Actions>
           <ActionGroup>
             <ActionButton 
@@ -1099,7 +1167,7 @@ useEffect(() => {
               <FaAngry /> 
             </ActionButton>
             <ActionButton 
-              onClick={() => setShowComments(!showComments)}
+              onClick={toggleComments}
               $active={showComments}
               $color="#f000"
             >
@@ -1127,18 +1195,29 @@ useEffect(() => {
             </ActionButton>
           </ActionGroup>
         </Actions>
-  
-        {/* Seção de comentários */}
-        {showComments && (
-          <CommentSection 
-            memeId={meme._id}
-            onCommentSubmit={handleCommentSubmit}
-            onCommentCountChange={onCommentCountChange} 
-          />
-        )}
       </Card>
   
-      {/* Diálogo de confirmação de deleção */}
+      {/* Seção de comentários mobile */}
+      {showComments && (
+        <MobileCommentSection
+          $isOpen={showComments}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <CloseCommentsButton onClick={toggleComments}>
+            <FiChevronDown size={24} />
+          </CloseCommentsButton>
+          <CommentSectionContainer ref={commentSectionRef}>
+            <CommentSection 
+              memeId={meme._id}
+              onCommentSubmit={handleCommentSubmit}
+              onCommentCountChange={onCommentCountChange} 
+            />
+          </CommentSectionContainer>
+        </MobileCommentSection>
+      )}
+  
       {showConfirmDialog && (
         <ConfirmationDialog>
           <DialogContent>

@@ -64,6 +64,11 @@ const CommentContainer = styled.div`
   background: var(--card-bg);
   border-top: 1px solid var(--border-light);
   padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    border-top: none;
+  }
 `;
 
 const CommentList = styled.div`
@@ -71,6 +76,12 @@ const CommentList = styled.div`
   overflow-y: auto;
   margin-bottom: 1rem;
   padding-right: 0.5rem;
+
+  @media (max-width: 768px) {
+    max-height: none;
+    padding-right: 0;
+    margin-bottom: 0.5rem;
+  }
 
   &::-webkit-scrollbar {
     width: 0.375rem;
@@ -96,6 +107,11 @@ const CommentItem = styled.div`
   margin-left: ${props => props.$depth * 1.25}rem;
   border-left: ${props => props.$depth > 0 ? '2px solid var(--primary)' : 'none'};
   padding-left: ${props => props.$depth > 0 ? '0.75rem' : '0'};
+
+  @media (max-width: 768px) {
+    margin-left: ${props => props.$depth * 0.75}rem;
+    padding-left: ${props => props.$depth > 0 ? '0.5rem' : '0'};
+  }
 
   &:hover {
     transform: translateX(0.125rem);
@@ -172,7 +188,7 @@ const CommentUser = styled.div`
 const UserBadge = styled.span`
   font-size: 0.7rem;
   background: linear-gradient(135deg, #ff4500, #ff8c00);
-  color: background: var(--card-bg);
+  color: var(--card-bg); 
   padding: 2px 6px;
   border-radius: 12px;
 `;
@@ -205,6 +221,18 @@ const CommentForm = styled.form`
   transition: var(--transition);
   border: 1px solid var(--border-light);
 
+  @media (max-width: 768px) {
+    position: sticky;
+    bottom: 0;
+    margin-top: 0.5rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    background: var(--card-bg);
+    padding: 0.5rem;
+  }
+
   &:focus-within {
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
     border-color: var(--primary);
@@ -222,11 +250,16 @@ const CommentInput = styled.input`
   color: var(--input-text);
   transition: var(--transition);
 
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+    font-size: 16px; // Prevent zoom on iOS
+    min-height: 44px; // Tamanho mínimo para toque
+  }
+
   &:focus {
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   }
 `;
-
 
 const SubmitButton = styled.button`
   background: linear-gradient(135deg, #ff4500, #ff8c00);
@@ -242,6 +275,12 @@ const SubmitButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 2px 5px rgba(255, 69, 0, 0.3);
+
+  @media (max-width: 768px) {
+    width: 44px;
+    height: 44px;
+    margin-left: 4px;
+  }
 
   &:hover {
     background: linear-gradient(135deg, #e03d00, #e07d00);
@@ -421,7 +460,7 @@ const EditButtons = styled.div`
 
 const SaveButton = styled.button`
   background: linear-gradient(135deg, #ff4500, #ff8c00);
-  color: background: var(--card-bg);
+  color: var(--card-bg); 
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -537,6 +576,11 @@ const AttachButton = styled.button`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+
+  @media (max-width: 768px) {
+    width: 44px;
+    height: 44px;
+  }
 
   &:hover {
     background: #e0e0e0;
@@ -1243,6 +1287,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const [expandedReplies, setExpandedReplies] = useState({});
   const [repliesPagination, setRepliesPagination] = useState({});
   const [loadingReplies, setLoadingReplies] = useState({});
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
   // Funções auxiliares independentes
@@ -1628,29 +1673,119 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       console.error('Erro ao reagir ao comentário:', error);
     }
   }, [memeId, comments, findComment]);
+// Efeitos
+useEffect(() => {
+  fetchComments();
+}, [fetchComments, memeId]); // Adicionei memeId como dependência
 
-  // Efeitos
-  useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
+// Otimização: Evitar recálculos desnecessários
+const processedComments = useMemo(() => {
+  return Array.isArray(comments) ? processComments(comments) : [];
+}, [comments, processComments]);
 
-  const processedComments = useMemo(() => processComments(comments), [comments, processComments]);
+// Verificar se é mobile com tratamento de SSR
+const isMobile = useMemo(() => {
+  return typeof window !== 'undefined' ? window.innerWidth <= 768 : false;
+}, []);
 
-  return (
-    <CommentContainer data-testid="comment-section">
-      <CommentCount>
-        {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
-      </CommentCount>
-      
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-      
-      <CommentList>
-        {loading ? (
-          <LoadingMessage>Carregando comentários...</LoadingMessage>
-        ) : !comments || comments.length === 0 ? (
-          <EmptyMessage>Nenhum comentário ainda. Seja o primeiro!</EmptyMessage>
-        ) : (
-          processedComments.map(comment => (
+// Estado para controle do teclado virtual
+const [keyboardActive, setKeyboardActive] = useState(false);
+
+// Efeito para lidar com o teclado em mobile
+useEffect(() => {
+  if (!isMobile) return;
+
+  const handleFocus = () => setKeyboardActive(true);
+  const handleBlur = () => setKeyboardActive(false);
+
+  const input = document.getElementById('main-comment-input');
+  const fileInput = document.getElementById('comment-file-input');
+
+  if (input) {
+    input.addEventListener('focus', handleFocus);
+    input.addEventListener('blur', handleBlur);
+  }
+
+  return () => {
+    if (input) {
+      input.removeEventListener('focus', handleFocus);
+      input.removeEventListener('blur', handleBlur);
+    }
+    if (fileInput) {
+      fileInput.removeEventListener('focus', handleFocus);
+      fileInput.removeEventListener('blur', handleBlur);
+    }
+  };
+}, [isMobile]);
+
+// Componente para o botão de tentar novamente
+const RetryButton = styled.button`
+  margin-left: 10px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+// Componente para a mensagem de fim de lista
+const EndOfListMessage = styled.div`
+  text-align: center;
+  padding: 10px;
+  color: var(--text-light);
+  font-size: 0.9rem;
+`;
+
+return (
+  <CommentContainer 
+    data-testid="comment-section"
+    style={{
+      paddingBottom: keyboardActive ? '300px' : '0',
+      transition: 'padding-bottom 0.3s ease'
+    }}
+    aria-live="polite"
+    aria-atomic="true"
+  >
+    <CommentCount aria-live="polite">
+      {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
+    </CommentCount>
+    
+    {error && (
+      <ErrorMessage role="alert">
+        {error}
+        <RetryButton 
+          onClick={fetchComments}
+          aria-label="Tentar carregar comentários novamente"
+        >
+          Tentar novamente
+        </RetryButton>
+      </ErrorMessage>
+    )}
+    
+    <CommentList>
+      {loading ? (
+        <LoadingMessage aria-busy="true">
+          <div className="spinner" aria-hidden="true" />
+          Carregando comentários...
+        </LoadingMessage>
+      ) : !Array.isArray(comments) || comments.length === 0 ? (
+        <EmptyMessage>
+          Nenhum comentário ainda. Seja o primeiro!
+          {isMobile && (
+            <div style={{ marginTop: '10px' }}>
+              Role para baixo para comentar ↓
+            </div>
+          )}
+        </EmptyMessage>
+      ) : (
+        <div role="list">
+          {processedComments.map(comment => (
             <Comment 
               key={comment._id}
               comment={comment}
@@ -1682,86 +1817,105 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
               expandedReplies={expandedReplies}
               setExpandedReplies={setExpandedReplies}
             />
-          ))
-        )}
-      </CommentList>
+          ))}
+          {isMobile && comments.length > 3 && (
+            <EndOfListMessage>
+              Você chegou ao fim. Role para cima ↑
+            </EndOfListMessage>
+          )}
+        </div>
+      )}
+    </CommentList>
 
-      {currentUser && (
-        <>
-          <CommentForm onSubmit={handleSubmit}>
-            <CommentInput
-              type="text"
-              id="main-comment-input"
-              name="mainComment"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Escreva um comentário..."
-              aria-label="Escrever comentário"
+    {currentUser && (
+      <>
+        <CommentForm onSubmit={handleSubmit} role="form">
+          <CommentInput
+            type="text"
+            id="main-comment-input"
+            name="mainComment"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Escreva um comentário..."
+            aria-label="Escrever comentário"
+            data-testid="comment-input"
+            aria-required="true"
+          />
+          <ActionButtons>
+            <AttachButton 
+              type="button" 
+              onClick={() => document.getElementById('comment-file-input').click()}
+              aria-label="Anexar mídia"
+              data-testid="attach-media-button"
+            >
+              <FiPaperclip size={18} aria-hidden="true" />
+            </AttachButton>
+            <input
+              type="file"
+              id="comment-file-input"
+              style={{ display: 'none' }}
+              onChange={handleCommentMediaChange}
+              accept="image/*, video/*"
+              data-testid="media-input"
+              aria-label="Selecionar arquivo de mídia"
             />
-            <ActionButtons>
-              <AttachButton 
-                type="button" 
-                onClick={() => document.getElementById('comment-file-input').click()}
-                aria-label="Anexar mídia"
-              >
-                <FiPaperclip size={18} />
-              </AttachButton>
-              <input
-                type="file"
-                id="comment-file-input"
-                style={{ display: 'none' }}
-                onChange={handleCommentMediaChange}
-                accept="image/*, video/*"
-              />
-              <AttachButton 
-                type="button"
-                onClick={() => {
-                  setShowMemeSelector(true);
-                  fetchUserMemes();
-                }}
-                aria-label="Compartilhar meme"
-              >
-                <FiImage size={18} />
-              </AttachButton>
-              <SubmitButton type="submit" aria-label="Enviar comentário">
-                <FiSend size={18} />
-              </SubmitButton>
-            </ActionButtons>
-            
-            {(commentMedia || selectedMeme) && (
-              <MediaPreview 
-                file={commentMedia} 
-                meme={selectedMeme ? userMemes.find(m => m._id === selectedMeme) : null}
-                onRemove={() => {
-                  setCommentMedia(null);
-                  setSelectedMeme(null);
-                }} 
-              />
-            )}
-          </CommentForm>
-
-          {showMemeSelector && (
-            <MemeSelectorModal
-              memes={userMemes}
-              selectedMeme={currentReplyForMeme ? replySelectedMeme[currentReplyForMeme] : selectedMeme}
-              onSelect={handleSelectMeme}
-              onClose={() => {
-                setShowMemeSelector(false);
-                setCurrentReplyForMeme(null);
+            <AttachButton 
+              type="button"
+              onClick={() => {
+                setShowMemeSelector(true);
+                fetchUserMemes();
               }}
-              isForReply={!!currentReplyForMeme}
+              aria-label="Compartilhar meme"
+              data-testid="meme-selector-button"
+            >
+              <FiImage size={18} aria-hidden="true" />
+            </AttachButton>
+            <SubmitButton 
+              type="submit" 
+              aria-label="Enviar comentário"
+              disabled={!commentText.trim() && !commentMedia && !selectedMeme}
+              data-testid="submit-comment-button"
+              aria-disabled={!commentText.trim() && !commentMedia && !selectedMeme}
+            >
+              <FiSend size={18} aria-hidden="true" />
+            </SubmitButton>
+          </ActionButtons>
+          
+          {(commentMedia || selectedMeme) && (
+            <MediaPreview 
+              file={commentMedia} 
+              meme={selectedMeme ? userMemes.find(m => m._id === selectedMeme) : null}
+              onRemove={() => {
+                setCommentMedia(null);
+                setSelectedMeme(null);
+              }}
+              data-testid="media-preview"
             />
           )}
-        </>
-      )}
-    </CommentContainer>
-  );
-};
+        </CommentForm>
+
+        {showMemeSelector && (
+          <MemeSelectorModal
+            memes={userMemes}
+            selectedMeme={currentReplyForMeme ? replySelectedMeme[currentReplyForMeme] : selectedMeme}
+            onSelect={handleSelectMeme}
+            onClose={() => {
+              setShowMemeSelector(false);
+              setCurrentReplyForMeme(null);
+            }}
+            isForReply={!!currentReplyForMeme}
+            data-testid="meme-selector-modal"
+          />
+        )}
+      </>
+    )}
+  </CommentContainer>
+)};
 
 CommentSection.propTypes = {
   memeId: PropTypes.string.isRequired,
-  onCommentSubmit: PropTypes.func.isRequired
-  
+  onCommentSubmit: PropTypes.func.isRequired,
+  onCommentCountChange: PropTypes.func
 };
 
 export default CommentSection;
