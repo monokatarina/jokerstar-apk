@@ -394,12 +394,19 @@ const Username = styled.span`
 `;
 
 const ResponsiveImage = styled.img`
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
-  pointer-events: none;
+  transition: var(--transition);
+  border-radius: var(--radius-md);
+  
+  &:hover {
+    transform: scale(1.03);
+    filter: saturate(1.2) brightness(1.05);
+  }
 `;
-
 
 const ResponsiveVideo = styled.video`
   max-width: 100%;
@@ -419,16 +426,27 @@ const ResponsiveVideo = styled.video`
 
 const MediaContainer = styled.div`
   width: 100%;
-  height: 85vh;
+  max-height: 43.75rem;
+  min-height: 18.75rem;
+  background: var(--background);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
-  background: #000;
-  touch-action: pan-y;
+  overflow: hidden;
 `;
 
 const VideoContainer = styled.div`
-  width: 100%;
-  height: 85vh;
   position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: var(--radius-md);
 `;
 
 const PlayButton = styled.div`
@@ -942,58 +960,19 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isSq
     }
   };
 
-  const handleTouchEnd = (e) => {
-    if(!touchStartY.current) return;
-    
-    const touchY = e.changedTouches[0].clientY;
-    const deltaY = touchY - touchStartY.current;
-    
-    if(Math.abs(deltaY) > 50) {
-      if(deltaY > 0 && onScroll) onScroll('up');
-      if(deltaY < 0 && onScroll) onScroll('down');
-    }
+  const handleTouchEnd = () => {
+    touchStartY.current = null;
   };
-
-
 
   return (
     <>
-      <Card $deleting={isDeleting} style={isSquareView ? {
+      <Card $deleting={isDeleting}style={isFullScreen ? {
         width: '100%',
         height: '100%',
-        margin: 0,
+        marginBottom: 0,
         borderRadius: 0,
         border: 'none',
-        boxShadow: 'none',
-        
-        // Esconde elementos não essenciais na visualização quadrada
-        '& > header, & > p, & > div:not(:first-child)': {
-          display: 'none'
-        },
-        
-        // Estilo específico para o container de mídia
-        [MediaContainer]: {
-          height: '100%',
-          minHeight: 'auto',
-          borderRadius: 0
-        },
-        
-        // Ajusta a imagem/vídeo para preencher o quadrado
-        [ResponsiveImage]: {
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          borderRadius: 0,
-          transform: 'none',
-          filter: 'none'
-        },
-        
-        [ResponsiveVideo]: {
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          borderRadius: 0
-        }
+        boxShadow: 'none'
       } : {}}>
         {isDeleting && (
           <div style={{
@@ -1096,10 +1075,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isSq
           </Username>
         </Header>
         
-        <MediaContainer 
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          >
+        <MediaContainer>
           {meme.mediaType === 'image' ? (
             <ResponsiveImage 
               src={buildUrl(meme.mediaUrl)}
