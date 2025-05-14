@@ -1,62 +1,60 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { StatusBar} from '@capacitor/status-bar';
-import { Capacitor } from '@capacitor/core';
 import GlobalStyles from './styles/GlobalStyles';
+import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './styles/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+import PrivateRoute from './components/PrivateRoute';
+import Navbar from './components/Navbar/Navbar';
+import { StatusBar } from '@capacitor/status-bar';
+import { Keyboard } from '@capacitor/keyboard';
+
+// Importações individuais de páginas
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import FeedPage from './pages/FeedPage';
 import UploadPage from './pages/UploadPage';
 import ProfilePage from './pages/ProfilePage';
-import Navbar from './components/Navbar/Navbar';
-import { AuthProvider } from './contexts/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
 import TrendingPage from './pages/TrendingPage';
-import { ThemeProvider } from './styles/ThemeContext';
-import { NotificationProvider } from './contexts/NotificationContext';
 import MemeDetailPage from './pages/MemeDetailPage';
-import { Keyboard } from '@capacitor/keyboard';
 
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  padding-top: ${Capacitor.isNativePlatform() ? 'env(safe-area-inset-top)' : '0'};
-  padding-bottom: ${Capacitor.isNativePlatform() ? 'env(safe-area-inset-bottom)' : '0'};
+  background: var(--background);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 `;
 
 const MainContent = styled.main`
   flex: 1;
-  padding: ${Capacitor.isNativePlatform() ? '0' : '1rem'};
-  padding-top: ${Capacitor.isNativePlatform() ? '60px' : '0'};
-  background-color: var(--background);
-  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0 0 72px; /* Bottom padding para a navigation bar */
+  -webkit-overflow-scrolling: touch;
   
   @media (max-width: 768px) {
-    padding-top: ${Capacitor.isNativePlatform() ? '60px' : '0'};
-    padding: 0;
+    padding-bottom: 64px;
   }
 `;
 
-const MobileSafeArea = styled.div`
-  padding-top: ${Capacitor.isNativePlatform() ? '60px' : '0'};
+const KeyboardSpacer = styled.div`
+  height: var(--keyboard-height, 0px);
+  transition: height 0.3s ease;
 `;
 
 function App() {
-  // Configurações específicas para mobile
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Configura a status bar
       StatusBar.setOverlaysWebView({ overlay: true });
       StatusBar.setBackgroundColor({ color: '#00000000' });
-      
-      // Ajusta o layout quando o teclado aparece
-      Keyboard.addListener('keyboardWillShow', () => {
-        document.documentElement.style.setProperty('--keyboard-height', '300px');
+
+      Keyboard.addListener('keyboardWillShow', (info) => {
+        document.documentElement.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
       });
-      
+
       Keyboard.addListener('keyboardWillHide', () => {
         document.documentElement.style.setProperty('--keyboard-height', '0px');
       });
@@ -70,58 +68,28 @@ function App() {
           <ThemeProvider>
             <GlobalStyles />
             <AppContainer>
-              {Capacitor.isNativePlatform() ? (
-                <>
-                  <Navbar />
-                  <MobileSafeArea>
-                    <MainContent>
-                      <Routes>
-                        {/* Rotas públicas */}
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/memes/:id" element={<MemeDetailPage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
-                        <Route path="/users/:userId" element={<ProfilePage />} />
-                        <Route path="/trending" element={<TrendingPage />} />
-                        
-                        {/* Rotas protegidas */}
-                        <Route path="/feed" element={
-                          <PrivateRoute>
-                            <FeedPage />
-                          </PrivateRoute>
-                        } />
-                        
-                        <Route path="/upload" element={
-                          <PrivateRoute>
-                            <UploadPage />
-                          </PrivateRoute>
-                        } />
-                        
-                        {/* Rota para páginas não encontradas */}
-                        <Route path="*" element={<Navigate to="/" />} />
-                      </Routes>
-                    </MainContent>
-                  </MobileSafeArea>
-                </>
-              ) : (
-                <>
-                  <Navbar />
-                  <MainContent>
-                    <Routes>
-                      {/* Mesmas rotas para versão web */}
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/memes/:id" element={<MemeDetailPage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/users/:userId" element={<ProfilePage />} />
-                      <Route path="/trending" element={<TrendingPage />} />
-                      <Route path="/feed" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
-                      <Route path="/upload" element={<PrivateRoute><UploadPage /></PrivateRoute>} />
-                      <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
-                  </MainContent>
-                </>
-              )}
+              <Navbar />
+              
+              <MainContent>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/memes/:id" element={<MemeDetailPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/users/:userId" element={<ProfilePage />} />
+                  <Route path="/trending" element={<TrendingPage />} />
+
+                  {/* Protected Routes */}
+                  <Route path="/feed" element={<PrivateRoute><FeedPage /></PrivateRoute>} />
+                  <Route path="/upload" element={<PrivateRoute><UploadPage /></PrivateRoute>} />
+
+                  {/* Fallback Route */}
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </MainContent>
+
+              <KeyboardSpacer />
             </AppContainer>
           </ThemeProvider>
         </Router>

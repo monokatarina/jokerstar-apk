@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { FiBell, FiCheck, FiTrash2, FiX } from 'react-icons/fi';
+import { FiBell, FiCheck, FiTrash2 } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { useNavigate } from 'react-router-dom';
-import { Capacitor } from '@capacitor/core';
 import { StatusBar } from '@capacitor/status-bar';
-
+import { Capacitor } from '@capacitor/core';
 
 // Animations
 const fadeIn = keyframes`
@@ -279,7 +278,7 @@ const NotificationDropdown = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Fecha o dropdown quando clica fora
+  // Handle click outside for mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -288,23 +287,28 @@ const NotificationDropdown = () => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, []);
 
-  // Ajusta a status bar quando o dropdown é aberto
+  // Status bar adjustments for mobile
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       if (isOpen) {
         StatusBar.setBackgroundColor({ color: '#1E1E1E' });
+        StatusBar.setStyle({ style: 'dark' });
       } else {
         StatusBar.setBackgroundColor({ color: '#00000000' });
+        StatusBar.setStyle({ style: 'light' });
       }
     }
   }, [isOpen]);
 
-  // Marca como lido quando o dropdown é aberto
+  // Mark as read when opened
   useEffect(() => {
     if (isOpen && unreadCount > 0) {
       const unreadIds = notifications
@@ -318,6 +322,8 @@ const NotificationDropdown = () => {
   }, [isOpen, notifications, unreadCount, markAsRead]);
 
   const handleItemClick = (notification) => {
+    setIsOpen(false);
+    
     if (notification.meme) {
       navigate(`/memes/${notification.meme._id}`);
     } else if (notification.comment) {
@@ -329,7 +335,6 @@ const NotificationDropdown = () => {
         state: { highlightReply: notification.reply._id } 
       });
     }
-    setIsOpen(false);
   };
 
   const handleMarkAllRead = async () => {
@@ -357,7 +362,9 @@ const NotificationDropdown = () => {
             {notification.metadata?.context === 'comment' ? 'comentário' : 'meme'}
             {notification.metadata?.text && (
               <QuoteText>
-                "{truncate(notification.metadata.text, 50)}"
+                "{notification.metadata.text.length > 50 
+                  ? notification.metadata.text.substring(0, 47) + '...' 
+                  : notification.metadata.text}"
               </QuoteText>
             )}
           </>
@@ -369,7 +376,9 @@ const NotificationDropdown = () => {
             <HighlightText>{notification.sender?.username || 'Alguém'}</HighlightText> curtiu seu meme
             {notification.meme?.caption && (
               <QuoteText>
-                "{truncate(notification.meme.caption, 50)}"
+                "{notification.meme.caption.length > 50 
+                  ? notification.meme.caption.substring(0, 47) + '...' 
+                  : notification.meme.caption}"
               </QuoteText>
             )}
           </>
@@ -381,7 +390,9 @@ const NotificationDropdown = () => {
             Seu meme tem <HighlightText>{notification.metadata?.count || 'muitas'} curtidas</HighlightText>
             {notification.meme?.caption && (
               <QuoteText>
-                "{truncate(notification.meme.caption, 50)}"
+                "{notification.meme.caption.length > 50 
+                  ? notification.meme.caption.substring(0, 47) + '...' 
+                  : notification.meme.caption}"
               </QuoteText>
             )}
           </>
@@ -393,7 +404,9 @@ const NotificationDropdown = () => {
             <HighlightText>{notification.sender?.username || 'Alguém'}</HighlightText> comentou no seu meme: 
             {notification.comment?.text ? (
               <QuoteText>
-                "{truncate(notification.comment.text, 60)}"
+                "{notification.comment.text.length > 60 
+                  ? notification.comment.text.substring(0, 57) + '...' 
+                  : notification.comment.text}"
               </QuoteText>
             ) : (
               <QuoteText>Novo comentário</QuoteText>
@@ -407,7 +420,9 @@ const NotificationDropdown = () => {
             Seu meme tem <HighlightText>{notification.metadata?.count || 'muitos'} comentários</HighlightText>
             {notification.meme?.caption && (
               <QuoteText>
-                "{truncate(notification.meme.caption, 50)}"
+                "{notification.meme.caption.length > 50 
+                  ? notification.meme.caption.substring(0, 47) + '...' 
+                  : notification.meme.caption}"
               </QuoteText>
             )}
           </>
@@ -433,15 +448,18 @@ const NotificationDropdown = () => {
     }
   };
 
-  const truncate = (str, n) => {
-    return str?.length > n ? str.substr(0, n-1) + '...' : str;
-  };
-
   return (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      <NotificationButton onClick={() => setIsOpen(!isOpen)}>
+      <NotificationButton 
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notificações"
+      >
         <FiBell size={24} />
-        {unreadCount > 0 && <Badge>{unreadCount > 9 ? '9+' : unreadCount}</Badge>}
+        {unreadCount > 0 && (
+          <Badge aria-hidden="true">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </Badge>
+        )}
       </NotificationButton>
       
       <Dropdown $isOpen={isOpen}>
@@ -452,12 +470,16 @@ const NotificationDropdown = () => {
               <ActionButton 
                 $danger 
                 onClick={() => setShowClearConfirmation(true)}
+                aria-label="Limpar notificações"
               >
                 <FiTrash2 size={16} /> Limpar
               </ActionButton>
             )}
             {notifications.some(n => !n.read) && (
-              <ActionButton onClick={handleMarkAllRead}>
+              <ActionButton 
+                onClick={handleMarkAllRead}
+                aria-label="Marcar todas como lidas"
+              >
                 <FiCheck size={16} /> Lidas
               </ActionButton>
             )}
@@ -482,6 +504,7 @@ const NotificationDropdown = () => {
                 $unread={!notification.read}
                 $type={notification.type}
                 onClick={() => handleItemClick(notification)}
+                aria-label={`Notificação de ${notification.type}`}
               >
                 <Avatar
                   src={
@@ -529,10 +552,16 @@ const NotificationDropdown = () => {
               Esta ação não pode ser desfeita.
             </ConfirmationText>
             <ConfirmationButtons>
-              <ConfirmationButton onClick={handleClearAll}>
+              <ConfirmationButton 
+                onClick={handleClearAll}
+                aria-label="Confirmar limpar notificações"
+              >
                 Limpar
               </ConfirmationButton>
-              <ConfirmationButton onClick={() => setShowClearConfirmation(false)}>
+              <ConfirmationButton 
+                onClick={() => setShowClearConfirmation(false)}
+                aria-label="Cancelar"
+              >
                 Cancelar
               </ConfirmationButton>
             </ConfirmationButtons>

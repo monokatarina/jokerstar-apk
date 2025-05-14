@@ -1,0 +1,41 @@
+{
+  "appId": "com.jokester.app",
+  "appName": "jokerstar",
+  "webDir": "web-build",
+  "bundledWebRuntime": true,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#121212",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "overlaysWebView": false
+    },
+    "StatusBar": {
+      "backgroundColor": "#121212",
+      "style": "dark",
+      "overlaysWebView": true
+    }
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false,
+    "buildOptions": {
+      "keystorePath": "",
+      "keystoreAlias": ""
+    }
+  },
+  "server": {
+    "url": "https://jokerstar-apk.vercel.app",
+    "cleartext": false,
+    "hostname": "jokerstar-apk.vercel.app"
+  }
+}

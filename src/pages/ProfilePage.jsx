@@ -28,10 +28,10 @@ const spin = keyframes`
 const ProfileContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px; // Reduzido de 20px
   animation: ${fadeIn} 0.5s ease-out;
   background-color: var(--background);
-  min-height: 100vh;
+  min-height: calc(100vh - 50px); // Ajustado para altura do navbar
 
   @media (max-width: 768px) {
     padding: 0;
@@ -150,13 +150,13 @@ const NotFoundText = styled.p`
 `;
 
 const ContentContainer = styled.div`
-  margin-top: 30px;
+  margin-top: 15px; // Reduzido de 30px
   animation: ${fadeIn} 0.6s ease-out;
-  padding-bottom: 60px; // Espaço para o bottom navigation
+  padding-bottom: 20px; // Reduzido de 60px
 
   @media (max-width: 768px) {
-    margin-top: 20px;
-    padding: 0 15px 80px;
+    margin-top: 10px;
+    padding: 0 10px 20px; // Reduzido padding
   }
 `;
 

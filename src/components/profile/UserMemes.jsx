@@ -2,101 +2,81 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import api from '../../services/api';
 import { useParams } from 'react-router-dom';
-import MemeThumbnail from '../MemeThumbnail';
+import MemeCard from '../MemeCard';
 import { PulseLoader } from 'react-spinners';
 import { FaSadTear, FaSmileWink } from 'react-icons/fa';
 import { useAuth } from '../../contexts/AuthContext';
 
 const Container = styled.div`
-  max-width: 100%;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 10px;
+  padding: 20px;
 `;
 
 const MemeGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  padding: 20px;
 
-  @media (min-width: 400px) {
-    grid-template-columns: repeat(4, 1fr);
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
   }
 
-  @media (min-width: 600px) {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
-  @media (min-width: 900px) {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 6px;
-  }
-`;
-
-const MemeContainer = styled.div`
-  aspect-ratio: 1;
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-
-  &:hover {
-    transform: scale(0.98);
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
 `;
 
 const StatusMessage = styled.div`
-  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 300px;
   text-align: center;
-  padding: 20px;
+  padding: 40px;
   background: ${({ theme }) => theme.cardBg || '#f8f9fa'};
-  border-radius: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   color: ${({ theme }) => theme.text || '#333'};
 
   svg {
-    font-size: 2rem;
-    margin-bottom: 15px;
+    font-size: 3rem;
+    margin-bottom: 20px;
     color: ${({ theme }) => theme.primary || '#6c5ce7'};
   }
 
   h3 {
-    font-size: 1.2rem;
-    margin-bottom: 8px;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
   }
 
   p {
-    font-size: 0.9rem;
+    font-size: 1rem;
     opacity: 0.8;
   }
 `;
 
-const LoadMoreButton = styled.button`
-  grid-column: 1 / -1;
-  margin: 10px auto;
-  padding: 8px 16px;
-  background: ${({ theme }) => theme.primary || '#6c5ce7'};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+const Title = styled.h2`
+  font-size: 2rem;
+  color: ${({ theme }) => theme.text || '#333'};
+  margin-bottom: 20px;
+  padding-left: 20px;
+  position: relative;
 
-  &:hover {
-    background: ${({ theme }) => theme.primaryHover || '#5649c0'};
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 70%;
+    width: 5px;
+    background: ${({ theme }) => theme.primary || '#6c5ce7'};
+    border-radius: 5px;
   }
 `;
 
@@ -106,108 +86,100 @@ const UserMemes = () => {
   const [memes, setMemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-
-  const fetchUserMemes = async (pageNum = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data } = await api.get(`/users/${userId}/memes`, {
-        params: { page: pageNum, limit: 30 }
-      });
-      
-      const validMemes = data.memes.filter(meme => {
-        const isNotDeleted = !meme.isDeleted;
-        const hasValidAuthor = meme.author && !meme.author.isDeleted;
-        return isNotDeleted && hasValidAuthor;
-      });
-
-      setMemes(prev => pageNum === 1 ? validMemes : [...prev, ...validMemes]);
-      setHasMore(data.hasMore);
-    } catch (err) {
-      setError('Falha ao carregar memes');
-      console.error('Erro ao buscar memes:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserMemes();
-  }, [userId]);
-
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchUserMemes(nextPage);
-  };
 
   const handleMemeDeleted = (deletedMemeId) => {
     setMemes(prev => prev.filter(m => m._id !== deletedMemeId));
   };
 
-  if (loading && memes.length === 0) {
-    return (
-      <Container>
-        <StatusMessage>
-          <PulseLoader color="#6c5ce7" size={10} />
-          <h3>Carregando memes...</h3>
-        </StatusMessage>
-      </Container>
-    );
-  }
+  useEffect(() => {
+    const fetchUserMemes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // 1. Busca memes do backend (que já deve filtrar isDeleted)
+        const { data } = await api.get(`/users/${userId}/memes`);
+        
+        // 2. Filtro adicional no frontend como segurança redundante
+        const validMemes = data.filter(meme => {
+          // Verifica se o meme não está deletado
+          const isNotDeleted = !meme.isDeleted;
+          // Verifica se o autor não foi deletado
+          const hasValidAuthor = meme.author && !meme.author.isDeleted;
+          return isNotDeleted && hasValidAuthor;
+        });
 
-  if (error) {
-    return (
-      <Container>
-        <StatusMessage>
-          <FaSadTear />
-          <h3>Oops! Algo deu errado</h3>
-          <p>{error}</p>
-          <LoadMoreButton onClick={() => fetchUserMemes()}>
-            Tentar novamente
-          </LoadMoreButton>
-        </StatusMessage>
-      </Container>
-    );
-  }
+        setMemes(validMemes);
+      } catch (err) {
+        setError('Falha ao carregar memes');
+        console.error('Erro ao buscar memes:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (memes.length === 0) {
-    return (
-      <Container>
-        <StatusMessage>
-          <FaSmileWink />
-          <h3>Nenhum meme encontrado</h3>
-          <p>Parece que este usuário ainda não criou memes</p>
-        </StatusMessage>
-      </Container>
-    );
-  }
+    fetchUserMemes();
+  }, [userId]);
+
+  // Função para deletar meme
+  const handleDeleteMeme = async (memeId) => {
+    try {
+      await api.delete(`/memes/${memeId}`);
+      handleMemeDeleted(memeId); // Atualização otimista
+    } catch (error) {
+      console.error('Erro ao deletar meme:', error);
+      if (error.response?.status === 410) {
+        // Se o meme já foi deletado, remove da lista mesmo assim
+        handleMemeDeleted(memeId);
+      }
+      alert(error.response?.data?.message || 'Erro ao deletar meme');
+    }
+  };
+
+
+  if (loading) return (
+    <Container>
+      <StatusMessage>
+        <PulseLoader color="#6c5ce7" size={15} />
+        <h3>Carregando memes...</h3>
+        <p>Preparando as melhores piadas pra você</p>
+      </StatusMessage>
+    </Container>
+  );
+
+  if (error) return (
+    <Container>
+      <StatusMessage>
+        <FaSadTear />
+        <h3>Oops! Algo deu errado</h3>
+        <p>{error}</p>
+        <p>Tente recarregar a página</p>
+      </StatusMessage>
+    </Container>
+  );
+
+  if (memes.length === 0) return (
+    <Container>
+      <StatusMessage>
+        <FaSmileWink />
+        <h3>Nenhum meme encontrado</h3>
+        <p>Parece que este usuário ainda não criou memes</p>
+      </StatusMessage>
+    </Container>
+  );
 
   return (
     <Container>
+      <Title>Posts</Title>
       <MemeGrid>
         {memes.map(meme => (
-          <MemeContainer key={meme._id}>
-            <MemeThumbnail 
-              meme={meme}
-              compactMode={true}
-              showDetailsOnHover={false}
-              onDelete={currentUser?._id === meme.author?._id ? handleMemeDeleted : null}
-            />
-          </MemeContainer>
+          <MemeCard 
+            key={meme._id} 
+            meme={meme}
+            onDelete={handleDeleteMeme}
+            isOwner={currentUser?._id === meme.author?._id}
+          />
         ))}
-        
-        {hasMore && (
-          <LoadMoreButton 
-            onClick={handleLoadMore}
-            disabled={loading}
-          >
-            {loading ? 'Carregando...' : 'Ver mais'}
-          </LoadMoreButton>
-        )}
       </MemeGrid>
     </Container>
   );

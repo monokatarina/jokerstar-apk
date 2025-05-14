@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cores principais (baseadas no seu tema gradient) -->
+    <color name="colorPrimary">#FF7300</color>       <!-- Laranja mais claro -->
+    <color name="colorPrimaryDark">#E64105</color>   <!-- Laranja mais escuro -->
+    <color name="colorAccent">#1DA1F2</color>        <!-- Azul para acentos -->
+
+    <!-- Cores do tema -->
+    <color name="background">#121212</color>         <!-- Fundo escuro -->
+    <color name="textPrimary">#FFFFFF</color>        <!-- Texto claro -->
+    <color name="textSecondary">#CCCCCC</color>      <!-- Texto secundário -->
+    
+    <!-- Cores para modo dark/light -->
+    <color name="background_light">#FAFAFA</color>
+    <color name="textPrimary_light">#333333</color>
+    <color name="textSecondary_light">#666666</color>
+
+    <!-- Cores de feedback -->
+    <color name="success">#00C851</color>
+    <color name="error">#FF4444</color>
+    <color name="warning">#FF9500</color>
+    <color name="info">#1DA1F2</color>
+</resources>
