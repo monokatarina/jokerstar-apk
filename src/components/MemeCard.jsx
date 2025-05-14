@@ -106,6 +106,8 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   background: var(--card-bg);
   height: 80vh;
   max-height: 80vh;
+  z-index: 1004;
+  pointer-events: auto; 
   /* Novo estilo para o handle de arraste */
   &::before {
     content: '';
@@ -126,7 +128,8 @@ const DragHandle = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  height: 160px; /* Área maior para arraste */
+  height: 48px; /* Área maior para arraste */
+  z-index: 1;
   cursor: grab;
   display: flex;
   justify-content: center;
@@ -139,8 +142,10 @@ const DragHandle = styled.div`
 
 const CommentSectionContainer = styled.div`
   flex: 1;
+  z-index: 2;
   overflow-y: auto;
   padding: 16px;
+  position: relative;
   padding-bottom: 0;
 `;
 
@@ -1018,12 +1023,13 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   };
 
   const handleTouchStart = (e) => {
-    if (e.target.closest('.reaction-button')) {
-      return;
-    }
+    // Verificar se o toque começou na área de arraste superior
+    const isHandleTouch = e.target.closest('.drag-handle');
+    if (!isHandleTouch) return;
+    
     touchStartY.current = e.touches[0].clientY;
     setIsDragging(true);
-    setDragOffset(0); 
+    setDragOffset(0);
   };
 
   const handleTouchMove = (e) => {
@@ -1032,15 +1038,19 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     const touchY = e.touches[0].clientY;
     const deltaY = touchY - touchStartY.current;
     
-    if (deltaY > 10) {
+    // Limitar o arraste para baixo
+    if (deltaY > 0) {
       setDragOffset(Math.min(deltaY * 0.7, 180));
     }
   };
 
   const handleTouchEnd = () => {
+    if (!isDragging) return;
+    
     setIsDragging(false);
     
-    if (dragOffset > 85 || (dragOffset > 30 && Date.now() - touchStartTime.current < 200)) {
+    // Só fecha se arrastado mais de 100px ou movimento rápido
+    if (dragOffset > 100) {
       setShowComments(false);
     }
     setDragOffset(0);
@@ -1297,19 +1307,22 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
           <ImprovedMobileCommentSection
             $isOpen={showComments}
             $offset={dragOffset}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
           >
             <DragHandle 
+              className="drag-handle"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             />
             
-            <CommentSectionContainer 
+            <CommentSectionContainer
+              style={{
+                touchAction: isDragging ? 'none' : 'auto',
+                pointerEvents: isDragging ? 'none' : 'auto'
+                }}
               ref={commentSectionRef}
               onScroll={() => setIsDragging(false)}
+              onClick={(e) => e.stopPropagation()}
             >
               <CloseCommentsButton onClick={toggleComments}>
                 <FiChevronDown size={24} />

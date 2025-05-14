@@ -227,7 +227,7 @@ const CommentTime = styled.small`
 `;
 
 const CommentForm = styled.form`
-  z-index: 1001;
+
   display: flex;
   align-items: center;
   margin-top: 1rem;
@@ -254,7 +254,6 @@ const CommentForm = styled.form`
     padding: 0.25rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     transition: bottom 0.3s ease;
-    z-index: 1001; // Adicionar z-index alto
   }
 `;
 
@@ -625,7 +624,6 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
 `;
 
 const ModalContent = styled.div`
