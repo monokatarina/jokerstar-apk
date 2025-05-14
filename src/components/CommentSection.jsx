@@ -1027,42 +1027,34 @@ const Comment = memo(({
   // Verifica se há mais respostas para carregar
   const hasMoreReplies = comment.repliesCount > (comment.replies?.length || 0);
 
-
-  const loadAllReplies = async (commentId) => {
-    if (!fullyExpanded[commentId]) {
-      try {
-        setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
-        const response = await api.get(`/memes/${memeId}/comments/${commentId}/replies?limit=100`);
-        
-        setComments(prev => {
-          const updateReplies = (comments) => comments.map(c => {
-            if (c._id === commentId) {
-              return {
-                ...c,
-                replies: response.data?.data || []
-              };
-            }
-            if (c.replies) {
-              return {
-                ...c,
-                replies: updateReplies(c.replies)
-              };
-            }
-            return c;
-          });
-          return updateReplies(prev);
+  const toggleExpandReplies = useCallback((commentId) => {
+    setExpandedReplies(prev => {
+      const newExpanded = {...prev};
+      const isExpanded = !prev[commentId];
+      
+      // Função recursiva para expandir/collapsar todas as respostas aninhadas
+      const toggleNestedReplies = (replies) => {
+        replies.forEach(reply => {
+          newExpanded[reply._id] = isExpanded;
+          if (reply.replies && reply.replies.length > 0) {
+            toggleNestedReplies(reply.replies);
+          }
         });
+      };
 
-        setFullyExpanded(prev => ({ ...prev, [commentId]: true }));
-      } catch (error) {
-        console.error('Erro ao carregar respostas:', error);
-      } finally {
-        setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
+      // Aplica para o comentário atual
+      newExpanded[commentId] = isExpanded;
+      
+      // Aplica recursivamente para todas as respostas
+      const comment = findComment(comments, commentId);
+      if (comment && comment.replies) {
+        toggleNestedReplies(comment.replies);
       }
-    } else {
-      setFullyExpanded(prev => ({ ...prev, [commentId]: false }));
-    }
-  };
+
+      return newExpanded;
+    });
+  }, [comments, findComment]);
+
 
   return (
     <React.Fragment>
@@ -1447,7 +1439,7 @@ const Comment = memo(({
           {/* Mostra a primeira resposta ou todas se expandido */}
           {(expandedReplies[comment._id] ? comment.replies : [comment.replies[0]]).map(reply => (
             <Comment 
-              key={reply._id}
+              key={reply._id} 
               comment={reply}
               depth={depth + 1}
               parentCommentId={comment._id}
@@ -1488,27 +1480,7 @@ const Comment = memo(({
               paddingLeft: depth > 0 ? '1rem' : '0'
             }}>
               <button
-                onClick={() => {
-                  // Expande todas as respostas aninhadas recursivamente
-                  const newExpanded = {...expandedReplies};
-                  const expandNested = (replies) => {
-                    replies.forEach(reply => {
-                      newExpanded[reply._id] = true;
-                      if (reply.replies && reply.replies.length > 0) {
-                        expandNested(reply.replies);
-                      }
-                    });
-                  };
-
-                  if (!expandedReplies[comment._id]) {
-                    expandNested(comment.replies);
-                  }
-
-                  setExpandedReplies({
-                    ...newExpanded,
-                    [comment._id]: !expandedReplies[comment._id]
-                  });
-                }}
+                onClick={() => toggleExpandReplies(comment._id)}
                 disabled={loadingReplies[comment._id]}
                 style={{
                   background: 'rgba(var(--primary-rgb), 0.08)',
@@ -2388,6 +2360,7 @@ const EndOfListMessage = styled.div`
                 loadingReplies={loadingReplies}
                 expandedReplies={expandedReplies}
                 setExpandedReplies={setExpandedReplies}
+                findComment={findComment}
               />
             ))}
             {isMobile && comments.length > 3 && (
