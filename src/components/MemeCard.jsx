@@ -127,15 +127,25 @@ const DragHandle = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  height: 48px; /* Área maior para arraste */
+  height: 48px;
   z-index: 1;
   cursor: grab;
   display: flex;
   justify-content: center;
   align-items: center;
+  background: linear-gradient(to bottom, 
+    rgba(0,0,0,0.1) 0%,
+    rgba(0,0,0,0.05) 50%,
+    transparent 100%
+  ); // Feedback visual
   
   &:active {
     cursor: grabbing;
+    background: linear-gradient(to bottom, 
+      rgba(0,0,0,0.15) 0%,
+      rgba(0,0,0,0.1) 50%,
+      transparent 100%
+    );
   }
 `;
 
@@ -145,6 +155,24 @@ const CommentSectionContainer = styled.div`
   padding: 16px;
   position: relative;
   padding-bottom: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease; // Adicionar transição suave
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  
+  /* Melhorar a barra de rolagem */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--primary-rgb), 0.5);
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.1);
+  }
 `;
 
 const CommentFormContainer = styled.div`
@@ -1039,19 +1067,24 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     const touchY = e.touches[0].clientY;
     const deltaY = touchY - dragStart;
     
-    // Limitar o arraste para baixo
+    // Aumentar sensibilidade do arraste
     if (deltaY > 0) {
-      setCurrentDrag(Math.min(deltaY, 300));
-      setShouldClose(deltaY > 100);
+      setCurrentDrag(Math.min(deltaY * 1.2, 300)); // Aumentar fator de sensibilidade
+      setShouldClose(deltaY > 80); // Reduzir limiar para 80px
       
-      // Bloquear a rolagem enquanto arrasta
+      // Adicionar feedback visual imediato
       if (commentSectionRef.current) {
-        commentSectionRef.current.style.overflow = 'hidden';
+        commentSectionRef.current.style.transform = `translateY(${deltaY * 0.5}px)`;
+        commentSectionRef.current.style.opacity = 1 - (deltaY / 300);
       }
     }
   };
 
   const handleTouchEnd = () => {
+    if (commentSectionRef.current) {
+      commentSectionRef.current.style.transform = 'none';
+      commentSectionRef.current.style.opacity = 1;
+    }
     if (dragStart === null) return;
     
     if (shouldClose) {
@@ -1334,7 +1367,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
 
           <ImprovedMobileCommentSection
             $isOpen={showComments}
-            $offset={dragOffset}
+            $offset={currentDrag}
           >
             <DragHandle 
               className="drag-handle"
