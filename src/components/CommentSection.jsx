@@ -286,8 +286,8 @@ const SubmitButton = styled.button`
   background: linear-gradient(135deg, #ff4500, #ff8c00);
   color: white;
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   margin-left: 8px;
   display: flex;
@@ -298,9 +298,9 @@ const SubmitButton = styled.button`
   box-shadow: 0 2px 5px rgba(255, 69, 0, 0.3);
 
   @media (max-width: 768px) {
-    width: 44px;
-    height: 44px;
-    margin-left: 4px;
+    width: 26px;
+    height: 26px;
+    margin-left: 2px;
   }
 
   &:hover {
@@ -356,7 +356,7 @@ const ReactionButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1rem;
   padding: 0.25rem 0.625rem;
   border-radius: 1rem;
   transition: var(--transition);
@@ -589,8 +589,8 @@ const AttachButton = styled.button`
   background: var(--background);
   color: var(--text-light);
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -599,8 +599,8 @@ const AttachButton = styled.button`
   transition: all 0.2s;
 
   @media (max-width: 768px) {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
   }
 
   &:hover {
