@@ -101,18 +101,22 @@ const MobileCommentSection = styled.div`
 const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform: translateY(calc(${props => props.$offset}px + ${props => props.$isOpen ? '0%' : '100%'}));
-  
+  opacity: ${props => 1 - (props.$offset / 200)};
+  border-radius: 16px 16px 0 0;
+  background: var(--card-bg);
+  height: 60vh;
+  max-height: 60vh;
   /* Novo estilo para o handle de arraste */
   &::before {
     content: '';
     position: absolute;
-    top: 12px; /* Aumentado de 8px para 12px */
+    top: 12px; 
     left: 50%;
     transform: translateX(-50%);
-    width: 60px; /* Aumentado de 40px para 60px */
-    height: 6px; /* Aumentado de 4px para 6px */
+    width: 60px; 
+    height: 6px; 
     background: var(--text-light);
-    border-radius: 3px; /* Aumentado de 2px para 3px */
+    border-radius: 3px; 
     opacity: ${props => 1 - (props.$offset / 100)};
   }
 `;
@@ -1018,6 +1022,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   const handleTouchStart = (e) => {
     touchStartY.current = e.touches[0].clientY;
     setIsDragging(true);
+    setDragOffset(0); 
   };
 
   const handleTouchMove = (e) => {
@@ -1027,14 +1032,14 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     const deltaY = touchY - touchStartY.current;
     
     if (deltaY > 0) {
-      setDragOffset(Math.min(deltaY, 100));
+      setDragOffset(Math.min(deltaY * 0.7, 150));
     }
   };
 
   const handleTouchEnd = () => {
     setIsDragging(false);
     
-    if (dragOffset > 40) {
+    if (dragOffset > 60 || (dragOffset > 30 && Date.now() - touchStartTime.current < 200)) {
       setShowComments(false);
     }
     setDragOffset(0);

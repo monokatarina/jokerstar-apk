@@ -117,16 +117,16 @@ const CommentList = styled.div`
 
 const CommentItem = styled.div`
   display: flex;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   position: relative;
   transition: var(--transition);
-  margin-left: ${props => props.$depth * 1.25}rem;
+  margin-left: ${props => props.$depth * 0.75}rem;
   border-left: ${props => props.$depth > 0 ? '2px solid var(--primary)' : 'none'};
-  padding-left: ${props => props.$depth > 0 ? '0.75rem' : '0'};
+  padding-left: ${props => props.$depth > 0 ? '0.5rem' : '0'};
 
   @media (max-width: 768px) {
-    margin-left: ${props => props.$depth * 0.75}rem;
-    padding-left: ${props => props.$depth > 0 ? '0.5rem' : '0'};
+    margin-left: ${props => props.$depth * 0.5}rem;
+    padding-left: ${props => props.$depth > 0 ? '0.25rem' : '0'};
   }
 
   &:hover {
@@ -154,10 +154,10 @@ const CommentItem = styled.div`
 `;
 
 const CommentAvatar = styled.img`
-  width: ${props => props.$isReply ? '32px' : '40px'};
-  height: ${props => props.$isReply ? '32px' : '40px'};
+  width: ${props => props.$isReply ? '28px' : '32px'};
+  height: ${props => props.$isReply ? '28px' : '32px'};
   border-radius: 50%;
-  margin-right: 12px;
+  margin-right: 8px;
   object-fit: cover;
   border: 2px solid var(--background);
   transition: all 0.2s;
@@ -171,7 +171,7 @@ const CommentAvatar = styled.img`
 const CommentContent = styled.div`
   flex: 1;
   background: var(--comment-bg);
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-radius: var(--radius-md);
   position: relative;
   box-shadow: var(--shadow-sm);
@@ -194,7 +194,7 @@ const CommentHeader = styled.div`
 
 const CommentUser = styled.div`
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--text);
   display: flex;
   align-items: center;
@@ -210,9 +210,9 @@ const UserBadge = styled.span`
 `;
 
 const CommentText = styled.p`
-  margin: 8px 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  margin: 4px 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
@@ -251,7 +251,7 @@ const CommentForm = styled.form`
     border-right: none;
     border-bottom: none;
     background: var(--card-bg);
-    padding: 0.5rem;
+    padding: 0.25rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     transition: bottom 0.3s ease;
     z-index: 1000; // Adicionar z-index alto
@@ -260,7 +260,7 @@ const CommentForm = styled.form`
 
 const CommentInput = styled.input`
   flex: 1;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: var(--radius-lg);
   font-size: 0.95rem;
@@ -270,9 +270,9 @@ const CommentInput = styled.input`
   transition: var(--transition);
 
   @media (max-width: 768px) {
-    padding: 0.75rem;
+    padding: 0.5rem;
     font-size: 16px; // Prevent zoom on iOS
-    min-height: 44px;
+    min-height: 36px;
     transform: translateZ(0);
     backface-visibility: hidden;
   }
@@ -286,8 +286,8 @@ const SubmitButton = styled.button`
   background: linear-gradient(135deg, #ff4500, #ff8c00);
   color: white;
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   margin-left: 8px;
   display: flex;
