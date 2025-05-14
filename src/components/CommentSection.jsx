@@ -80,22 +80,8 @@ const CommentList = styled.div`
   margin-bottom: 1rem;
   padding-right: 0.5rem;
   scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
   
-  /* Melhora a sensação de arraste */
-  scroll-snap-type: y proximity;
-  scrollbar-width: thin;
-  
-  @media (max-width: 768px) {
-    max-height: none;
-    height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
-    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
-    margin-bottom: 0;
-    transition: all 0.3s ease;
-  }
-
+  /* Estilos de scrollbar */
   &::-webkit-scrollbar {
     width: 0.375rem;
   }
@@ -112,6 +98,14 @@ const CommentList = styled.div`
     &:hover {
       background: var(--primary);
     }
+  }
+
+  @media (max-width: 768px) {
+    max-height: none;
+    height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
+    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
+    margin-bottom: 0;
+    transition: all 0.3s ease;
   }
 `;
 
@@ -1414,16 +1408,6 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const [loadingReplies, setLoadingReplies] = useState({});
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const commentListRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartY = useRef(0);
-  const scrollStartTop = useRef(0);
-  const animationFrameId = useRef(null);
-  const touchTimeout = useRef(null);
-  const velocity = useRef(0);
-  const lastY = useRef(0);
-  const lastTime = useRef(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimeout = useRef(null);
   
   const commentFormRef = useRef(null);
 
@@ -1479,190 +1463,6 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       setIsScrolling(false);
     }, 100);
   }, 100);
-  // Efeito principal para scroll personalizado
-  useEffect(() => {
-    const list = commentListRef.current;
-    if (!list) return;
-
-    // Variáveis de estado do scroll
-    const state = {
-      isDragging: false,
-      startY: 0,
-      startScrollTop: 0,
-      lastY: 0,
-      lastTime: 0,
-      velocity: 0,
-      animationId: null,
-      touchActive: false
-    };
-
-    // Configurações ajustáveis
-    const config = {
-      deceleration: 0.94,
-      minVelocity: 0.2,
-      bounceStiffness: 0.2,
-      scrollEndDelay: 300,
-      maxDeltaY: 100
-    };
-
-    const handleStart = (y) => {
-      state.isDragging = true;
-      state.startY = y;
-      state.startScrollTop = list.scrollTop;
-      state.lastY = y;
-      state.lastTime = performance.now();
-      state.velocity = 0;
-      
-      cancelAnimationFrame(state.animationId);
-      list.style.scrollBehavior = 'auto';
-      setIsDragging(true);
-    };
-
-    const handleMove = (y) => {
-      if (!state.isDragging) return;
-      
-      const now = performance.now();
-      const deltaTime = now - state.lastTime;
-      
-      if (deltaTime > 0) {
-        const deltaY = y - state.lastY;
-        state.velocity = deltaY / deltaTime;
-        state.lastY = y;
-        state.lastTime = now;
-      }
-      
-      const deltaY = Math.min(config.maxDeltaY, Math.max(-config.maxDeltaY, y - state.startY));
-      let newScrollTop = state.startScrollTop - deltaY;
-      
-      // Limites com efeito elástico
-      const maxScroll = list.scrollHeight - list.clientHeight;
-      const atTop = newScrollTop < 0;
-      const atBottom = newScrollTop > maxScroll;
-      
-      if (atTop || atBottom) {
-        const overscroll = atTop ? -newScrollTop : newScrollTop - maxScroll;
-        newScrollTop = atTop 
-          ? -overscroll * config.bounceStiffness 
-          : maxScroll + overscroll * config.bounceStiffness;
-      }
-      
-      list.scrollTop = newScrollTop;
-    };
-
-    const applyMomentum = () => {
-      if (Math.abs(state.velocity) < config.minVelocity) {
-        state.animationId = null;
-        finishScroll();
-        return;
-      }
-      
-      const maxScroll = list.scrollHeight - list.clientHeight;
-      let newScrollTop = list.scrollTop - state.velocity * 16;
-      
-      // Limites com bounce
-      if (newScrollTop < 0) {
-        newScrollTop = 0;
-        state.velocity = 0;
-      } else if (newScrollTop > maxScroll) {
-        newScrollTop = maxScroll;
-        state.velocity = 0;
-      }
-      
-      list.scrollTop = newScrollTop;
-      state.velocity *= config.deceleration;
-      
-      state.animationId = requestAnimationFrame(applyMomentum);
-    };
-
-    const finishScroll = () => {
-      setTimeout(() => {
-        list.style.scrollBehavior = 'smooth';
-        setIsDragging(false);
-      }, config.scrollEndDelay);
-    };
-
-    const handleEnd = () => {
-      if (!state.isDragging) return;
-      state.isDragging = false;
-      
-      if (Math.abs(state.velocity) > config.minVelocity) {
-        state.animationId = requestAnimationFrame(applyMomentum);
-      } else {
-        finishScroll();
-      }
-    };
-
-    // Eventos de toque
-    const touchStart = (e) => {
-      if (e.touches.length !== 1) return;
-      state.touchActive = true;
-      handleStart(e.touches[0].clientY);
-      e.preventDefault();
-    };
-
-    const touchMove = (e) => {
-      if (!state.touchActive || e.touches.length !== 1) return;
-      handleMove(e.touches[0].clientY);
-      e.preventDefault();
-    };
-
-    const touchEnd = () => {
-      if (!state.touchActive) return;
-      state.touchActive = false;
-      handleEnd();
-    };
-
-    // Eventos de mouse
-    const mouseDown = (e) => {
-      if (e.button !== 0 || state.touchActive) return;
-      handleStart(e.clientY);
-      document.addEventListener('mousemove', mouseMove);
-      document.addEventListener('mouseup', mouseEnd);
-    };
-
-    const mouseMove = (e) => {
-      handleMove(e.clientY);
-      e.preventDefault();
-    };
-
-    const mouseEnd = () => {
-      document.removeEventListener('mousemove', mouseMove);
-      document.removeEventListener('mouseup', mouseEnd);
-      handleEnd();
-    };
-
-    // Adiciona listeners otimizados
-    const passiveOptions = { passive: false };
-    list.addEventListener('touchstart', touchStart, passiveOptions);
-    list.addEventListener('touchmove', touchMove, passiveOptions);
-    list.addEventListener('touchend', touchEnd);
-    list.addEventListener('mousedown', mouseDown);
-
-    // Cleanup completo
-    return () => {
-      list.removeEventListener('touchstart', touchStart);
-      list.removeEventListener('touchmove', touchMove);
-      list.removeEventListener('touchend', touchEnd);
-      list.removeEventListener('mousedown', mouseDown);
-      document.removeEventListener('mousemove', mouseMove);
-      document.removeEventListener('mouseup', mouseEnd);
-      cancelAnimationFrame(state.animationId);
-      clearTimeout(scrollTimeout.current);
-    };
-  }, []);
-
-  // Função para scroll programático suave
-  const scrollToComment = useCallback((commentId) => {
-    if (isScrolling) return;
-    
-    const commentElement = document.getElementById(`comment-${commentId}`);
-    if (commentElement && commentListRef.current) {
-      commentElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      });
-    }
-  }, [isScrolling]);
 
 
   const loadMoreReplies = async (commentId) => {
@@ -2107,28 +1907,64 @@ useEffect(() => {
   const handleFocus = (e) => {
     if (e.target.id === 'main-comment-input') {
       setKeyboardActive(true);
+      // Tempo aumentado para garantir que o scroll ocorra após o teclado aparecer
       setTimeout(() => {
-        commentFormRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }, 500);
+        if (commentFormRef.current) {
+          commentFormRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }, 300); // Reduzi o tempo de 500ms para 300ms para melhor resposta
     }
+  };
+
+  const handleBlur = () => {
+    setKeyboardActive(false);
   };
 
   const input = document.getElementById('main-comment-input');
   if (input) {
     input.addEventListener('focus', handleFocus);
-    input.addEventListener('blur', () => setKeyboardActive(false));
+    input.addEventListener('blur', handleBlur);
   }
 
   return () => {
     if (input) {
       input.removeEventListener('focus', handleFocus);
-      input.removeEventListener('blur', () => setKeyboardActive(false));
+      input.removeEventListener('blur', handleBlur);
     }
   };
 }, [isMobile]);
+
+// Efeito adicional para ajustar a altura quando o teclado aparece
+useEffect(() => {
+  if (!isMobile) return;
+
+  const handleResize = () => {
+    const visualViewport = window.visualViewport;
+    if (visualViewport) {
+      const viewportHeight = visualViewport.height;
+      const windowHeight = window.innerHeight;
+      const keyboardHeight = windowHeight - viewportHeight;
+      
+      setKeyboardHeight(Math.max(keyboardHeight, 250)); // Valor mínimo reduzido para 250px
+      setKeyboardActive(keyboardHeight > 50);
+    }
+  };
+
+  const visualViewport = window.visualViewport;
+  if (visualViewport) {
+    visualViewport.addEventListener('resize', handleResize);
+  }
+
+  return () => {
+    if (visualViewport) {
+      visualViewport.removeEventListener('resize', handleResize);
+    }
+  };
+}, [isMobile]);
+
 // Componente para o botão de tentar novamente
 const RetryButton = styled.button`
   margin-left: 10px;
