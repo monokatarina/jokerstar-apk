@@ -72,8 +72,6 @@ const ProfileTabs = ({ activeTab, setActiveTab, showSettings = false }) => {
     { id: 'memes', label: 'Posts' },
     { id: 'likes', label: 'Likes' },
     { id: 'activity', label: 'Activity' },
-    { id: 'followers', label: 'Followers' },
-    { id: 'following', label: 'Following' },
     ...(showSettings ? [{ id: 'settings', label: 'Settings' }] : [])
   ];
 
