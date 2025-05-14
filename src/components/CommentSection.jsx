@@ -3,6 +3,7 @@ import styled, { keyframes, css } from 'styled-components';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { FaSmile, FaAngry } from 'react-icons/fa';
 import { 
   FiSend, 
   FiCornerDownLeft, 
@@ -35,376 +36,253 @@ const buildUrl = (url) => {
 
 // ============ Animations ============
 const bounceHappy = keyframes`
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  25% { transform: scale(1.2) rotate(5deg); }
-  50% { transform: scale(1.3) rotate(0deg); }
-  75% { transform: scale(1.2) rotate(-5deg); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15) translateY(-2px); }
 `;
 
 const shakeAngry = keyframes`
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  20% { transform: scale(1.2) rotate(-10deg); }
-  40% { transform: scale(1.3) rotate(10deg); }
-  60% { transform: scale(1.2) rotate(-10deg); }
-  80% { transform: scale(1.1) rotate(5deg); }
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
 `;
 
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 // ============ Styled Components ============
-
-
-
-
 const CommentContainer = styled.div`
+  padding: 0 16px 16px;
   background: var(--card-bg);
   border-top: 1px solid var(--border-light);
-  padding: 0.5rem;
-  padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '1rem'};
   transition: padding-bottom 0.3s ease;
 
   @media (max-width: 768px) {
-    padding: 0.25rem;
-    padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '0.5rem'};
+    padding: 0 8px 8px;
     border-top: none;
   }
 `;
 
 const CommentList = styled.div`
-  max-height: 31.25rem;
+  max-height: 60vh;
   overflow-y: auto;
-  margin-bottom: 1rem;
-  padding-right: 0.5rem;
-  scroll-behavior: smooth;
-  
-  /* Estilos de scrollbar */
+  padding-right: 8px;
+  animation: ${fadeIn} 0.3s ease;
+
   &::-webkit-scrollbar {
-    width: 0.375rem;
+    width: 4px;
   }
-  
-  &::-webkit-scrollbar-track {
-    background: var(--background);
-    border-radius: 0.625rem;
-  }
-  
+
   &::-webkit-scrollbar-thumb {
-    background: var(--border-light);
-    border-radius: 0.625rem;
-    
-    &:hover {
-      background: var(--primary);
-    }
+    background: var(--border);
+    border-radius: 2px;
   }
 
   @media (max-width: 768px) {
     max-height: none;
     height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
-    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
-    margin-bottom: 0;
-    transition: all 0.3s ease;
   }
 `;
 
 const CommentItem = styled.div`
   display: flex;
-  margin-bottom: 0.25rem;
+  gap: 12px;
+  margin: 12px 0;
   position: relative;
-  transition: var(--transition);
-  margin-left: ${props => props.$depth * 0.5}rem;
-  border-left: ${props => props.$depth > 0 ? '2px solid var(--primary)' : 'none'};
-  padding-left: ${props => props.$depth > 0 ? '0.25rem' : '0'};
 
-  @media (max-width: 768px) {
-    margin-left: ${props => props.$depth * 0.25}rem;
-    padding-left: ${props => props.$depth > 0 ? '0.125rem' : '0'};
-  }
+  ${props => props.$depth > 0 && css`
+    margin-left: ${props.$depth * 36}px;
+  `}
 
   &:hover {
-    transform: translateX(0.125rem);
-  }
-
-  ${props => props.$isPopular && css`
-    order: -1;
-    border: 2px solid var(--primary);
-    border-radius: var(--radius-md);
-    padding: 0.75rem;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(to right, rgba(var(--primary-rgb), 0.05), transparent);
-
-    &::before {
-      content: "🔥";
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.2rem;
-      animation: ${pulse} 1.5s infinite;
+    ${MoreOptionsButton} {
+      opacity: 1;
     }
-  `}
+  }
 `;
 
 const CommentAvatar = styled.img`
-  width: ${props => props.$isReply ? '28px' : '32px'};
-  height: ${props => props.$isReply ? '28px' : '32px'};
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  margin-right: 8px;
   object-fit: cover;
-  border: 2px solid var(--background);
-  transition: all 0.2s;
+  flex-shrink: 0;
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: transform 0.2s;
 
   &:hover {
-    border-color: #ff4500;
     transform: scale(1.05);
   }
 `;
 
 const CommentContent = styled.div`
   flex: 1;
-  background: var(--comment-bg);
-  padding: 0.25rem;
-  border-radius: var(--radius-md);
-  position: relative;
-  box-shadow: var(--shadow-sm);
-  overflow: visible;
-  color: var(--text);
-  transition: background 0.3s ease;
-  
-  ${props => props.$isReply && css`
-    background: var(--reply-bg);
-  `}
+  min-width: 0;
 `;
 
 const CommentHeader = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-  position: relative;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
 `;
 
 const CommentUser = styled.div`
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-`;
+  cursor: pointer;
 
-const UserBadge = styled.span`
-  font-size: 0.7rem;
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
-  color: var(--card-bg); 
-  padding: 2px 6px;
-  border-radius: 12px;
+  &:hover {
+    color: var(--primary);
+  }
 `;
 
 const CommentText = styled.p`
   margin: 4px 0;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   line-height: 1.4;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-  ${props => props.$isDeleted && 'font-style: italic; color: #999;'}
+
+  ${props => props.$isDeleted && css`
+    color: var(--text-lighter);
+    font-style: italic;
+  `}
 `;
 
 const CommentTime = styled.small`
-  font-size: 0.65rem;  // Reduzido de 0.75rem
-  color: #999;
-  margin-left: 6px;
-  font-weight: normal;
+  font-size: 0.75rem;
+  color: var(--text-lighter);
 `;
 
-const CommentForm = styled.form`
-
+const ReactionButtons = styled.div`
   display: flex;
   align-items: center;
-  margin-top: 1rem;
-  background: var(--input-bg);
-  border-radius: var(--radius-lg);
-  padding: 0.25rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
-  border: 1px solid var(--border-light);
-  position: sticky;
-  bottom: 0;
-
-  @media (max-width: 768px) {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : '0'};
-    margin: 0;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    background: var(--card-bg);
-    padding: 0.25rem;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    transition: bottom 0.3s ease;
-  }
+  gap: 16px;
+  margin-top: 8px;
 `;
 
-const CommentInput = styled.input`
-  flex: 1;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: var(--radius-lg);
-  font-size: 0.95rem;
-  outline: none;
-  background: var(--input-bg);
-  color: var(--input-text);
-  transition: var(--transition);
-
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-    font-size: 16px; // Prevent zoom on iOS
-    min-height: 36px;
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
-
-  &:focus {
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
-  }
-`;
-
-const SubmitButton = styled.button`
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
-  color: white;
-  border: none;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  margin-left: 8px;
+const ReactionButton = styled.button`
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(255, 69, 0, 0.3);
+  color: var(--text-lighter);
 
-  @media (max-width: 768px) {
-    width: 26px;
-    height: 26px;
-    margin-left: 2px;
-  }
+  ${props => props.$active && css`
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+  `}
+
+  ${props => props.$type === 'like' && props.$active && css`
+    animation: ${bounceHappy} 0.4s ease;
+  `}
+
+  ${props => props.$type === 'dislike' && props.$active && css`
+    animation: ${shakeAngry} 0.4s ease;
+  `}
 
   &:hover {
-    background: linear-gradient(135deg, #e03d00, #e07d00);
-    transform: scale(1.05);
+    background: rgba(var(--primary-rgb), 0.05);
   }
 `;
 
 const ReplyButton = styled.button`
   background: none;
   border: none;
-  color: var(--text-light);
-  font-size: 0.85rem;
+  color: var(--text-lighter);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 4px 8px;
-  border-radius: 16px;
+  padding: 4px;
+  margin-left: auto;
   transition: all 0.2s;
 
   &:hover {
-    color: #ff4500;
-    background: rgba(255, 69, 0, 0.1);
+    color: var(--primary);
   }
 `;
 
-const ReplyForm = styled.form`
-  display: flex;
-  margin: 8px 0 16px 52px;
-  background: #fff;
-  border-radius: 24px;
-  padding: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: var(--transition);
-
-  &:focus-within {
-    box-shadow: 0 2px 12px rgba(255, 69, 0, 0.2);
-  }
-`;
-
-const ReactionButtons = styled.div`
+const CommentForm = styled.form`
   display: flex;
   gap: 8px;
-  margin-top: 8px;
+  padding: 12px;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-light);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : '0'};
+    padding: 8px;
+    background: var(--background);
+    border-top: 1px solid var(--border);
+  }
 `;
 
-const ReactionButton = styled.button`
-  position: relative;
+const CommentInput = styled.input`
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+
+  &:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+  }
+`;
+
+const SubmitButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  background: none;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border: none;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
   cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.125rem 0.5rem;
-  border-radius: 1rem;
-  transition: var(--transition);
-  
-  &:active, &:focus {
-    outline: none;
-  }
+  transition: all 0.2s;
 
   &:hover {
-    transform: scale(1.1);
+    background: var(--primary-hover);
+    transform: scale(1.05);
   }
-
-  ${props => props.$type === 'like' && css`
-    color: ${props.$active ? 'var(--like-color)' : 'var(--text-light)'};
-    &:hover {
-      background: rgba(var(--like-rgb), 0.1);
-    }
-    ${props.$active && css`
-      animation: ${bounceHappy} 0.6s;
-    `}
-  `}
-
-  ${props => props.$type === 'dislike' && css`
-    color: ${props.$active ? 'var(--dislike-color)' : 'var(--text-light)'};
-    &:hover {
-      background: rgba(var(--dislike-rgb), 0.1);
-    }
-    ${props.$active && css`
-      animation: ${shakeAngry} 0.6s;
-    `}
-  `}
-`;
-
-const ReactionCount = styled.span`
-  font-size: 0.85rem;
-  color: inherit;
-  margin-left: 4px;
 `;
 
 const MoreOptionsButton = styled.button`
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-lighter);
   cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
+  opacity: 0;
   transition: all 0.2s;
+  padding: 4px;
+  margin-left: 8px;
 
   &:hover {
-    color: #ff4500;
-    background: rgba(0, 0, 0, 0.05);
-    transform: rotate(90deg);
+    color: var(--primary);
+    opacity: 1;
   }
 `;
+
 
 const OptionsMenu = styled.div`
   position: absolute;
@@ -941,14 +819,15 @@ const Comment = memo(({
   const canEditDelete = !isDeleted && currentUser && 
     (safeUser._id === currentUser._id || currentUser.isAdmin);
 
-  const formatTime = useCallback((dateString) => {
+  const getTimeAgo = useCallback((dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }, []);
-
-  const formatDate = useCallback((dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) return 'Agora';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds/60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds/3600)}h`;
+    return `${Math.floor(diffInSeconds/86400)}d`;
   }, []);
 
   // Verifica se há mais respostas para carregar
@@ -975,26 +854,7 @@ const Comment = memo(({
           style={{ cursor: 'pointer' }}
         />
         <CommentContent $isReply={isReply}>
-          <CommentHeader>
-            <CommentUser 
-              onClick={() => navigate(`/users/${safeUser._id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              @{safeUser.username}
-              {safeUser.isVerified && <UserBadge>Verificado</UserBadge>}
-              {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
-              <CommentTime>
-                {formatDate(comment.createdAt)} às {formatTime(comment.createdAt)}
-                {comment.isEdited && ' (editado)'}
-              </CommentTime>
-            </CommentUser>
-            
-            {canEditDelete && (
-              <MoreOptionsButton onClick={() => onToggleOptions(comment._id)} aria-label="Mais opções">
-                <FiMoreHorizontal />
-              </MoreOptionsButton>
-            )}
-          </CommentHeader>
+
           
           {showOptions === comment._id && (
             <OptionsMenu>
@@ -1032,6 +892,26 @@ const Comment = memo(({
               <CommentText $isDeleted={isDeleted}>
                 {isDeleted ? <DeletedMessage>{comment.text}</DeletedMessage> : comment.text}
               </CommentText>
+              <CommentHeader>
+                <CommentUser 
+                  onClick={() => navigate(`/users/${safeUser._id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {safeUser.username}
+                  {safeUser.isVerified && <UserBadge>Verificado</UserBadge>}
+                  {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
+                  <CommentTime>
+                    {getTimeAgo(comment.createdAt)}
+                    {comment.isEdited && 'editado'}
+                  </CommentTime>
+                </CommentUser>
+                
+                {canEditDelete && (
+                  <MoreOptionsButton onClick={() => onToggleOptions(comment._id)} aria-label="Mais opções">
+                    <FiMoreHorizontal />
+                  </MoreOptionsButton>
+                )}
+              </CommentHeader>
               
               {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
                 <SharedMemeContainer>
@@ -1065,29 +945,53 @@ const Comment = memo(({
           
           {!isDeleted && (
             <ReactionButtons>
+              {/* Botão Like */}
               <ReactionButton 
                 onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
                 $active={comment.userReaction === 'like'}
                 $type="like"
                 aria-label="Curtir"
+                data-testid="like-button"
               >
-                {comment.userReaction === 'like' ? '😊' : '🙂'}
-                <ReactionCount>{comment.likes?.length || 0}</ReactionCount>
+                {comment.userReaction === 'like' ? (
+                  <FaSmile size={14} style={{ transform: 'scale(1.1)' }} />
+                ) : (
+                  <FaSmile size={14} style={{ opacity: 0.7 }} />
+                )}
+                {comment.likes?.length > 0 && (
+                  <ReactionCount>{comment.likes.length}</ReactionCount>
+                )}
               </ReactionButton>
+
+              {/* Botão Dislike */}
               <ReactionButton 
                 onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
                 $active={comment.userReaction === 'dislike'}
                 $type="dislike"
                 aria-label="Não curtir"
+                data-testid="dislike-button"
               >
-                {comment.userReaction === 'dislike' ? '😠' : '☹️'}
-                <ReactionCount>{comment.dislikes?.length || 0}</ReactionCount>
+                {comment.userReaction === 'dislike' ? (
+                  <FaAngry size={14} style={{ transform: 'scale(1.1)' }} />
+                ) : (
+                  <FaAngry size={14} style={{ opacity: 0.7 }} />
+                )}
+                {comment.dislikes?.length > 0 && (
+                  <ReactionCount>{comment.dislikes.length}</ReactionCount>
+                )}
               </ReactionButton>
+
+              {/* Botão de Resposta */}
               {currentUser && depth < MAX_DEPTH && (
-                <ReplyButton onClick={() => onReply(comment._id, parentCommentId)}>
-                  <FiCornerDownLeft size={12} />
-                  Responder
-                </ReplyButton>
+                <ReactionButton 
+                  as="div" // Remove o comportamento de botão nativo
+                  onClick={() => onReply(comment._id, parentCommentId)}
+                  aria-label="Responder"
+                  style={{ marginLeft: 'auto' }} // Alinha à direita
+                  data-testid="reply-button"
+                >
+                  <FiMessageCircle size={12} style={{ color: '#666' }} />
+                </ReactionButton>
               )}
             </ReactionButtons>
           )}
