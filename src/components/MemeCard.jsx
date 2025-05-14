@@ -126,8 +126,7 @@ const DragHandle = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  height: 100px; /* Área maior para arraste */
-  z-index: 5;
+  height: 60px; /* Área maior para arraste */
   cursor: grab;
   display: flex;
   justify-content: center;
@@ -1036,14 +1035,14 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     const deltaY = touchY - touchStartY.current;
     
     if (deltaY > 10) {
-      setDragOffset(Math.min(deltaY * 0.7, 150));
+      setDragOffset(Math.min(deltaY * 0.7, 180));
     }
   };
 
   const handleTouchEnd = () => {
     setIsDragging(false);
     
-    if (dragOffset > 60 || (dragOffset > 30 && Date.now() - touchStartTime.current < 200)) {
+    if (dragOffset > 80 || (dragOffset > 30 && Date.now() - touchStartTime.current < 200)) {
       setShowComments(false);
     }
     setDragOffset(0);
