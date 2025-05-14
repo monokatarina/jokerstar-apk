@@ -114,9 +114,13 @@ const CommentList = styled.div`
 
 const CommentItem = styled.div`
   display: flex;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
   position: relative;
   transition: var(--transition);
+
+  ${props => props.$depth > 0 && css`
+    margin-left: ${props.$depth * 12}px;
+  `}
 
   @media (max-width: 768px) {
     margin-left: ${props => props.$depth * 0.25}rem;
@@ -165,7 +169,7 @@ const CommentAvatar = styled.img`
 const CommentContent = styled.div`
   flex: 1;
   background: var(--comment-bg);
-  padding: 0.25rem;
+  padding: 0.75rem;
   border-radius: var(--radius-md);
   position: relative;
   box-shadow: var(--shadow-sm);
@@ -175,15 +179,16 @@ const CommentContent = styled.div`
   
   ${props => props.$isReply && css`
     background: var(--reply-bg);
+    border-left: 3px solid var(--primary);
+    margin-left: 8px;
   `}
 `;
 
 const CommentHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start; // Alinhar no topo
   margin-bottom: 4px;
-  position: relative;
 `;
 
 const CommentUser = styled.div`
@@ -193,9 +198,8 @@ const CommentUser = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  order: 2;
+  order: 1;
 `;
-
 const UserBadge = styled.span`
   font-size: 0.7rem;
   background: linear-gradient(135deg, #ff4500, #ff8c00);
@@ -205,12 +209,13 @@ const UserBadge = styled.span`
 `;
 
 const CommentText = styled.p`
-  margin: 4px 0;
+  margin: 4px 0 8px;
   font-size: 0.85rem;
   line-height: 1.4;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
+  padding: 0 8px;
   ${props => props.$isDeleted && 'font-style: italic; color: #999;'}
 `;
 
@@ -334,8 +339,18 @@ const ReactionButtons = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 6px;
+  justify-content: flex-end; // Alinhar à direita
 `;
 
+const ReplyIndicator = styled.div`
+  position: absolute;
+  left: -12px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--primary);
+  border-radius: 2px;
+`;
 
 const ReactionButton = styled.button`
   position: relative;
@@ -954,6 +969,7 @@ const Comment = memo(({
   return (
     <React.Fragment>
       <CommentItem $depth={depth} $isPopular={isPopular} data-testid={`comment-${comment._id}`}>
+        {isReply && <ReplyIndicator />}
         <CommentAvatar 
           src={
             safeUser.profile?.avatar 
