@@ -351,7 +351,7 @@ const ReactionButtons = styled.div`
 
 const ReactionButton = styled.button`
   position: relative;
-  z-index: 1002;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -423,7 +423,7 @@ const OptionsMenu = styled.div`
   border: 1px solid var(--background);
   border-radius: 8px;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-  z-index: 1002;
+  z-index: 100;
   min-width: 120px;
   overflow: hidden;
   animation: fadeIn 0.2s ease;

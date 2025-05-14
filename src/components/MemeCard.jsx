@@ -73,7 +73,7 @@ const MobileCommentSection = styled.div`
     height: 100vh;
     max-height: 100vh;
     background: var(--card-bg);
-    z-index: 1000;
+    z-index: 1003;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
     overflow: hidden;
@@ -145,7 +145,6 @@ const CommentSectionContainer = styled.div`
 `;
 
 const CommentFormContainer = styled.div`
-  z-index: 1001;
   position: sticky;
   bottom: 0;
   padding: 12px;
@@ -160,7 +159,6 @@ const CloseCommentsButton = styled.button`
   background: none;
   border: none;
   color: var(--text-light);
-  z-index: 10;
   padding: 8px;
   border-radius: 50%;
   display: flex;
