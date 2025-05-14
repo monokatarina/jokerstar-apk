@@ -13,7 +13,8 @@ import {
   FiX,
   FiPaperclip,
   FiImage,
-  FiLoader
+  FiLoader,
+  FiMessageCircle
 } from 'react-icons/fi';
 import PropTypes from 'prop-types';
 const buildUrl = (url) => {
@@ -1064,9 +1065,11 @@ const Comment = memo(({
           <ReactionButtons>
             {/* Botão Like */}
             <ReactionButton 
+              as="div"
               onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
               $active={comment.userReaction === 'like'}
               $type="like"
+              style={{ marginLeft: 'auto' }}
               aria-label="Curtir"
               data-testid="like-button"
             >
