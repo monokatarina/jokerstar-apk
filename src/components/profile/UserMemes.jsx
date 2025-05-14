@@ -10,23 +10,18 @@ import { useAuth } from '../../contexts/AuthContext';
 const Container = styled.div`
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 16px;
 `;
 
 const MemeGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
-  padding: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
+  gap: 16px;
+  padding: 0;
 
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-    gap: 15px;
   }
 `;
 
@@ -35,37 +30,39 @@ const StatusMessage = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: 60vh;
   text-align: center;
-  padding: 40px;
+  padding: 24px;
   background: ${({ theme }) => theme.cardBg || '#f8f9fa'};
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  color: ${({ theme }) => theme.text || '#333'};
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 16px;
 
   svg {
-    font-size: 3rem;
-    margin-bottom: 20px;
+    font-size: 2.5rem;
+    margin-bottom: 16px;
     color: ${({ theme }) => theme.primary || '#6c5ce7'};
   }
 
   h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
+    font-size: 1.3rem;
+    margin-bottom: 12px;
+    color: ${({ theme }) => theme.text || '#333'};
   }
 
   p {
-    font-size: 1rem;
-    opacity: 0.8;
+    font-size: 0.9rem;
+    color: ${({ theme }) => theme.textLight || '#666'};
   }
 `;
 
 const Title = styled.h2`
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: ${({ theme }) => theme.text || '#333'};
-  margin-bottom: 20px;
-  padding-left: 20px;
+  margin: 0 16px 20px;
+  padding-left: 12px;
   position: relative;
+  font-weight: 600;
 
   &::before {
     content: '';
@@ -73,13 +70,46 @@ const Title = styled.h2`
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    height: 70%;
-    width: 5px;
+    height: 60%;
+    width: 3px;
     background: ${({ theme }) => theme.primary || '#6c5ce7'};
-    border-radius: 5px;
+    border-radius: 2px;
   }
 `;
 
+// Novos estilos para o MemeCard (adicionar ao componente MemeCard ou criar um wrapper)
+const MobileCardWrapper = styled.div`
+  .meme-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    img {
+      aspect-ratio: 1/1;
+      object-fit: cover;
+    }
+
+    .card-footer {
+      padding: 12px;
+      background: ${({ theme }) => theme.cardBg || '#fff'};
+
+      h3 {
+        font-size: 0.95rem;
+        line-height: 1.3;
+        margin-bottom: 8px;
+      }
+
+      .stats {
+        font-size: 0.8rem;
+      }
+    }
+  }
+`;
 const UserMemes = () => {
   const { userId } = useParams();
   const { user: currentUser } = useAuth();
@@ -173,12 +203,14 @@ const UserMemes = () => {
       <Title>Posts</Title>
       <MemeGrid>
         {memes.map(meme => (
-          <MemeCard 
-            key={meme._id} 
-            meme={meme}
-            onDelete={handleDeleteMeme}
-            isOwner={currentUser?._id === meme.author?._id}
-          />
+          <MobileCardWrapper key={meme._id}>
+            <MemeCard 
+              meme={meme}
+              onDelete={handleDeleteMeme}
+              isOwner={currentUser?._id === meme.author?._id}
+              className="meme-card"
+            />
+          </MobileCardWrapper>
         ))}
       </MemeGrid>
     </Container>
