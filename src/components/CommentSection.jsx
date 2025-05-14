@@ -74,6 +74,35 @@ const CommentContainer = styled.div`
   }
 `;
 
+const ExpandAllButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  border-radius: 12px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(var(--primary-rgb), 0.1);
+  }
+
+  svg {
+    transition: transform 0.2s;
+  }
+
+  ${props => props.$expanded && css`
+    svg {
+      transform: rotate(180deg);
+    }
+  `}
+`;
+
 const CommentList = styled.div`
   max-height: 31.25rem;
   overflow-y: auto;
@@ -995,6 +1024,43 @@ const Comment = memo(({
   // Verifica se há mais respostas para carregar
   const hasMoreReplies = comment.repliesCount > (comment.replies?.length || 0);
 
+
+  const loadAllReplies = async (commentId) => {
+    if (!fullyExpanded[commentId]) {
+      try {
+        setLoadingReplies(prev => ({ ...prev, [commentId]: true }));
+        const response = await api.get(`/memes/${memeId}/comments/${commentId}/replies?limit=100`);
+        
+        setComments(prev => {
+          const updateReplies = (comments) => comments.map(c => {
+            if (c._id === commentId) {
+              return {
+                ...c,
+                replies: response.data?.data || []
+              };
+            }
+            if (c.replies) {
+              return {
+                ...c,
+                replies: updateReplies(c.replies)
+              };
+            }
+            return c;
+          });
+          return updateReplies(prev);
+        });
+
+        setFullyExpanded(prev => ({ ...prev, [commentId]: true }));
+      } catch (error) {
+        console.error('Erro ao carregar respostas:', error);
+      } finally {
+        setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
+      }
+    } else {
+      setFullyExpanded(prev => ({ ...prev, [commentId]: false }));
+    }
+  };
+
   return (
     <React.Fragment>
       <CommentItem $depth={depth} $isPopular={isPopular} data-testid={`comment-${comment._id}`}>
@@ -1375,7 +1441,8 @@ const Comment = memo(({
           marginLeft: depth > 0 ? '1.25rem' : '0',
           marginTop: '8px'
         }}>
-          {comment.replies.slice(0, expandedReplies[comment._id] ? comment.replies.length : 1).map(reply => (
+          {/* Mostra a primeira resposta ou todas se expandido */}
+          {(expandedReplies[comment._id] ? comment.replies : [comment.replies[0]]).map(reply => (
             <Comment 
               key={reply._id}
               comment={reply}
@@ -1410,78 +1477,120 @@ const Comment = memo(({
             />
           ))}
 
-          {/* Botão para expandir/collapsar respostas */}
+          {/* Botão principal para expandir/collapsar */}
           {comment.replies.length > 1 && (
             <div style={{ 
-              textAlign: 'center', 
-              marginTop: '0.5rem',
-              paddingLeft: depth > 0 ? '1.25rem' : '0'
+              textAlign: 'left',
+              marginTop: '8px',
+              paddingLeft: depth > 0 ? '1rem' : '0'
             }}>
               <button
-                onClick={() => setExpandedReplies(prev => ({
-                  ...prev,
-                  [comment._id]: !prev[comment._id]
-                }))}
+                onClick={() => {
+                  // Expande todas as respostas aninhadas recursivamente
+                  const newExpanded = {...expandedReplies};
+                  const expandNested = (replies) => {
+                    replies.forEach(reply => {
+                      newExpanded[reply._id] = true;
+                      if (reply.replies && reply.replies.length > 0) {
+                        expandNested(reply.replies);
+                      }
+                    });
+                  };
+
+                  if (!expandedReplies[comment._id]) {
+                    expandNested(comment.replies);
+                  }
+
+                  setExpandedReplies({
+                    ...newExpanded,
+                    [comment._id]: !expandedReplies[comment._id]
+                  });
+                }}
                 disabled={loadingReplies[comment._id]}
                 style={{
-                  background: 'none',
-                  border: 'none',
+                  background: 'rgba(var(--primary-rgb), 0.08)',
+                  border: '1px solid rgba(var(--primary-rgb), 0.2)',
                   color: 'var(--primary)',
                   cursor: 'pointer',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  borderRadius: '16px',
+                  padding: '8px 16px',
+                  fontSize: '0.8rem',
+                  borderRadius: '20px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  backgroundColor: 'rgba(var(--primary-rgb), 0.1)'
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500',
+                  ':hover': {
+                    background: 'rgba(var(--primary-rgb), 0.15)'
+                  },
+                  ':disabled': {
+                    opacity: '0.7',
+                    cursor: 'not-allowed'
+                  }
                 }}
               >
                 {loadingReplies[comment._id] ? (
                   <>
-                    <FiLoader size={14} />
+                    <FiLoader size={14} style={{ animation: 'spin 1s linear infinite' }} />
                     Carregando...
                   </>
+                ) : expandedReplies[comment._id] ? (
+                  <>
+                    <FiChevronUp size={14} />
+                    Ocultar todas as respostas
+                  </>
                 ) : (
-                  expandedReplies[comment._id] 
-                    ? 'Mostrar menos' 
-                    : `Mostrar mais respostas (${comment.replies.length - 1})`
+                  <>
+                    <FiChevronDown size={14} />
+                    Mostrar todas as respostas ({comment.replies.length - 1})
+                  </>
                 )}
               </button>
             </div>
           )}
 
-          {/* Botão para carregar mais respostas */}
+          {/* Botão para carregar mais respostas (se aplicável) */}
           {hasMoreReplies && !expandedReplies[comment._id] && (
             <div style={{ 
-              textAlign: 'center', 
-              marginTop: '0.5rem',
-              paddingLeft: depth > 0 ? '1.25rem' : '0'
+              textAlign: 'left',
+              marginTop: '8px',
+              paddingLeft: depth > 0 ? '1rem' : '0'
             }}>
               <button
                 onClick={() => loadMoreReplies(comment._id)}
                 disabled={loadingReplies[comment._id]}
                 style={{
-                  background: 'none',
-                  border: 'none',
+                  background: 'rgba(var(--primary-rgb), 0.08)',
+                  border: '1px solid rgba(var(--primary-rgb), 0.2)',
                   color: 'var(--primary)',
                   cursor: 'pointer',
-                  padding: '6px 12px',
-                  fontSize: '12px',
-                  borderRadius: '16px',
+                  padding: '8px 16px',
+                  fontSize: '0.8rem',
+                  borderRadius: '20px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
-                  backgroundColor: 'rgba(var(--primary-rgb), 0.1)'
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  fontWeight: '500',
+                  ':hover': {
+                    background: 'rgba(var(--primary-rgb), 0.15)'
+                  },
+                  ':disabled': {
+                    opacity: '0.7',
+                    cursor: 'not-allowed'
+                  }
                 }}
               >
                 {loadingReplies[comment._id] ? (
                   <>
-                    <FiLoader size={14} />
+                    <FiLoader size={14} style={{ animation: 'spin 1s linear infinite' }} />
                     Carregando...
                   </>
                 ) : (
-                  `Carregar mais respostas (${comment.repliesCount - comment.replies.length})`
+                  <>
+                    <FiPlusCircle size={14} />
+                    Carregar mais respostas ({comment.repliesCount - comment.replies.length})
+                  </>
                 )}
               </button>
             </div>
@@ -1611,7 +1720,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const [loadingReplies, setLoadingReplies] = useState({});
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const commentListRef = useRef(null);
-  
+  const [fullyExpanded, setFullyExpanded] = useState({});
   const commentFormRef = useRef(null);
 
 
@@ -1705,6 +1814,12 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     } finally {
       setLoadingReplies(prev => ({ ...prev, [commentId]: false }));
     }
+  };
+  const toggleFullyExpand = (commentId) => {
+    setFullyExpanded(prev => ({
+      ...prev,
+      [commentId]: !prev[commentId]
+    }));
   };
 
   const sortByPopularity = useCallback((comments) => {
