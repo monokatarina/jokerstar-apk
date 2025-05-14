@@ -1008,7 +1008,7 @@ const Comment = memo(({
         />
         <CommentContent $isReply={isReply}>
           {showOptions === comment._id && (
-            <OptionsMenu>
+            <OptionsMenu style={{ right: '0', left: 'auto' }}>
               <OptionButton onClick={() => onEdit(comment)}>
                 <FiEdit2 size={14} /> Editar
               </OptionButton>
@@ -1041,23 +1041,30 @@ const Comment = memo(({
           ) : (
             <>
               <CommentHeader>
-                <CommentUser 
-                  onClick={() => navigate(`/users/${safeUser._id}`)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {safeUser.username}
-                  {safeUser.isVerified && <UserBadge>Verificado</UserBadge>}
-                  {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <CommentUser 
+                    onClick={() => navigate(`/users/${safeUser._id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {safeUser.username}
+                    {safeUser.isVerified && <UserBadge>Verificado</UserBadge>}
+                    {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
+                  </CommentUser>
                   <CommentTime>
                     {getTimeAgo(comment.createdAt)}
                     {comment.isEdited && ' · editado'}
                   </CommentTime>
-                </CommentUser>
+                </div>
                 
                 {canEditDelete && (
-                  <MoreOptionsButton onClick={() => onToggleOptions(comment._id)} aria-label="Mais opções">
-                    <FiMoreHorizontal />
-                  </MoreOptionsButton>
+                  <div style={{ marginLeft: 'auto' }}>
+                    <MoreOptionsButton 
+                      onClick={() => onToggleOptions(comment._id)} 
+                      aria-label="Mais opções"
+                    >
+                      <FiMoreHorizontal />
+                    </MoreOptionsButton>
+                  </div>
                 )}
               </CommentHeader>
               
