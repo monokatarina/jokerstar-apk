@@ -120,6 +120,8 @@ const CommentItem = styled.div`
 
   ${props => props.$depth > 0 && css`
     margin-left: ${props.$depth * 12}px;
+    padding-left: 8px;
+    border-left: 2px solid var(--primary);
   `}
 
   @media (max-width: 768px) {
@@ -339,7 +341,22 @@ const ReactionButtons = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 6px;
-  justify-content: flex-end; // Alinhar à direita
+  justify-content: flex-start; // Alinhar mais à esquerda
+  margin-left: 8px; // Não totalmente à esquerda
+`;
+
+const ReplyCount = styled.div`
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  
+  &:hover {
+    color: var(--primary);
+  }
 `;
 
 const ReplyIndicator = styled.div`
@@ -397,8 +414,10 @@ const ReactionButton = styled.button`
 `;
 
 const ReactionCount = styled.span`
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: inherit;
+  margin-left: 4px;
+  font-weight: 500;
 `;
 
 const MoreOptionsButton = styled.button`
@@ -988,8 +1007,6 @@ const Comment = memo(({
           style={{ cursor: 'pointer' }}
         />
         <CommentContent $isReply={isReply}>
-
-          
           {showOptions === comment._id && (
             <OptionsMenu>
               <OptionButton onClick={() => onEdit(comment)}>
@@ -1023,9 +1040,6 @@ const Comment = memo(({
             </EditForm>
           ) : (
             <>
-              <CommentText $isDeleted={isDeleted}>
-                {isDeleted ? <DeletedMessage>{comment.text}</DeletedMessage> : comment.text}
-              </CommentText>
               <CommentHeader>
                 <CommentUser 
                   onClick={() => navigate(`/users/${safeUser._id}`)}
@@ -1036,7 +1050,7 @@ const Comment = memo(({
                   {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
                   <CommentTime>
                     {getTimeAgo(comment.createdAt)}
-                    {comment.isEdited && 'editado'}
+                    {comment.isEdited && ' · editado'}
                   </CommentTime>
                 </CommentUser>
                 
@@ -1046,6 +1060,10 @@ const Comment = memo(({
                   </MoreOptionsButton>
                 )}
               </CommentHeader>
+              
+              <CommentText $isDeleted={isDeleted}>
+                {isDeleted ? <DeletedMessage>{comment.text}</DeletedMessage> : comment.text}
+              </CommentText>
               
               {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
                 <SharedMemeContainer>
@@ -1078,58 +1096,49 @@ const Comment = memo(({
           )}
           
           {!isDeleted && (
-          <ReactionButtons>
-            {/* Botão Like */}
-            <ReactionButton 
-              as="div"
-              onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
-              $active={comment.userReaction === 'like'}
-              $type="like"
-              style={{ marginLeft: 'auto' }}
-              aria-label="Curtir"
-              data-testid="like-button"
-            >
-              {comment.userReaction === 'like' ? (
-                <FaSmile size={14} style={{ transform: 'scale(1.1)' }} />
-              ) : (
-                <FaSmile size={14} style={{ opacity: 0.7 }} />
-              )}
-              {comment.likes?.length > 0 && (
-                <ReactionCount>{comment.likes.length}</ReactionCount>
-              )}
-            </ReactionButton>
-
-            {/* Botão Dislike */}
-            <ReactionButton 
-              onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
-              $active={comment.userReaction === 'dislike'}
-              $type="dislike"
-              aria-label="Não curtir"
-              data-testid="dislike-button"
-            >
-              {comment.userReaction === 'dislike' ? (
-                <FaAngry size={14} style={{ transform: 'scale(1.1)' }} />
-              ) : (
-                <FaAngry size={14} style={{ opacity: 0.7 }} />
-              )}
-              {comment.dislikes?.length > 0 && (
-                <ReactionCount>{comment.dislikes.length}</ReactionCount>
-              )}
-            </ReactionButton>
-
-            {/* Botão de Resposta */}
-            {currentUser && depth < MAX_DEPTH && (
+            <ReactionButtons>
+              {/* Botão Like */}
               <ReactionButton 
-                as="div" // Remove o comportamento de botão nativo
-                onClick={() => onReply(comment._id, parentCommentId)}
-                aria-label="Responder"
-                style={{ marginLeft: 'auto' }} // Alinha à direita
-                data-testid="reply-button"
+                onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
+                $active={comment.userReaction === 'like'}
+                $type="like"
+                aria-label="Curtir"
+                data-testid="like-button"
               >
-                <FiMessageCircle size={12} style={{ color: '#666' }} />
+                <FaSmile size={14} />
+                <ReactionCount>
+                  {comment.likes?.length > 0 ? comment.likes.length : '0'}
+                </ReactionCount>
               </ReactionButton>
-            )}
-          </ReactionButtons>
+
+              {/* Botão Dislike */}
+              <ReactionButton 
+                onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
+                $active={comment.userReaction === 'dislike'}
+                $type="dislike"
+                aria-label="Não curtir"
+                data-testid="dislike-button"
+              >
+                <FaAngry size={14} />
+                <ReactionCount>
+                  {comment.dislikes?.length > 0 ? comment.dislikes.length : '0'}
+                </ReactionCount>
+              </ReactionButton>
+
+              {/* Botão de Resposta */}
+              {currentUser && depth < MAX_DEPTH && (
+                <ReactionButton 
+                  onClick={() => onReply(comment._id, parentCommentId)}
+                  aria-label="Responder"
+                  data-testid="reply-button"
+                >
+                  <FiMessageCircle size={12} style={{ color: '#666' }} />
+                  {comment.repliesCount > 0 && (
+                    <ReactionCount>{comment.repliesCount}</ReactionCount>
+                  )}
+                </ReactionButton>
+              )}
+            </ReactionButtons>
           )}
         </CommentContent>
       </CommentItem>
@@ -1198,7 +1207,6 @@ const Comment = memo(({
       {/* Área de respostas */}
       {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
         <div style={{ marginLeft: depth > 0 ? '1.25rem' : '0' }}>
-          {/* Mostra apenas a primeira resposta */}
           {comment.replies.slice(0, expandedReplies[comment._id] ? comment.replies.length : 1).map(reply => (
             <Comment 
               key={reply._id}
@@ -1229,10 +1237,11 @@ const Comment = memo(({
               userMemes={userMemes}
               loadMoreReplies={loadMoreReplies}
               loadingReplies={loadingReplies}
+              expandedReplies={expandedReplies}
+              setExpandedReplies={setExpandedReplies}
             />
           ))}
 
-          {/* Botão "Mostrar mais respostas" - aparece apenas se houver mais de 1 resposta */}
           {comment.replies.length > 1 && (
             <div style={{ 
               textAlign: 'center', 
@@ -1280,7 +1289,6 @@ const Comment = memo(({
             </div>
           )}
 
-          {/* Botão para carregar mais respostas (se houver) */}
           {hasMoreReplies && !expandedReplies[comment._id] && (
             <div style={{ 
               textAlign: 'center', 
