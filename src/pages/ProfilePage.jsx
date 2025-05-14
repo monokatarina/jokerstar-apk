@@ -31,6 +31,12 @@ const ProfileContainer = styled.div`
   padding: 20px;
   animation: ${fadeIn} 0.5s ease-out;
   background-color: var(--background);
+  min-height: 100vh;
+
+  @media (max-width: 768px) {
+    padding: 0;
+    max-width: 100%;
+  }
 `;
 
 const LoadingContainer = styled.div`
@@ -40,18 +46,30 @@ const LoadingContainer = styled.div`
   justify-content: center;
   height: 60vh;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    height: 70vh;
+  }
 `;
 
 const LoadingSpinner = styled.div`
   animation: ${spin} 1s linear infinite;
   font-size: 40px;
   color: var(--primary);
+
+  @media (max-width: 768px) {
+    font-size: 32px;
+  }
 `;
 
 const LoadingText = styled.p`
   font-size: 18px;
   color: var(--text-light);
   font-weight: 500;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
 `;
 
 const ErrorContainer = styled.div`
@@ -62,6 +80,11 @@ const ErrorContainer = styled.div`
   height: 60vh;
   gap: 20px;
   text-align: center;
+
+  @media (max-width: 768px) {
+    height: 70vh;
+    padding: 0 20px;
+  }
 `;
 
 const ErrorText = styled.p`
@@ -69,6 +92,11 @@ const ErrorText = styled.p`
   color: var(--dislike-color);
   font-weight: 500;
   max-width: 80%;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    max-width: 90%;
+  }
 `;
 
 const RetryButton = styled.button`
@@ -89,6 +117,11 @@ const RetryButton = styled.button`
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
   }
+
+  @media (max-width: 768px) {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 `;
 
 const NotFoundContainer = styled.div`
@@ -98,17 +131,33 @@ const NotFoundContainer = styled.div`
   justify-content: center;
   height: 60vh;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    height: 70vh;
+    padding: 0 20px;
+  }
 `;
 
 const NotFoundText = styled.p`
   font-size: 18px;
   color: var(--text);
   font-weight: 500;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    text-align: center;
+  }
 `;
 
 const ContentContainer = styled.div`
   margin-top: 30px;
   animation: ${fadeIn} 0.6s ease-out;
+  padding-bottom: 60px; // Espaço para o bottom navigation
+
+  @media (max-width: 768px) {
+    margin-top: 20px;
+    padding: 0 15px 80px;
+  }
 `;
 
 const ProfilePage = () => {

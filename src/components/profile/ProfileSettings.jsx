@@ -4,6 +4,7 @@ import { FiUpload, FiX } from 'react-icons/fi';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Adicionando media queries para mobile
 const FormContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
@@ -11,6 +12,13 @@ const FormContainer = styled.div`
   background: var(--card-bg);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    border-radius: 0;
+    min-height: 100vh;
+    box-shadow: none;
+  }
 `;
 
 const FormTitle = styled.h2`
@@ -18,10 +26,19 @@ const FormTitle = styled.h2`
   margin-bottom: 25px;
   text-align: center;
   font-size: 1.8rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 25px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 20px;
+  }
 `;
 
 const Label = styled.label`
@@ -29,6 +46,10 @@ const Label = styled.label`
   margin-bottom: 10px;
   font-weight: 600;
   color: var(--text);
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const Input = styled.input`
@@ -45,6 +66,11 @@ const Input = styled.input`
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+  }
+
+  @media (max-width: 768px) {
+    padding: 10px 12px;
+    font-size: 16px; // Evita zoom no iOS
   }
 `;
 
@@ -64,6 +90,12 @@ const TextArea = styled.textarea`
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+  }
+
+  @media (max-width: 768px) {
+    min-height: 100px;
+    padding: 10px 12px;
+    font-size: 16px; // Evita zoom no iOS
   }
 `;
 
@@ -92,12 +124,22 @@ const FileInputLabel = styled.label`
     margin-right: 8px;
     color: var(--primary);
   }
+
+  @media (max-width: 768px) {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
 `;
 
 const PreviewContainer = styled.div`
   display: flex;
   gap: 20px;
   margin-top: 15px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 15px;
+  }
 `;
 
 const ImagePreviewWrapper = styled.div`
@@ -108,6 +150,11 @@ const ImagePreviewWrapper = styled.div`
   overflow: hidden;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+
+  @media (max-width: 768px) {
+    width: ${props => props.$isAvatar ? '100px' : '100%'};
+    height: ${props => props.$isAvatar ? '100px' : '150px'};
+  }
 `;
 
 const ImagePreview = styled.img`
@@ -136,6 +183,11 @@ const RemoveButton = styled.button`
   &:hover {
     background: var(--primary-hover);
   }
+
+  @media (max-width: 768px) {
+    width: 25px;
+    height: 25px;
+  }
 `;
 
 const SaveButton = styled.button`
@@ -153,6 +205,13 @@ const SaveButton = styled.button`
 
   &:hover {
     background: ${props => props.disabled ? 'var(--border)' : 'var(--primary-hover)'};
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px;
+    font-size: 1rem;
+    position: sticky;
+    bottom: 20px;
   }
 `;
 

@@ -138,7 +138,7 @@ const UserGuests = ({ userId }) => {
                 <GuestAvatar
                   src={
                     guest.visitor.profile?.avatar
-                      ? guest.visitor.profile.avatar.startsWith('http')
+                      ? guest.visitor.profile.avatar.startsWith('https')
                         ? guest.visitor.profile.avatar
                         : `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}${guest.visitor.profile.avatar}`
                       : '/default-avatar.jpg'

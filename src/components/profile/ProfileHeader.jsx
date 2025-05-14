@@ -36,6 +36,12 @@ const HeaderContainer = styled.div`
   &:hover {
     box-shadow: var(--shadow-hover);
   }
+
+  @media (max-width: 768px) {
+    border-radius: 0;
+    margin-bottom: 10px;
+    box-shadow: none;
+  }
 `;
 
 const Skeleton = styled.div`
@@ -61,6 +67,14 @@ const CoverPhoto = styled.div`
     bottom: 0;
     background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.5));
   }
+
+  @media (max-width: 768px) {
+    height: 150px;
+  }
+
+  @media (max-width: 480px) {
+    height: 120px;
+  }
 `;
 
 const CoverImage = styled.img`
@@ -69,6 +83,10 @@ const CoverImage = styled.img`
   object-fit: cover;
   transition: opacity 0.3s ease;
   opacity: ${({ $loaded }) => ($loaded ? 1 : 0)};
+
+  @media (max-width: 768px) {
+    object-position: center;
+  }
 `;
 
 const ProfileInfo = styled.div`
@@ -80,6 +98,15 @@ const ProfileInfo = styled.div`
   z-index: 2;
   padding: 0 15px 20px;
   text-align: center;
+
+  @media (max-width: 768px) {
+    margin-top: -60px;
+    padding-bottom: 15px;
+  }
+
+  @media (max-width: 480px) {
+    margin-top: -50px;
+  }
 `;
 
 const AvatarContainer = styled.div`
@@ -98,6 +125,17 @@ const AvatarContainer = styled.div`
     transform: scale(1.05);
     box-shadow: var(--shadow-hover);
   }
+
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 480px) {
+    width: 80px;
+    height: 80px;
+  }
 `;
 
 const Avatar = styled.img`
@@ -107,6 +145,10 @@ const Avatar = styled.img`
   object-fit: cover;
   transition: var(--transition);
   opacity: ${({ $loaded }) => ($loaded ? 1 : 0)};
+
+  @media (max-width: 768px) {
+    object-position: center top;
+  }
 `;
 
 const AvatarSkeleton = styled(Skeleton)`
@@ -125,6 +167,10 @@ const DefaultAvatar = styled.div`
   justify-content: center;
   color: var(--text-inverse);
   font-size: 50px;
+
+  @media (max-width: 768px) {
+    font-size: 40px;
+  }
 `;
 
 const Username = styled.h1`
@@ -138,6 +184,14 @@ const Username = styled.h1`
   background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
+
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
 `;
 
 const Bio = styled.p`
@@ -147,6 +201,11 @@ const Bio = styled.p`
   line-height: 1.5;
   font-size: 14px;
   padding: 0 15px;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+    padding: 0 10px;
+  }
 `;
 
 const StatsContainer = styled.div`
@@ -156,6 +215,11 @@ const StatsContainer = styled.div`
   flex-wrap: wrap;
   justify-content: center;
   width: 100%;
+
+  @media (max-width: 768px) {
+    gap: 8px;
+    margin: 15px 0;
+  }
 `;
 
 const StatItem = styled.div`
@@ -174,6 +238,16 @@ const StatItem = styled.div`
     background: var(--input-bg);
     box-shadow: var(--shadow-hover);
   }
+
+  @media (max-width: 768px) {
+    min-width: 60px;
+    padding: 6px 8px;
+  }
+
+  @media (max-width: 480px) {
+    min-width: 50px;
+    padding: 5px;
+  }
 `;
 
 const StatNumber = styled.div`
@@ -181,6 +255,10 @@ const StatNumber = styled.div`
   font-size: 18px;
   color: var(--text);
   margin-bottom: 2px;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
 `;
 
 const StatLabel = styled.div`
@@ -189,6 +267,10 @@ const StatLabel = styled.div`
   color: var(--text-lighter);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
 `;
 
 const DaysBadge = styled.div`
@@ -217,6 +299,13 @@ const DaysBadge = styled.div`
   
   & > svg {
     font-size: 14px;
+  }
+
+  @media (max-width: 768px) {
+    top: 8px;
+    left: 8px;
+    font-size: 11px;
+    padding: 4px 8px;
   }
 `;
 
@@ -267,6 +356,15 @@ const EditButton = styled.button`
     transform: translateY(-2px);
     box-shadow: var(--shadow-hover);
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 15px;
+    font-size: 13px;
+    top: 10px;
+    right: 10px;
+    min-width: 120px;
+    min-height: 44px;
+  }
 `;
 
 const FollowButton = styled.button`
@@ -307,6 +405,13 @@ const FollowButton = styled.button`
     background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
     pointer-events: none;
   }
+
+  @media (max-width: 768px) {
+    padding: 10px 20px;
+    font-size: 13px;
+    min-width: 120px;
+    min-height: 44px;
+  }
 `;
 
 const Modal = styled.div`
@@ -336,6 +441,17 @@ const ModalContent = styled.div`
   box-shadow: var(--shadow-hover);
   position: relative;
   animation: ${fadeIn} 0.4s ease-out;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    padding: 20px 10px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -360,12 +476,25 @@ const CloseButton = styled.button`
     color: var(--text-inverse);
     transform: rotate(90deg);
   }
+
+  @media (max-width: 768px) {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
 `;
 
 const LoadingSpinner = styled.div`
   display: inline-block;
   animation: ${pulse} 1.5s infinite ease-in-out;
   margin-left: 8px;
+`;
+
+const TouchableArea = styled.div`
+  @media (max-width: 768px) {
+    padding: 10px;
+    margin: -10px;
+  }
 `;
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
@@ -438,9 +567,20 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const { stats, loading: statsLoading, setStats } = useUserStats(user._id);
   const { isFollowing, loading: followLoading, toggleFollow } = useFollowStatus(user._id, isOwnProfile);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window || navigator.maxTouchPoints);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null;
@@ -571,22 +711,28 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
         ) : (
           <StatsContainer>
             <StatItem>
-              <StatNumber>{stats.posts}</StatNumber>
-              <StatLabel>Posts</StatLabel>
+              <TouchableArea>
+                <StatNumber>{stats.posts}</StatNumber>
+                <StatLabel>Posts</StatLabel>
+              </TouchableArea>
             </StatItem>
             <StatItem 
               onClick={() => setShowFollowersModal(true)}
               aria-label={`Ver seguidores (${stats.followers})`}
             >
-              <StatNumber>{stats.followers}</StatNumber>
-              <StatLabel>Seguidores</StatLabel>
+              <TouchableArea>
+                <StatNumber>{stats.followers}</StatNumber>
+                <StatLabel>Seguidores</StatLabel>
+              </TouchableArea>
             </StatItem>
             <StatItem 
               onClick={() => setShowFollowingModal(true)}
               aria-label={`Ver seguindo (${stats.following})`}
             >
-              <StatNumber>{stats.following}</StatNumber>
-              <StatLabel>Seguindo</StatLabel>
+              <TouchableArea>
+                <StatNumber>{stats.following}</StatNumber>
+                <StatLabel>Seguindo</StatLabel>
+              </TouchableArea>
             </StatItem>
           </StatsContainer>
         )}
@@ -634,9 +780,9 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: '18px'
+              fontSize: isMobile ? '16px' : '18px'
             }}>
-              <FiUsers size={22} /> Seguidores
+              <FiUsers size={isMobile ? 18 : 22} /> Seguidores
             </h2>
             <UserFollowers userId={user._id} />
           </ModalContent>
@@ -658,9 +804,9 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: '18px'
+              fontSize: isMobile ? '16px' : '18px'
             }}>
-              <FiUsers size={22} /> Seguindo
+              <FiUsers size={isMobile ? 18 : 22} /> Seguindo
             </h2>
             <UserFollowing userId={user._id} />
           </ModalContent>
