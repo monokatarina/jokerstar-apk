@@ -63,12 +63,12 @@ const pulse = keyframes`
 const CommentContainer = styled.div`
   background: var(--card-bg);
   border-top: 1px solid var(--border-light);
-  padding: 1rem;
+  padding: 0.5rem;
   padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '1rem'};
   transition: padding-bottom 0.3s ease;
 
   @media (max-width: 768px) {
-    padding: 0.5rem;
+    padding: 0.25rem;
     padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '0.5rem'};
     border-top: none;
   }
@@ -227,6 +227,7 @@ const CommentTime = styled.small`
 `;
 
 const CommentForm = styled.form`
+  z-index: 1001;
   display: flex;
   align-items: center;
   margin-top: 1rem;
@@ -238,7 +239,6 @@ const CommentForm = styled.form`
   border: 1px solid var(--border-light);
   position: sticky;
   bottom: 0;
-  z-index: 10;
 
   @media (max-width: 768px) {
     position: fixed;
@@ -254,7 +254,7 @@ const CommentForm = styled.form`
     padding: 0.25rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     transition: bottom 0.3s ease;
-    z-index: 1000; // Adicionar z-index alto
+    z-index: 1001; // Adicionar z-index alto
   }
 `;
 
@@ -350,6 +350,8 @@ const ReactionButtons = styled.div`
 `;
 
 const ReactionButton = styled.button`
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -361,6 +363,10 @@ const ReactionButton = styled.button`
   border-radius: 1rem;
   transition: var(--transition);
   
+  &:active, &:focus {
+    outline: none;
+  }
+
   &:hover {
     transform: scale(1.1);
   }

@@ -146,6 +146,7 @@ const CommentSectionContainer = styled.div`
 `;
 
 const CommentFormContainer = styled.div`
+  z-index: 1001;
   position: sticky;
   bottom: 0;
   padding: 12px;
@@ -1020,6 +1021,9 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   };
 
   const handleTouchStart = (e) => {
+    if (e.target.closest('.reaction-button')) {
+      return;
+    }
     touchStartY.current = e.touches[0].clientY;
     setIsDragging(true);
     setDragOffset(0); 
@@ -1031,7 +1035,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     const touchY = e.touches[0].clientY;
     const deltaY = touchY - touchStartY.current;
     
-    if (deltaY > 0) {
+    if (deltaY > 10) {
       setDragOffset(Math.min(deltaY * 0.7, 150));
     }
   };
