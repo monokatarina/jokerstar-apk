@@ -59,9 +59,6 @@ const pulse = keyframes`
 
 // ============ Styled Components ============
 
-
-
-
 const CommentContainer = styled.div`
   padding: 16px;
   background: var(--card-bg);
@@ -90,12 +87,12 @@ const CommentList = styled.div`
   }
   
   &::-webkit-scrollbar-track {
-    background: var(--background);
+    background: var(--scrollbar-track);
     border-radius: 0.625rem;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: var(--border-light);
+    background: var(--scrollbar-thumb);
     border-radius: 0.625rem;
     
     &:hover {
@@ -157,13 +154,13 @@ const CommentAvatar = styled.img`
   width: ${props => props.$isReply ? '28px' : '32px'};
   height: ${props => props.$isReply ? '28px' : '32px'};
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 12px;
   object-fit: cover;
-  border: 2px solid var(--background);
+  border: 2px solid var(--avatar-border);
   transition: all 0.2s;
 
   &:hover {
-    border-color: #ff4500;
+    border-color: var(--primary);
     transform: scale(1.05);
   }
 `;
@@ -189,52 +186,54 @@ const CommentContent = styled.div`
 const CommentHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-start; // Alinhar no topo
-  margin-bottom: 4px;
+  align-items: flex-start;
+  margin-bottom: 6px;
 `;
 
 const CommentUser = styled.div`
-  font-weight: 500;
-  font-size: 0.75rem;
-  color: #666;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
   order: 1;
 `;
+
 const UserBadge = styled.span`
-  font-size: 0.7rem;
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
-  color: var(--card-bg); 
+  font-size: 0.65rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
   padding: 2px 6px;
   border-radius: 12px;
+  font-weight: 500;
 `;
 
 const CommentText = styled.p`
-  margin: 4px 0 8px;
-  font-size: 0.85rem;
-  line-height: 1.4;
+  margin: 6px 0 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-  padding: 0 8px;
-  ${props => props.$isDeleted && 'font-style: italic; color: #999;'}
+  padding: 0 4px;
+  ${props => props.$isDeleted && 'font-style: italic; color: var(--text-muted);'}
 `;
 
 const CommentTime = styled.small`
-  font-size: 0.65rem;
-  color: #999;
-  margin-left: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: 8px;
+  font-weight: 400;
 `;
 
 const CommentForm = styled.form`
-
   display: flex;
   align-items: center;
   margin-top: 1rem;
   background: var(--input-bg);
   border-radius: var(--radius-lg);
-  padding: 0.25rem;
+  padding: 0.5rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   border: 1px solid var(--border-light);
@@ -252,7 +251,7 @@ const CommentForm = styled.form`
     border-right: none;
     border-bottom: none;
     background: var(--card-bg);
-    padding: 0.25rem;
+    padding: 0.5rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     transition: bottom 0.3s ease;
   }
@@ -260,7 +259,7 @@ const CommentForm = styled.form`
 
 const CommentInput = styled.input`
   flex: 1;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
   border: none;
   border-radius: var(--radius-lg);
   font-size: 0.95rem;
@@ -270,11 +269,9 @@ const CommentInput = styled.input`
   transition: var(--transition);
 
   @media (max-width: 768px) {
-    padding: 0.5rem;
-    font-size: 16px; // Prevent zoom on iOS
-    min-height: 36px;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+    padding: 0.75rem;
+    font-size: 16px;
+    min-height: 40px;
   }
 
   &:focus {
@@ -283,11 +280,11 @@ const CommentInput = styled.input`
 `;
 
 const SubmitButton = styled.button`
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   border: none;
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   margin-left: 8px;
   display: flex;
@@ -295,64 +292,50 @@ const SubmitButton = styled.button`
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(255, 69, 0, 0.3);
-
-  @media (max-width: 768px) {
-    width: 26px;
-    height: 26px;
-    margin-left: 2px;
-  }
+  box-shadow: var(--shadow-xs);
 
   &:hover {
-    background: linear-gradient(135deg, #e03d00, #e07d00);
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-darker));
     transform: scale(1.05);
   }
-`;
 
-const ReplyButton = styled.button`
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  padding: 2px;
-  transition: all 0.2s;
-
-  &:hover {
-    color: #ff4500;
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
 `;
 
 const ReplyForm = styled.form`
   display: flex;
-  margin: 8px 0 16px 52px;
-  background: #fff;
-  border-radius: 24px;
-  padding: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 12px 0 16px 52px;
+  background: var(--reply-form-bg);
+  border-radius: var(--radius-lg);
+  padding: 0.5rem;
+  box-shadow: var(--shadow-sm);
   transition: var(--transition);
+  border: 1px solid var(--border-light);
 
   &:focus-within {
-    box-shadow: 0 2px 12px rgba(255, 69, 0, 0.2);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
   }
 `;
 
 const ReactionButtons = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-  justify-content: flex-start; // Alinhar mais à esquerda
-  margin-left: 8px; // Não totalmente à esquerda
+  gap: 12px;
+  margin-top: 8px;
+  justify-content: flex-start;
 `;
 
 const ReplyCount = styled.div`
-  font-size: 0.75rem;
-  color: var(--text-light);
-  margin-left: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
+  transition: color 0.2s;
   
   &:hover {
     color: var(--primary);
@@ -378,7 +361,7 @@ const ReactionButton = styled.button`
   border: none;
   cursor: pointer;
   font-size: 0.85rem;
-  padding: 0.125rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 1rem;
   transition: var(--transition);
   
@@ -387,11 +370,11 @@ const ReactionButton = styled.button`
   }
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
 
   ${props => props.$type === 'like' && css`
-    color: ${props.$active ? 'var(--like-color)' : 'var(--text-light)'};
+    color: ${props.$active ? 'var(--like-color)' : 'var(--text-muted)'};
     &:hover {
       background: rgba(var(--like-rgb), 0.1);
     }
@@ -401,14 +384,12 @@ const ReactionButton = styled.button`
   `}
 
   ${props => props.$type === 'dislike' && css`
-    color: ${props.$active ? 'var(--dislike-color)' : 'var(--text-light)'};
+    color: ${props.$active ? 'var(--dislike-color)' : 'var(--text-muted)'};
     &:hover {
       background: rgba(var(--dislike-rgb), 0.1);
-      color:rgb(255, 154, 3);
     }
     ${props.$active && css`
       animation: ${shakeAngry} 0.6s;
-      color: #F44336;
     `}
   `}
 `;
@@ -423,45 +404,43 @@ const ReactionCount = styled.span`
 const MoreOptionsButton = styled.button`
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
   transition: all 0.2s;
 
   &:hover {
-    color: #ff4500;
-    background: rgba(0, 0, 0, 0.05);
-    transform: rotate(90deg);
+    color: var(--primary);
+    background: var(--hover-bg);
   }
 `;
 
 const OptionsMenu = styled.div`
   position: absolute;
   right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 40px;
   background: var(--card-bg);
-  border: 1px solid var(--background);
-  border-radius: 8px;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   z-index: 100;
-  min-width: 120px;
+  min-width: 140px;
   overflow: hidden;
   animation: fadeIn 0.2s ease;
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px) translateY(-50%); }
-    to { opacity: 1; transform: translateY(0) translateY(-50%); }
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 `;
 
 const OptionButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem;
   background: none;
   border: none;
   text-align: left;
@@ -471,7 +450,7 @@ const OptionButton = styled.button`
   transition: var(--transition);
   
   &:hover {
-    background: var(--background-light);
+    background: var(--hover-bg);
     color: var(--primary);
   }
 `;
@@ -482,14 +461,14 @@ const EditForm = styled.div`
 
 const EditTextarea = styled.textarea`
   width: 100%;
-  padding: 0.75rem;
+  padding: 1rem;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   resize: none;
   font-family: inherit;
   font-size: 0.95rem;
-  min-height: 5rem;
-  margin-bottom: 0.5rem;
+  min-height: 100px;
+  margin-bottom: 0.75rem;
   background: var(--input-bg);
   color: var(--input-text);
   transition: var(--transition);
@@ -503,122 +482,146 @@ const EditTextarea = styled.textarea`
 
 const EditButtons = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 12px;
   justify-content: flex-end;
 `;
 
 const SaveButton = styled.button`
-  background: linear-gradient(135deg, #ff4500, #ff8c00);
-  color: var(--card-bg); 
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(255, 69, 0, 0.3);
+  box-shadow: var(--shadow-xs);
+  font-weight: 500;
 
   &:hover {
-    background: linear-gradient(135deg, #e03d00, #e07d00);
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-darker));
     transform: translateY(-1px);
   }
 `;
 
 const CancelButton = styled.button`
-  background: var(--background);
-  color: var(--text-light);
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  border: 1px solid var(--border-light);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s;
+  font-weight: 500;
 
   &:hover {
-    background: var(--background);
+    background: var(--button-secondary-hover);
     transform: translateY(-1px);
   }
 `;
 
 const LoadingMessage = styled.div`
   text-align: center;
-  padding: 20px;
-  color: var(--text-light);
-  font-size: 0.9rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 `;
 
 const EmptyMessage = styled.div`
   text-align: center;
-  padding: 20px;
-  color: var(--text-light);
-  font-size: 0.9rem;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 `;
 
 const ErrorMessage = styled.div`
   text-align: center;
-  padding: 20px;
-  color: #ff3b30;
+  padding: 1rem;
+  color: var(--error);
   font-size: 0.9rem;
+  background: var(--error-bg);
+  border-radius: var(--radius-sm);
+  margin: 0.5rem 0;
 `;
 
 const DeletedMessage = styled.span`
   font-style: italic;
-  color: #999;
+  color: var(--text-muted);
 `;
 
 const CommentCount = styled.div`
-  font-size: 0.9rem;
-  color: var(--text-light);
-  margin-bottom: 16px;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
   padding: 0 8px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-muted);
+  }
 `;
 
 const PopularBadge = styled.span`
   font-size: 0.7rem;
-  background: linear-gradient(135deg, #ff8c00, #ff4500);
-  color: background: var(--card-bg);
-  padding: 2px 8px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  padding: 3px 8px;
   border-radius: 12px;
   margin-left: 8px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-weight: 500;
 `;
 
 const SharedMemeContainer = styled.div`
   margin-top: 12px;
-  border: 1px solid var(--background);
-  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  max-width: 300px;
+  max-width: 100%;
   position: relative;
+  background: var(--media-bg);
 `;
 
 const SharedMeme = styled.img`
   width: 100%;
   height: auto;
+  max-height: 300px;
+  object-fit: contain;
   display: block;
+  background: var(--media-bg);
 `;
 
 const SharedMemeCaption = styled.p`
-  padding: 8px;
-  font-size: 0.9rem;
-  color: var(--text-light);
+  padding: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
   margin: 0;
-  background: #f9f9f9;
+  background: var(--media-caption-bg);
+  border-top: 1px solid var(--border-light);
 `;
 
 const ActionButtons = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
+  margin-left: 8px;
 `;
 
 const AttachButton = styled.button`
-  background: var(--background);
-  color: var(--text-light);
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
   border: none;
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -626,14 +629,10 @@ const AttachButton = styled.button`
   cursor: pointer;
   transition: all 0.2s;
 
-  @media (max-width: 768px) {
-    width: 36px;
-    height: 36px;
-  }
-
   &:hover {
-    background: #e0e0e0;
-    color: #ff4500;
+    background: var(--button-secondary-hover);
+    color: var(--primary);
+    transform: scale(1.05);
   }
 `;
 
@@ -647,6 +646,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 `;
 
 const ModalContent = styled.div`
@@ -664,8 +664,8 @@ const ModalContent = styled.div`
 `;
 
 const ModalHeader = styled.div`
-  padding: ${props => props.$isMobile ? '12px 16px' : '16px'};
-  border-bottom: 1px solid var(--background);
+  padding: ${props => props.$isMobile ? '1rem' : '1.25rem'};
+  border-bottom: 1px solid var(--border-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -676,23 +676,32 @@ const ModalHeader = styled.div`
 `;
 
 const ModalTitle = styled.h3`
-  font-size: ${props => props.$isMobile ? '1rem' : '1.25rem'};
+  font-size: ${props => props.$isMobile ? '1.1rem' : '1.25rem'};
   margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-light);
-  padding: ${props => props.$isMobile ? '4px' : '8px'};
+  color: var(--text-muted);
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--hover-bg);
+    color: var(--text);
+  }
 `;
 
 const MemeGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(${props => props.$isMobile ? '100px' : '120px'}, 1fr));
-  gap: ${props => props.$isMobile ? '6px' : '8px'};
-  padding: ${props => props.$isMobile ? '12px' : '16px'};
+  grid-template-columns: repeat(auto-fill, minmax(${props => props.$isMobile ? '120px' : '150px'}, 1fr));
+  gap: ${props => props.$isMobile ? '8px' : '12px'};
+  padding: ${props => props.$isMobile ? '1rem' : '1.25rem'};
   overflow-y: auto;
 `;
 
@@ -705,10 +714,11 @@ const MemeThumbnail = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  border: 2px solid ${props => props.$selected ? '#ff4500' : 'transparent'};
+  border: 2px solid ${props => props.$selected ? 'var(--primary)' : 'transparent'};
   transition: all 0.2s;
+  background: var(--media-bg);
 
   &:hover {
     transform: ${props => props.$isMobile ? 'none' : 'scale(1.05)'};
@@ -716,11 +726,11 @@ const MemeThumbnail = styled.img`
 `;
 
 const ModalActions = styled.div`
-  padding: ${props => props.$isMobile ? '12px' : '16px'};
-  border-top: 1px solid var(--background);
+  padding: ${props => props.$isMobile ? '1rem' : '1.25rem'};
+  border-top: 1px solid var(--border-light);
   display: flex;
   justify-content: flex-end;
-  gap: ${props => props.$isMobile ? '6px' : '8px'};
+  gap: ${props => props.$isMobile ? '8px' : '12px'};
   position: sticky;
   bottom: 0;
   background: var(--card-bg);
@@ -730,11 +740,11 @@ const MemeVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  border: 2px solid ${props => props.$selected ? '#ff4500' : 'transparent'};
+  border: 2px solid ${props => props.$selected ? 'var(--primary)' : 'transparent'};
   transition: all 0.2s;
-  background: #000;
+  background: var(--media-bg);
 
   &:hover {
     transform: ${props => props.$isMobile ? 'none' : 'scale(1.05)'};
@@ -748,30 +758,32 @@ const MemeCaption = styled.div`
   right: 0;
   background: rgba(0,0,0,0.7);
   color: white;
-  padding: ${props => props.$isMobile ? '2px 4px' : '4px'};
-  font-size: ${props => props.$isMobile ? '0.6rem' : '0.7rem'};
+  padding: ${props => props.$isMobile ? '4px 6px' : '6px 8px'};
+  font-size: ${props => props.$isMobile ? '0.65rem' : '0.75rem'};
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
 `;
 
 const ModalButton = styled.button`
-  padding: ${props => props.$isMobile ? '6px 12px' : '8px 16px'};
+  padding: ${props => props.$isMobile ? '0.75rem 1rem' : '0.75rem 1.25rem'};
   font-size: ${props => props.$isMobile ? '0.9rem' : '1rem'};
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
-  background: ${props => props.$primary ? '#ff4500' : 'var(--background)'};
-  color: ${props => props.$primary ? 'white' : 'var(--text)'};
+  background: ${props => props.$primary ? 'var(--primary)' : 'var(--button-secondary-bg)'};
+  color: ${props => props.$primary ? 'white' : 'var(--button-secondary-text)'};
   transition: all 0.2s;
-  min-width: ${props => props.$isMobile ? '100px' : 'auto'};
+  font-weight: 500;
+  min-width: ${props => props.$isMobile ? '100px' : '120px'};
 
   &:hover {
-    background: ${props => props.$primary ? '#e03d00' : '#e0e0e0'};
+    background: ${props => props.$primary ? 'var(--primary-dark)' : 'var(--button-secondary-hover)'};
+    transform: translateY(-1px);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.7;
     cursor: not-allowed;
   }
 `;
@@ -989,231 +1001,382 @@ const Comment = memo(({
     <React.Fragment>
       <CommentItem $depth={depth} $isPopular={isPopular} data-testid={`comment-${comment._id}`}>
         {isReply && <ReplyIndicator />}
-        <CommentAvatar 
-          src={
-            safeUser.profile?.avatar 
-              ? (safeUser.profile.avatar.startsWith('https') 
-                  ? safeUser.profile.avatar 
-                  : `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}${safeUser.profile.avatar}`)
-              : 'https://i.pravatar.cc/150?img=3'
-          }
-          alt={safeUser.username}
-          $isReply={isReply}
-          crossOrigin="anonymous"
-          onError={(e) => {
-            e.target.src = 'https://i.pravatar.cc/150?img=3';
-          }}
-          onClick={() => navigate(`/users/${safeUser._id}`)}
-          style={{ cursor: 'pointer' }}
-        />
-        <CommentContent $isReply={isReply}>
-          {showOptions === comment._id && (
-            <OptionsMenu style={{ right: '0', left: 'auto' }}>
-              <OptionButton onClick={() => onEdit(comment)}>
-                <FiEdit2 size={14} /> Editar
-              </OptionButton>
-              <OptionButton onClick={() => onDelete(comment._id, isReply, parentCommentId)}>
-                <FiTrash2 size={14} /> Excluir
-              </OptionButton>
-              <OptionButton onClick={() => onToggleOptions(null)}>
-                <FiX size={14} /> Cancelar
-              </OptionButton>
-            </OptionsMenu>
-          )}
+        
+        {/* Cabeçalho do Comentário (linha superior) */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'flex-start',
+          width: '100%'
+        }}>
+          {/* Avatar */}
+          <CommentAvatar 
+            src={
+              safeUser.profile?.avatar 
+                ? (safeUser.profile.avatar.startsWith('https') 
+                    ? safeUser.profile.avatar 
+                    : `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}${safeUser.profile.avatar}`)
+                : 'https://i.pravatar.cc/150?img=3'
+            }
+            alt={safeUser.username}
+            $isReply={isReply}
+            crossOrigin="anonymous"
+            onError={(e) => {
+              e.target.src = 'https://i.pravatar.cc/150?img=3';
+            }}
+            onClick={() => navigate(`/users/${safeUser._id}`)}
+            style={{ 
+              cursor: 'pointer',
+              flexShrink: 0,
+              marginRight: '12px'
+            }}
+          />
           
-          {isEditing ? (
-            <EditForm>
-              <EditTextarea
-                value={editText}
-                onChange={(e) => onEditChange(e.target.value)}
-                autoFocus
-                aria-label="Editar comentário"
-              />
-              <EditButtons>
-                <CancelButton onClick={() => onEdit(null)}>
-                  Cancelar
-                </CancelButton>
-                <SaveButton onClick={() => onSaveEdit(comment._id, isReply, parentCommentId)}>
-                  Salvar
-                </SaveButton>
-              </EditButtons>
-            </EditForm>
-          ) : (
-            <>
-              <CommentHeader>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <CommentUser 
-                    onClick={() => navigate(`/users/${safeUser._id}`)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {safeUser.username}
-                    {safeUser.isVerified && <UserBadge>Verificado</UserBadge>}
-                    {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
-                  </CommentUser>
-                  <CommentTime>
-                    {getTimeAgo(comment.createdAt)}
-                    {comment.isEdited && ' · editado'}
-                  </CommentTime>
-                </div>
-                
-                {canEditDelete && (
-                  <div style={{ marginLeft: 'auto' }}>
+          {/* Conteúdo Principal */}
+          <CommentContent $isReply={isReply} style={{ flex: 1 }}>
+            {showOptions === comment._id && (
+              <OptionsMenu style={{ right: '0', left: 'auto', top: '40px' }}>
+                <OptionButton onClick={() => onEdit(comment)}>
+                  <FiEdit2 size={14} /> Editar
+                </OptionButton>
+                <OptionButton onClick={() => onDelete(comment._id, isReply, parentCommentId)}>
+                  <FiTrash2 size={14} /> Excluir
+                </OptionButton>
+                <OptionButton onClick={() => onToggleOptions(null)}>
+                  <FiX size={14} /> Cancelar
+                </OptionButton>
+              </OptionsMenu>
+            )}
+            
+            {isEditing ? (
+              <EditForm>
+                <EditTextarea
+                  value={editText}
+                  onChange={(e) => onEditChange(e.target.value)}
+                  autoFocus
+                  aria-label="Editar comentário"
+                />
+                <EditButtons>
+                  <CancelButton onClick={() => onEdit(null)}>
+                    Cancelar
+                  </CancelButton>
+                  <SaveButton onClick={() => onSaveEdit(comment._id, isReply, parentCommentId)}>
+                    Salvar
+                  </SaveButton>
+                </EditButtons>
+              </EditForm>
+            ) : (
+              <>
+                {/* Linha de Informações do Usuário */}
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <CommentUser 
+                      onClick={() => navigate(`/users/${safeUser._id}`)}
+                      style={{ 
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '600'
+                      }}
+                    >
+                      {safeUser.username}
+                    </CommentUser>
+                    
+                    <CommentTime style={{ 
+                      marginLeft: '8px',
+                      fontSize: '12px',
+                      color: '#888'
+                    }}>
+                      {getTimeAgo(comment.createdAt)}
+                      {comment.isEdited && ' · editado'}
+                    </CommentTime>
+                  </div>
+                  
+                  {canEditDelete && (
                     <MoreOptionsButton 
                       onClick={() => onToggleOptions(comment._id)} 
                       aria-label="Mais opções"
+                      style={{ marginLeft: 'auto' }}
                     >
-                      <FiMoreHorizontal />
+                      <FiMoreHorizontal size={16} />
                     </MoreOptionsButton>
-                  </div>
+                  )}
+                </div>
+                
+                {/* Badges (Verificado/Popular) */}
+                <div style={{ 
+                  display: 'flex',
+                  gap: '6px',
+                  marginBottom: '8px'
+                }}>
+                  {safeUser.isVerified && (
+                    <UserBadge style={{ 
+                      fontSize: '10px',
+                      padding: '2px 6px'
+                    }}>
+                      Verificado
+                    </UserBadge>
+                  )}
+                  {isPopular && (
+                    <PopularBadge style={{ 
+                      fontSize: '10px',
+                      padding: '2px 6px'
+                    }}>
+                      🔥 Popular
+                    </PopularBadge>
+                  )}
+                </div>
+                
+                {/* Texto do Comentário */}
+                <CommentText $isDeleted={isDeleted} style={{ 
+                  fontSize: '14px',
+                  lineHeight: '1.4',
+                  marginBottom: '12px'
+                }}>
+                  {isDeleted ? <DeletedMessage>{comment.text}</DeletedMessage> : comment.text}
+                </CommentText>
+                
+                {/* Mídia Compartilhada */}
+                {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
+                  <SharedMemeContainer style={{ 
+                    marginTop: '8px',
+                    maxWidth: '100%'
+                  }}>
+                    {comment.sharedMeme.mediaType === 'video' || comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
+                      <video 
+                        controls 
+                        style={{ 
+                          width: '100%', 
+                          display: 'block',
+                          maxHeight: '200px'
+                        }}
+                        crossOrigin="anonymous"
+                      >
+                        <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
+                      </video>
+                    ) : (
+                      <SharedMeme 
+                        src={buildUrl(comment.sharedMeme.mediaUrl)}
+                        alt={comment.sharedMeme.caption || 'Meme compartilhado'}
+                        crossOrigin="anonymous"
+                        style={{
+                          maxHeight: '200px'
+                        }}
+                        onError={(e) => {
+                          console.error('Failed to load meme:', e.target.src);
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    {comment.sharedMeme.caption && (
+                      <SharedMemeCaption style={{
+                        fontSize: '12px',
+                        padding: '8px'
+                      }}>
+                        {comment.sharedMeme.caption}
+                      </SharedMemeCaption>
+                    )}
+                  </SharedMemeContainer>
                 )}
-              </CommentHeader>
-              
-              <CommentText $isDeleted={isDeleted}>
-                {isDeleted ? <DeletedMessage>{comment.text}</DeletedMessage> : comment.text}
-              </CommentText>
-              
-              {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
-                <SharedMemeContainer>
-                  {comment.sharedMeme.mediaType === 'video' || comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
-                    <video 
-                      controls 
-                      style={{ width: '100%', display: 'block' }}
-                      crossOrigin="anonymous"
-                    >
-                      <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
-                      Seu navegador não suporta vídeos HTML5.
-                    </video>
-                  ) : (
-                    <SharedMeme 
-                      src={buildUrl(comment.sharedMeme.mediaUrl)}
-                      alt={comment.sharedMeme.caption || 'Meme compartilhado'}
-                      crossOrigin="anonymous"
-                      onError={(e) => {
-                        console.error('Failed to load meme:', e.target.src);
-                        e.target.style.display = 'none';
+              </>
+            )}
+            
+            {/* Botões de Reação */}
+            {!isDeleted && (
+              <ReactionButtons style={{
+                marginTop: '12px',
+                paddingTop: '8px',
+                borderTop: '1px solid #eee'
+              }}>
+                <div style={{ 
+                  display: 'flex',
+                  gap: '16px'
+                }}>
+                  {/* Botão Like */}
+                  <ReactionButton 
+                    onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
+                    $active={comment.userReaction === 'like'}
+                    $type="like"
+                    aria-label="Curtir"
+                    data-testid="like-button"
+                    style={{
+                      padding: '4px 8px'
+                    }}
+                  >
+                    <FaSmile size={14} />
+                    <ReactionCount style={{ 
+                      fontSize: '12px',
+                      marginLeft: '4px'
+                    }}>
+                      {comment.likes?.length > 0 ? comment.likes.length : '0'}
+                    </ReactionCount>
+                  </ReactionButton>
+
+                  {/* Botão Dislike */}
+                  <ReactionButton 
+                    onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
+                    $active={comment.userReaction === 'dislike'}
+                    $type="dislike"
+                    aria-label="Não curtir"
+                    data-testid="dislike-button"
+                    style={{
+                      padding: '4px 8px'
+                    }}
+                  >
+                    <FaAngry size={14} />
+                    <ReactionCount style={{ 
+                      fontSize: '12px',
+                      marginLeft: '4px'
+                    }}>
+                      {comment.dislikes?.length > 0 ? comment.dislikes.length : '0'}
+                    </ReactionCount>
+                  </ReactionButton>
+
+                  {/* Botão de Resposta */}
+                  {currentUser && depth < MAX_DEPTH && (
+                    <ReactionButton 
+                      onClick={() => onReply(comment._id, parentCommentId)}
+                      aria-label="Responder"
+                      data-testid="reply-button"
+                      style={{
+                        padding: '4px 8px',
+                        color: '#666'
                       }}
-                    />
+                    >
+                      <FiMessageCircle size={12} />
+                      {comment.repliesCount > 0 && (
+                        <ReactionCount style={{ 
+                          fontSize: '12px',
+                          marginLeft: '4px'
+                        }}>
+                          {comment.repliesCount}
+                        </ReactionCount>
+                      )}
+                    </ReactionButton>
                   )}
-                  {comment.sharedMeme.caption && (
-                    <SharedMemeCaption>{comment.sharedMeme.caption}</SharedMemeCaption>
-                  )}
-                </SharedMemeContainer>
-              )}
-            </>
-          )}
-          
-          {!isDeleted && (
-            <ReactionButtons>
-              {/* Botão Like */}
-              <ReactionButton 
-                onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
-                $active={comment.userReaction === 'like'}
-                $type="like"
-                aria-label="Curtir"
-                data-testid="like-button"
-              >
-                <FaSmile size={14} />
-                <ReactionCount>
-                  {comment.likes?.length > 0 ? comment.likes.length : '0'}
-                </ReactionCount>
-              </ReactionButton>
-
-              {/* Botão Dislike */}
-              <ReactionButton 
-                onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
-                $active={comment.userReaction === 'dislike'}
-                $type="dislike"
-                aria-label="Não curtir"
-                data-testid="dislike-button"
-              >
-                <FaAngry size={14} />
-                <ReactionCount>
-                  {comment.dislikes?.length > 0 ? comment.dislikes.length : '0'}
-                </ReactionCount>
-              </ReactionButton>
-
-              {/* Botão de Resposta */}
-              {currentUser && depth < MAX_DEPTH && (
-                <ReactionButton 
-                  onClick={() => onReply(comment._id, parentCommentId)}
-                  aria-label="Responder"
-                  data-testid="reply-button"
-                >
-                  <FiMessageCircle size={12} style={{ color: '#666' }} />
-                  {comment.repliesCount > 0 && (
-                    <ReactionCount>{comment.repliesCount}</ReactionCount>
-                  )}
-                </ReactionButton>
-              )}
-            </ReactionButtons>
-          )}
-        </CommentContent>
+                </div>
+              </ReactionButtons>
+            )}
+          </CommentContent>
+        </div>
       </CommentItem>
 
+      {/* Formulário de Resposta */}
       {isReplying && depth < MAX_DEPTH && (
         <ReplyForm onSubmit={(e) => {
           e.preventDefault();
           onReplySubmit(comment._id);
+        }} style={{
+          marginTop: '12px',
+          marginLeft: '44px',
+          padding: '8px',
+          backgroundColor: '#f5f5f5',
+          borderRadius: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-            <CommentInput
-              type="text"
-              id={`reply-input-${comment._id}`}
-              name={`replyTo${comment._id}`}
-              value={replyTexts[comment._id] || ''}
-              onChange={(e) => onReplyChange(comment._id, e.target.value)}
-              placeholder="Escreva uma resposta..."
-              aria-label="Responder comentário"
-            />
-            <AttachButton 
-              type="button"
-              onClick={() => document.getElementById(`reply-file-${comment._id}`).click()}
-              aria-label="Anexar mídia"
-            >
-              <FiPaperclip size={18} />
-            </AttachButton>
-            <input
-              type="file"
-              id={`reply-file-${comment._id}`}
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  onReplyMediaChange(file, comment._id);
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <CommentInput
+                type="text"
+                id={`reply-input-${comment._id}`}
+                name={`replyTo${comment._id}`}
+                value={replyTexts[comment._id] || ''}
+                onChange={(e) => onReplyChange(comment._id, e.target.value)}
+                placeholder="Escreva uma resposta..."
+                aria-label="Responder comentário"
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  fontSize: '14px'
+                }}
+              />
+              
+              <div style={{ 
+                display: 'flex',
+                gap: '4px'
+              }}>
+                <AttachButton 
+                  type="button"
+                  onClick={() => document.getElementById(`reply-file-${comment._id}`).click()}
+                  aria-label="Anexar mídia"
+                  style={{
+                    width: '32px',
+                    height: '32px'
+                  }}
+                >
+                  <FiPaperclip size={16} />
+                </AttachButton>
+                
+                <input
+                  type="file"
+                  id={`reply-file-${comment._id}`}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      onReplyMediaChange(file, comment._id);
+                      onReplyMemeChange(null, comment._id);
+                    }
+                  }}
+                  accept="image/*, video/*"
+                />
+                
+                <AttachButton 
+                  type="button"
+                  onClick={() => onOpenMemeSelector(comment._id)}
+                  aria-label="Compartilhar meme"
+                  style={{
+                    width: '32px',
+                    height: '32px'
+                  }}
+                >
+                  <FiImage size={16} />
+                </AttachButton>
+                
+                <SubmitButton 
+                  type="submit" 
+                  aria-label="Enviar resposta"
+                  style={{
+                    width: '32px',
+                    height: '32px'
+                  }}
+                >
+                  <FiSend size={16} />
+                </SubmitButton>
+              </div>
+            </div>
+            
+            {(replyMedia[comment._id] || replySelectedMeme[comment._id]) && (
+              <MediaPreview 
+                file={replyMedia[comment._id]} 
+                meme={replySelectedMeme[comment._id] ? 
+                  userMemes.find(m => m._id === replySelectedMeme[comment._id]) : null}
+                onRemove={() => {
+                  onReplyMediaChange(null, comment._id);
                   onReplyMemeChange(null, comment._id);
-                }
-              }}
-              accept="image/*, video/*"
-            />
-            <AttachButton 
-              type="button"
-              onClick={() => onOpenMemeSelector(comment._id)}
-              aria-label="Compartilhar meme"
-            >
-              <FiImage size={18} />
-            </AttachButton>
-            <SubmitButton type="submit" aria-label="Enviar resposta">
-              <FiSend size={18} />
-            </SubmitButton>
+                }} 
+              />
+            )}
           </div>
-          
-          {(replyMedia[comment._id] || replySelectedMeme[comment._id]) && (
-            <MediaPreview 
-              file={replyMedia[comment._id]} 
-              meme={replySelectedMeme[comment._id] ? 
-                userMemes.find(m => m._id === replySelectedMeme[comment._id]) : null}
-              onRemove={() => {
-                onReplyMediaChange(null, comment._id);
-                onReplyMemeChange(null, comment._id);
-              }} 
-            />
-          )}
         </ReplyForm>
       )}
 
-      {/* Área de respostas */}
+      {/* Área de Respostas */}
       {comment.replies && Array.isArray(comment.replies) && comment.replies.length > 0 && (
-        <div style={{ marginLeft: depth > 0 ? '1.25rem' : '0' }}>
+        <div style={{ 
+          marginLeft: depth > 0 ? '1.25rem' : '0',
+          marginTop: '8px'
+        }}>
           {comment.replies.slice(0, expandedReplies[comment._id] ? comment.replies.length : 1).map(reply => (
             <Comment 
               key={reply._id}
@@ -1249,6 +1412,7 @@ const Comment = memo(({
             />
           ))}
 
+          {/* Botão para expandir/collapsar respostas */}
           {comment.replies.length > 1 && (
             <div style={{ 
               textAlign: 'center', 
@@ -1266,20 +1430,13 @@ const Comment = memo(({
                   border: 'none',
                   color: 'var(--primary)',
                   cursor: 'pointer',
-                  padding: '0.25rem 0.75rem',
-                  fontSize: '0.85rem',
-                  borderRadius: '1rem',
-                  transition: 'all 0.2s',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  borderRadius: '16px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.25rem',
-                  ':hover': {
-                    backgroundColor: 'rgba(var(--primary-rgb), 0.1)'
-                  },
-                  ':disabled': {
-                    opacity: 0.7,
-                    cursor: 'not-allowed'
-                  }
+                  gap: '4px',
+                  backgroundColor: 'rgba(var(--primary-rgb), 0.1)'
                 }}
               >
                 {loadingReplies[comment._id] ? (
@@ -1296,6 +1453,7 @@ const Comment = memo(({
             </div>
           )}
 
+          {/* Botão para carregar mais respostas */}
           {hasMoreReplies && !expandedReplies[comment._id] && (
             <div style={{ 
               textAlign: 'center', 
@@ -1310,20 +1468,13 @@ const Comment = memo(({
                   border: 'none',
                   color: 'var(--primary)',
                   cursor: 'pointer',
-                  padding: '0.25rem 0.75rem',
-                  fontSize: '0.85rem',
-                  borderRadius: '1rem',
-                  transition: 'all 0.2s',
+                  padding: '6px 12px',
+                  fontSize: '12px',
+                  borderRadius: '16px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.25rem',
-                  ':hover': {
-                    backgroundColor: 'rgba(var(--primary-rgb), 0.1)'
-                  },
-                  ':disabled': {
-                    opacity: 0.7,
-                    cursor: 'not-allowed'
-                  }
+                  gap: '4px',
+                  backgroundColor: 'rgba(var(--primary-rgb), 0.1)'
                 }}
               >
                 {loadingReplies[comment._id] ? (
