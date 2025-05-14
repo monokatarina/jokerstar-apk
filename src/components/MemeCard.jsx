@@ -73,7 +73,7 @@ const MobileCommentSection = styled.div`
     height: 100vh;
     max-height: 100vh;
     background: var(--card-bg);
-    z-index: 1000;
+    z-index: 1002;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
     overflow: hidden;
@@ -123,10 +123,11 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
 
 const DragHandle = styled.div`
   position: absolute;
+  z-index: 1;
   top: 0;
   left: 0;
   right: 0;
-  height: 60px; /* Área maior para arraste */
+  height: 160px; /* Área maior para arraste */
   cursor: grab;
   display: flex;
   justify-content: center;
@@ -145,7 +146,7 @@ const CommentSectionContainer = styled.div`
 `;
 
 const CommentFormContainer = styled.div`
-  z-index: 1001;
+  z-index: 100;
   position: sticky;
   bottom: 0;
   padding: 12px;
@@ -1042,7 +1043,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   const handleTouchEnd = () => {
     setIsDragging(false);
     
-    if (dragOffset > 80 || (dragOffset > 30 && Date.now() - touchStartTime.current < 200)) {
+    if (dragOffset > 85 || (dragOffset > 30 && Date.now() - touchStartTime.current < 200)) {
       setShowComments(false);
     }
     setDragOffset(0);
