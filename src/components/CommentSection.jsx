@@ -36,253 +36,370 @@ const buildUrl = (url) => {
 
 // ============ Animations ============
 const bounceHappy = keyframes`
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15) translateY(-2px); }
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(5deg); }
+  50% { transform: scale(1.3) rotate(0deg); }
+  75% { transform: scale(1.2) rotate(-5deg); }
 `;
 
 const shakeAngry = keyframes`
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.2) rotate(-10deg); }
+  40% { transform: scale(1.3) rotate(10deg); }
+  60% { transform: scale(1.2) rotate(-10deg); }
+  80% { transform: scale(1.1) rotate(5deg); }
 `;
 
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 `;
 
 // ============ Styled Components ============
+
+
+
+
 const CommentContainer = styled.div`
-  padding: 0 16px 16px;
+  padding: 16px;
   background: var(--card-bg);
   border-top: 1px solid var(--border-light);
+  padding: 0.5rem;
+  padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '1rem'};
   transition: padding-bottom 0.3s ease;
 
   @media (max-width: 768px) {
-    padding: 0 8px 8px;
+    padding: 0.25rem;
+    padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '0.5rem'};
     border-top: none;
   }
 `;
 
 const CommentList = styled.div`
-  max-height: 60vh;
+  max-height: 31.25rem;
   overflow-y: auto;
-  padding-right: 8px;
-  animation: ${fadeIn} 0.3s ease;
-
+  margin-bottom: 1rem;
+  padding-right: 0.5rem;
+  scroll-behavior: smooth;
+  
+  /* Estilos de scrollbar */
   &::-webkit-scrollbar {
-    width: 4px;
+    width: 0.375rem;
   }
-
+  
+  &::-webkit-scrollbar-track {
+    background: var(--background);
+    border-radius: 0.625rem;
+  }
+  
   &::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 2px;
+    background: var(--border-light);
+    border-radius: 0.625rem;
+    
+    &:hover {
+      background: var(--primary);
+    }
   }
 
   @media (max-width: 768px) {
     max-height: none;
     height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
+    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
+    margin-bottom: 0;
+    transition: all 0.3s ease;
   }
 `;
 
 const CommentItem = styled.div`
   display: flex;
-  gap: 12px;
-  margin: 12px 0;
+  margin-bottom: 0.25rem;
   position: relative;
+  transition: var(--transition);
 
-  ${props => props.$depth > 0 && css`
-    margin-left: ${props.$depth * 36}px;
-  `}
+  @media (max-width: 768px) {
+    margin-left: ${props => props.$depth * 0.25}rem;
+    padding-left: ${props => props.$depth > 0 ? '0.125rem' : '0'};
+  }
 
   &:hover {
-    ${MoreOptionsButton} {
-      opacity: 1;
-    }
+    transform: none;
   }
+
+  ${props => props.$isPopular && css`
+    order: -1;
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, rgba(var(--primary-rgb), 0.05), transparent);
+
+    &::before {
+      content: "🔥";
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      animation: ${pulse} 1.5s infinite;
+    }
+  `}
 `;
 
 const CommentAvatar = styled.img`
-  width: 32px;
-  height: 32px;
+  width: ${props => props.$isReply ? '28px' : '32px'};
+  height: ${props => props.$isReply ? '28px' : '32px'};
   border-radius: 50%;
+  margin-right: 8px;
   object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid var(--border-light);
-  cursor: pointer;
-  transition: transform 0.2s;
+  border: 2px solid var(--background);
+  transition: all 0.2s;
 
   &:hover {
+    border-color: #ff4500;
     transform: scale(1.05);
   }
 `;
 
 const CommentContent = styled.div`
   flex: 1;
-  min-width: 0;
+  background: var(--comment-bg);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  overflow: visible;
+  color: var(--text);
+  transition: background 0.3s ease;
+  
+  ${props => props.$isReply && css`
+    background: var(--reply-bg);
+  `}
 `;
 
 const CommentHeader = styled.div`
   display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 2px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  position: relative;
 `;
 
 const CommentUser = styled.div`
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text);
-  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.75rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  order: 2;
+`;
 
-  &:hover {
-    color: var(--primary);
-  }
+const UserBadge = styled.span`
+  font-size: 0.7rem;
+  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  color: var(--card-bg); 
+  padding: 2px 6px;
+  border-radius: 12px;
 `;
 
 const CommentText = styled.p`
   margin: 4px 0;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   line-height: 1.4;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
-
-  ${props => props.$isDeleted && css`
-    color: var(--text-lighter);
-    font-style: italic;
-  `}
+  ${props => props.$isDeleted && 'font-style: italic; color: #999;'}
 `;
 
 const CommentTime = styled.small`
-  font-size: 0.75rem;
-  color: var(--text-lighter);
-`;
-
-const ReactionButtons = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 8px;
-`;
-
-const ReactionButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: var(--text-lighter);
-
-  ${props => props.$active && css`
-    color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.1);
-  `}
-
-  ${props => props.$type === 'like' && props.$active && css`
-    animation: ${bounceHappy} 0.4s ease;
-  `}
-
-  ${props => props.$type === 'dislike' && props.$active && css`
-    animation: ${shakeAngry} 0.4s ease;
-  `}
-
-  &:hover {
-    background: rgba(var(--primary-rgb), 0.05);
-  }
-`;
-
-const ReplyButton = styled.button`
-  background: none;
-  border: none;
-  color: var(--text-lighter);
-  cursor: pointer;
-  padding: 4px;
-  margin-left: auto;
-  transition: all 0.2s;
-
-  &:hover {
-    color: var(--primary);
-  }
+  font-size: 0.65rem;
+  color: #999;
+  margin-left: 6px;
 `;
 
 const CommentForm = styled.form`
+
   display: flex;
-  gap: 8px;
-  padding: 12px;
-  background: var(--card-bg);
-  border-top: 1px solid var(--border-light);
+  align-items: center;
+  margin-top: 1rem;
+  background: var(--input-bg);
+  border-radius: var(--radius-lg);
+  padding: 0.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-light);
   position: sticky;
   bottom: 0;
-  z-index: 10;
 
   @media (max-width: 768px) {
     position: fixed;
     left: 0;
     right: 0;
     bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : '0'};
-    padding: 8px;
-    background: var(--background);
-    border-top: 1px solid var(--border);
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    background: var(--card-bg);
+    padding: 0.25rem;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    transition: bottom 0.3s ease;
   }
 `;
 
 const CommentInput = styled.input`
   flex: 1;
-  padding: 10px 16px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
+  outline: none;
   background: var(--input-bg);
-  color: var(--text);
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  color: var(--input-text);
+  transition: var(--transition);
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+    font-size: 16px; // Prevent zoom on iOS
+    min-height: 36px;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
 
   &:focus {
-    border-color: var(--primary);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   }
 `;
 
 const SubmitButton = styled.button`
+  background: linear-gradient(135deg, #ff4500, #ff8c00);
+  color: white;
+  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  margin-left: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
   cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(255, 69, 0, 0.3);
+
+  @media (max-width: 768px) {
+    width: 26px;
+    height: 26px;
+    margin-left: 2px;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, #e03d00, #e07d00);
+    transform: scale(1.05);
+  }
+`;
+
+const ReplyButton = styled.button`
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px;
   transition: all 0.2s;
 
   &:hover {
-    background: var(--primary-hover);
-    transform: scale(1.05);
+    color: #ff4500;
   }
+`;
+
+const ReplyForm = styled.form`
+  display: flex;
+  margin: 8px 0 16px 52px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+
+  &:focus-within {
+    box-shadow: 0 2px 12px rgba(255, 69, 0, 0.2);
+  }
+`;
+
+const ReactionButtons = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+`;
+
+
+const ReactionButton = styled.button`
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  transition: var(--transition);
+  
+  &:active, &:focus {
+    outline: none;
+  }
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  ${props => props.$type === 'like' && css`
+    color: ${props.$active ? 'var(--like-color)' : 'var(--text-light)'};
+    &:hover {
+      background: rgba(var(--like-rgb), 0.1);
+    }
+    ${props.$active && css`
+      animation: ${bounceHappy} 0.6s;
+    `}
+  `}
+
+  ${props => props.$type === 'dislike' && css`
+    color: ${props.$active ? 'var(--dislike-color)' : 'var(--text-light)'};
+    &:hover {
+      background: rgba(var(--dislike-rgb), 0.1);
+      color:rgb(255, 154, 3);
+    }
+    ${props.$active && css`
+      animation: ${shakeAngry} 0.6s;
+      color: #F44336;
+    `}
+  `}
+`;
+
+const ReactionCount = styled.span`
+  font-size: 0.75rem;
+  color: inherit;
 `;
 
 const MoreOptionsButton = styled.button`
   background: none;
   border: none;
-  color: var(--text-lighter);
+  color: #999;
   cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s;
   padding: 4px;
-  margin-left: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
 
   &:hover {
-    color: var(--primary);
-    opacity: 1;
+    color: #ff4500;
+    background: rgba(0, 0, 0, 0.05);
+    transform: rotate(90deg);
   }
 `;
-
 
 const OptionsMenu = styled.div`
   position: absolute;
@@ -944,56 +1061,56 @@ const Comment = memo(({
           )}
           
           {!isDeleted && (
-            <ReactionButtons>
-              {/* Botão Like */}
-              <ReactionButton 
-                onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
-                $active={comment.userReaction === 'like'}
-                $type="like"
-                aria-label="Curtir"
-                data-testid="like-button"
-              >
-                {comment.userReaction === 'like' ? (
-                  <FaSmile size={14} style={{ transform: 'scale(1.1)' }} />
-                ) : (
-                  <FaSmile size={14} style={{ opacity: 0.7 }} />
-                )}
-                {comment.likes?.length > 0 && (
-                  <ReactionCount>{comment.likes.length}</ReactionCount>
-                )}
-              </ReactionButton>
-
-              {/* Botão Dislike */}
-              <ReactionButton 
-                onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
-                $active={comment.userReaction === 'dislike'}
-                $type="dislike"
-                aria-label="Não curtir"
-                data-testid="dislike-button"
-              >
-                {comment.userReaction === 'dislike' ? (
-                  <FaAngry size={14} style={{ transform: 'scale(1.1)' }} />
-                ) : (
-                  <FaAngry size={14} style={{ opacity: 0.7 }} />
-                )}
-                {comment.dislikes?.length > 0 && (
-                  <ReactionCount>{comment.dislikes.length}</ReactionCount>
-                )}
-              </ReactionButton>
-
-              {/* Botão de Resposta */}
-              {currentUser && depth < MAX_DEPTH && (
-                <ReactionButton 
-                  as="div" // Remove o comportamento de botão nativo
-                  onClick={() => onReply(comment._id, parentCommentId)}
-                  aria-label="Responder"
-                  style={{ marginLeft: 'auto' }} // Alinha à direita
-                  data-testid="reply-button"
-                >
-                  <FiMessageCircle size={12} style={{ color: '#666' }} />
-                </ReactionButton>
+          <ReactionButtons>
+            {/* Botão Like */}
+            <ReactionButton 
+              onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
+              $active={comment.userReaction === 'like'}
+              $type="like"
+              aria-label="Curtir"
+              data-testid="like-button"
+            >
+              {comment.userReaction === 'like' ? (
+                <FaSmile size={14} style={{ transform: 'scale(1.1)' }} />
+              ) : (
+                <FaSmile size={14} style={{ opacity: 0.7 }} />
               )}
-            </ReactionButtons>
+              {comment.likes?.length > 0 && (
+                <ReactionCount>{comment.likes.length}</ReactionCount>
+              )}
+            </ReactionButton>
+
+            {/* Botão Dislike */}
+            <ReactionButton 
+              onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
+              $active={comment.userReaction === 'dislike'}
+              $type="dislike"
+              aria-label="Não curtir"
+              data-testid="dislike-button"
+            >
+              {comment.userReaction === 'dislike' ? (
+                <FaAngry size={14} style={{ transform: 'scale(1.1)' }} />
+              ) : (
+                <FaAngry size={14} style={{ opacity: 0.7 }} />
+              )}
+              {comment.dislikes?.length > 0 && (
+                <ReactionCount>{comment.dislikes.length}</ReactionCount>
+              )}
+            </ReactionButton>
+
+            {/* Botão de Resposta */}
+            {currentUser && depth < MAX_DEPTH && (
+              <ReactionButton 
+                as="div" // Remove o comportamento de botão nativo
+                onClick={() => onReply(comment._id, parentCommentId)}
+                aria-label="Responder"
+                style={{ marginLeft: 'auto' }} // Alinha à direita
+                data-testid="reply-button"
+              >
+                <FiMessageCircle size={12} style={{ color: '#666' }} />
+              </ReactionButton>
+            )}
+          </ReactionButtons>
           )}
         </CommentContent>
       </CommentItem>
