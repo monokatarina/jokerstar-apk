@@ -14,7 +14,10 @@ import {
   FiPaperclip,
   FiImage,
   FiLoader,
-  FiMessageCircle
+  FiMessageCircle,
+  FiChevronDown,  // Add this
+  FiChevronUp,    // Add this
+  FiPlusCircle    // Add this
 } from 'react-icons/fi';
 import PropTypes from 'prop-types';
 const buildUrl = (url) => {
