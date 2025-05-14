@@ -185,8 +185,8 @@ const CommentContent = styled.div`
 
 const CommentHeader = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-direction: column; /* Muda para coluna */
+  gap: 2px; /* Espaço entre linhas */
   margin-bottom: 6px;
 `;
 
@@ -197,7 +197,6 @@ const CommentUser = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  order: 1;
 `;
 
 const UserBadge = styled.span`
@@ -223,7 +222,6 @@ const CommentText = styled.p`
 const CommentTime = styled.small`
   font-size: 0.7rem;
   color: var(--text-muted);
-  margin-left: 8px;
   font-weight: 400;
 `;
 
@@ -1085,14 +1083,7 @@ const Comment = memo(({
                       {safeUser.username}
                     </CommentUser>
                     
-                    <CommentTime style={{ 
-                      marginLeft: '8px',
-                      fontSize: '12px',
-                      color: '#888'
-                    }}>
-                      {getTimeAgo(comment.createdAt)}
-                      {comment.isEdited && ' · editado'}
-                    </CommentTime>
+
                   </div>
                   
                   {canEditDelete && (
@@ -1129,7 +1120,14 @@ const Comment = memo(({
                     </PopularBadge>
                   )}
                 </div>
-                
+                  <CommentTime style={{ 
+                    marginLeft: '8px',
+                    fontSize: '12px',
+                    color: '#888'
+                  }}>
+                    {getTimeAgo(comment.createdAt)}
+                    {comment.isEdited && ' · editado'}
+                  </CommentTime>
                 {/* Texto do Comentário */}
                 <CommentText $isDeleted={isDeleted} style={{ 
                   fontSize: '14px',
