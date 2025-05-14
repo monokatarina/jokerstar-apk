@@ -32,7 +32,7 @@ const AppContainer = styled.div`
 const MainContent = styled.main`
   flex: 1;
   overflow-y: auto;
-  padding: 0 0 72px; /* Bottom padding para a navigation bar */
+  padding: 60px 0 72px; /* 60px top para a navbar e 72px bottom para evitar o footer */
   -webkit-overflow-scrolling: touch;
   
   @media (max-width: 768px) {
@@ -43,6 +43,13 @@ const MainContent = styled.main`
 const KeyboardSpacer = styled.div`
   height: var(--keyboard-height, 0px);
   transition: height 0.3s ease;
+`;
+
+const NavbarWrapper = styled.div`
+  position: fixed;
+  top: env(safe-area-inset-top);
+  width: 100%;
+  z-index: 1000;
 `;
 
 function App() {
@@ -68,7 +75,10 @@ function App() {
           <ThemeProvider>
             <GlobalStyles />
             <AppContainer>
-              <Navbar />
+              <NavbarWrapper>
+                <Navbar />
+              </NavbarWrapper>
+            
               
               <MainContent>
                 <Routes>
@@ -90,6 +100,7 @@ function App() {
               </MainContent>
 
               <KeyboardSpacer />
+              
             </AppContainer>
           </ThemeProvider>
         </Router>
