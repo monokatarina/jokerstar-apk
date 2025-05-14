@@ -1032,28 +1032,21 @@ const Comment = memo(({
       const newExpanded = {...prev};
       const isExpanded = !prev[commentId];
       
-      // Função recursiva para expandir/collapsar todas as respostas aninhadas
-      const toggleNestedReplies = (replies) => {
-        replies.forEach(reply => {
-          newExpanded[reply._id] = isExpanded;
-          if (reply.replies && reply.replies.length > 0) {
-            toggleNestedReplies(reply.replies);
-          }
-        });
-      };
-
       // Aplica para o comentário atual
       newExpanded[commentId] = isExpanded;
       
-      // Aplica recursivamente para todas as respostas
-      const comment = findComment(comments, commentId);
-      if (comment && comment.replies) {
-        toggleNestedReplies(comment.replies);
+      // Aplica para todas as respostas diretas deste comentário
+      // Não precisamos de recursão aqui porque cada Comment filho
+      // cuidará de suas próprias respostas
+      if (comment.replies) {
+        comment.replies.forEach(reply => {
+          newExpanded[reply._id] = isExpanded;
+        });
       }
 
       return newExpanded;
     });
-  }, [comments, findComment]);
+  }, [comment.replies]);
 
 
   return (
