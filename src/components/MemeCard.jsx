@@ -96,6 +96,7 @@ const MobileCommentSection = styled.div`
   }
 `;
 
+// Substitua o ImprovedMobileCommentSection por este:
 const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
   transform: translateY(calc(${props => props.$offset}px + ${props => props.$isOpen ? '0%' : '100%'}));
@@ -104,18 +105,19 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   background: var(--card-bg);
   height: 80vh;
   max-height: 80vh;
-  pointer-events: auto; 
-  /* Novo estilo para o handle de arraste */
+  pointer-events: auto;
+  touch-action: none; /* Importante para controle total do toque */
+  
   &::before {
     content: '';
     position: absolute;
-    top: 24px; 
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
-    width: 60px; 
-    height: 6px; 
+    width: 60px;
+    height: 6px;
     background: var(--text-light);
-    border-radius: 3px; 
+    border-radius: 3px;
     opacity: ${props => 1 - (props.$offset / 100)};
   }
 `;
@@ -771,6 +773,10 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
   const touchStartY = useRef(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null);
+  const [currentDrag, setCurrentDrag] = useState(0);
+  const [shouldClose, setShouldClose] = useState(false);
+
   useEffect(() => {
     const processMentions = async () => {
       if (meme.caption) {
@@ -1017,37 +1023,66 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
 
   const handleTouchStart = (e) => {
     // Verificar se o toque começou na área de arraste superior
-    const isHandleTouch = e.target.closest('.drag-handle');
-    if (!isHandleTouch) return;
+    const touchY = e.touches[0].clientY;
+    const isHandleTouch = touchY < 100; // Área superior de 100px
     
-    touchStartY.current = e.touches[0].clientY;
-    setIsDragging(true);
-    setDragOffset(0);
+    if (isHandleTouch && showComments) {
+      setDragStart(touchY);
+      setCurrentDrag(0);
+      setShouldClose(false);
+    }
   };
 
   const handleTouchMove = (e) => {
-    if (!isDragging) return;
+    if (dragStart === null) return;
     
     const touchY = e.touches[0].clientY;
-    const deltaY = touchY - touchStartY.current;
+    const deltaY = touchY - dragStart;
     
     // Limitar o arraste para baixo
     if (deltaY > 0) {
-      setDragOffset(Math.min(deltaY * 0.7, 180));
+      setCurrentDrag(Math.min(deltaY, 300));
+      setShouldClose(deltaY > 100);
+      
+      // Bloquear a rolagem enquanto arrasta
+      if (commentSectionRef.current) {
+        commentSectionRef.current.style.overflow = 'hidden';
+      }
     }
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
+    if (dragStart === null) return;
     
-    setIsDragging(false);
-    
-    // Só fecha se arrastado mais de 100px ou movimento rápido
-    if (dragOffset > 100) {
+    if (shouldClose) {
       setShowComments(false);
     }
-    setDragOffset(0);
+    
+    // Resetar estados
+    setDragStart(null);
+    setCurrentDrag(0);
+    setShouldClose(false);
+    
+    // Restaurar a rolagem
+    if (commentSectionRef.current) {
+      commentSectionRef.current.style.overflow = 'auto';
+    }
   };
+  useEffect(() => {
+    const element = commentSectionRef.current;
+    if (!element) return;
+
+    element.addEventListener('touchstart', handleTouchStart, { passive: false });
+    element.addEventListener('touchmove', handleTouchMove, { passive: false });
+    element.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStart);
+      element.removeEventListener('touchmove', handleTouchMove);
+      element.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [showComments, dragStart, shouldClose]);
+
 
   return (
     <>
