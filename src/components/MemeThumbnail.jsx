@@ -71,13 +71,15 @@ const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
     
-    // Se a URL já é absoluta (começa com http), retorna diretamente
-    if (meme.mediaUrl.startsWith('https')) return meme.mediaUrl;
+    // Se a URL já é completa, converte para HTTPS se necessário
+    if (meme.mediaUrl.startsWith('http')) {
+      // Substitui 'http://' por 'https://' se necessário
+      return meme.mediaUrl.replace(/^http:\/\//i, 'https://');
+    }
     
-    // Se for uma URL relativa, adiciona a base da API
-    // Remove qualquer barra inicial para evitar duplicação
-    const cleanPath = meme.mediaUrl.startsWith('/') ? meme.mediaUrl.substring(1) : meme.mediaUrl;
-    return `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}/${cleanPath}`;
+    // Para URLs relativas, monta a URL completa com HTTPS
+    const cleanPath = meme.mediaUrl.startsWith('/') ? meme.mediaUrl : `/${meme.mediaUrl}`;
+    return `https://api.jokesteronline.org${cleanPath}`;
   };
 
   return (
