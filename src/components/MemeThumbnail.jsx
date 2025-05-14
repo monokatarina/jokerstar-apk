@@ -70,7 +70,7 @@ const RepostBadge = styled.div`
 const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
-    if (meme.mediaUrl.startsWith('http')) return meme.mediaUrl;
+    if (meme.mediaUrl.startsWith('https')) return meme.mediaUrl;
     return `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}${meme.mediaUrl}`;
   };
 
