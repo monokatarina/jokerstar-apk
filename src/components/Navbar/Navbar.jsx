@@ -1,157 +1,278 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import styled, { keyframes } from 'styled-components';
-import { FiHome, FiPlus, FiBell, FiUser, FiCompass } from 'react-icons/fi';
-import { Capacitor } from '@capacitor/core';
-import { StatusBar } from '@capacitor/status-bar';
-import { Keyboard } from '@capacitor/keyboard';
+import styled, { keyframes, css } from 'styled-components';
+import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiSettings, FiMenu, FiX, FiBell } from 'react-icons/fi';
+import { FaLaughSquint } from 'react-icons/fa';
+import { useTheme } from '../../styles/ThemeContext';
+import { FiMoon, FiSun } from 'react-icons/fi';
+import { useSwipeable } from 'react-swipeable';
 import NotificationDropdown from '../NotificationDropdown/NotificationDropdown';
 
 // Animations
-const slideUp = keyframes`
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+const slideIn = keyframes`
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+`;
+
+const popIn = keyframes`
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 `;
 
 // Styled Components
-const MobileNavBar = styled.nav`
+const MobileNavbarContainer = styled.nav`
   position: fixed;
-  bottom: 0;
+  top: 0;
   left: 0;
   right: 0;
-  height: ${Capacitor.isNativePlatform() ? '64px' : '56px'};
-  background: ${({ theme }) => theme.navBackground || 'rgba(255, 115, 0, 0.95)'};
-  backdrop-filter: blur(10px);
+  height: 60px;
+  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 16px;
   z-index: 1000;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
-const NavItem = styled(Link)`
-  position: relative;
+const BrandWrapper = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 100%;
-  color: ${({ $active }) => $active ? 'var(--primary)' : 'rgba(255, 255, 255, 0.7)'};
-  text-decoration: none;
-  transition: transform 0.1s ease;
-  -webkit-tap-highlight-color: transparent;
+  gap: 8px;
+  transition: transform 0.2s ease;
 
   &:active {
-    transform: scale(0.9);
+    transform: scale(0.95);
+  }
+`;
+
+const BrandLogo = styled(FaLaughSquint)`
+  font-size: 1.8rem;
+  color: #FFF;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+`;
+
+const BrandText = styled.span`
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #FFF;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+`;
+
+const DrawerContainer = styled.div`
+  position: fixed;
+  top: 0;
+  left: ${({ $isOpen }) => ($isOpen ? '0' : '-100%')};
+  width: 280px;
+  height: 100vh;
+  background: #1A1A1A;
+  z-index: 1002;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
+  pointer-events: ${({ $isOpen }) => ($isOpen ? 'all' : 'none')};
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+`;
+
+const DrawerHeader = styled.div`
+  padding: 24px 20px;
+  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+`;
+
+const DrawerItem = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  color: ${({ $active }) => ($active ? '#FF6B00' : '#FFF')};
+  text-decoration: none;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  background: ${({ $active }) => ($active ? 'rgba(255, 107, 0, 0.1)' : 'transparent')};
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #FF6B00;
+    opacity: ${({ $active }) => ($active ? '1' : '0')};
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
   }
 
   svg {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 4px;
+    width: 20px;
+    height: 20px;
+    color: ${({ $active }) => ($active ? '#FF6B00' : 'rgba(255, 255, 255, 0.7)')};
   }
 `;
 
-const NavLabel = styled.span`
-  font-size: 0.7rem;
-  font-weight: 500;
-  letter-spacing: 0.2px;
+const DrawerFooter = styled.div`
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
-const FloatingButton = styled.button`
-  position: fixed;
-  bottom: ${Capacitor.isNativePlatform() ? '84px' : '70px'};
-  left: 50%;
-  transform: translateX(-50%);
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background: var(--primary);
-  color: white;
+const IconButton = styled.button`
+  background: none;
   border: none;
+  padding: 8px;
+  color: #FFF;
+  border-radius: 8px;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 1001;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.1s ease;
 
   &:active {
-    transform: translateX(-50%) scale(0.9);
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.9);
   }
 `;
 
-const NotificationWrapper = styled.div`
-  position: relative;
-  height: 100%;
-  display: flex;
-  align-items: center;
-`;
-
 const Navbar = () => {
-  const { user } = useAuth();
-  const location = useLocation();
-  const [activeRoute, setActiveRoute] = useState(location.pathname);
+  const { theme, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeRoute, setActiveRoute] = useState(location.pathname);
 
   useEffect(() => {
     setActiveRoute(location.pathname);
+    setDrawerOpen(false);
   }, [location]);
 
-  // Configuração inicial da status bar
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      StatusBar.setBackgroundColor({ color: '#00000000' });
-      StatusBar.setStyle({ style: 'light' });
-    }
-  }, []);
+  const handlers = useSwipeable({
+    onSwipedLeft: () => setDrawerOpen(false),
+    trackMouse: true
+  });
 
-  const mainRoutes = [
-    { path: '/', icon: FiCompass, label: 'Explorar' },
-    { path: '/feed', icon: FiHome, label: 'Início' },
-    { path: user ? `/users/${user._id}` : '/login', icon: FiUser, label: 'Perfil' },
-  ];
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <>
-      <MobileNavBar>
-        {mainRoutes.map((route) => (
-          <NavItem
-            key={route.path}
-            to={route.path}
-            $active={activeRoute === route.path}
-          >
-            <route.icon />
-            <NavLabel>{route.label}</NavLabel>
-          </NavItem>
-        ))}
-        
-        <NotificationWrapper>
-          <NavItem
-            as="div"
-            style={{ cursor: 'pointer', width: '72px' }}
-            $active={false}
-          >
-            <FiBell />
-            <NavLabel>Notificações</NavLabel>
-            <NotificationDropdown />
-          </NavItem>
-        </NotificationWrapper>
-      </MobileNavBar>
+      <MobileNavbarContainer>
+        <IconButton onClick={() => setDrawerOpen(true)}>
+          <FiMenu size={24} />
+        </IconButton>
 
-      {user && (
-        <FloatingButton 
-          onClick={() => navigate('/upload')}
-          aria-label="Criar novo meme"
-        >
-          <FiPlus size={24} />
-        </FloatingButton>
-      )}
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <BrandWrapper>
+            <BrandLogo />
+            <BrandText>iFunny</BrandText>
+          </BrandWrapper>
+        </Link>
+
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {user && <NotificationDropdown />}
+        </div>
+      </MobileNavbarContainer>
+
+      <Overlay $isOpen={drawerOpen} onClick={() => setDrawerOpen(false)} {...handlers} />
+
+      <DrawerContainer $isOpen={drawerOpen} {...handlers}>
+        <DrawerHeader>
+          <BrandWrapper>
+            <BrandLogo />
+            <BrandText>iFunny</BrandText>
+          </BrandWrapper>
+        </DrawerHeader>
+
+        <div style={{ padding: '16px 0', flex: 1 }}>
+          {user ? (
+            <>
+              <DrawerItem 
+                to="/" 
+                $active={activeRoute === '/'}
+              >
+                <FiTrendingUp />
+                Trending
+              </DrawerItem>
+
+              <DrawerItem 
+                to="/feed" 
+                $active={activeRoute === '/feed'}
+              >
+                <FiHome />
+                Feed
+              </DrawerItem>
+
+              <DrawerItem 
+                to="/upload" 
+                $active={activeRoute === '/upload'}
+              >
+                <FiPlus />
+                Create
+              </DrawerItem>
+
+              <DrawerItem 
+                to={`/users/${user._id}`} 
+                $active={activeRoute === `/users/${user._id}`}
+              >
+                <FiUser />
+                Profile
+              </DrawerItem>
+            </>
+          ) : (
+            <>
+              <DrawerItem to="/login" $active={activeRoute === '/login'}>
+                Login
+              </DrawerItem>
+
+              <DrawerItem to="/register" $active={activeRoute === '/register'}>
+                Register
+              </DrawerItem>
+            </>
+          )}
+        </div>
+
+        <DrawerFooter>
+          <DrawerItem as="button" onClick={toggleTheme}>
+            {theme === 'light' ? <FiMoon /> : <FiSun />}
+            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+          </DrawerItem>
+
+          {user && (
+            <DrawerItem as="button" onClick={handleLogout}>
+              <FiLogOut />
+              Logout
+            </DrawerItem>
+          )}
+        </DrawerFooter>
+      </DrawerContainer>
     </>
   );
 };
