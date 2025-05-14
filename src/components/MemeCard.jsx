@@ -58,7 +58,6 @@ const CommentOverlay = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
   opacity: ${props => props.$visible ? 1 : 0};
   transition: opacity 0.3s ease;
   pointer-events: ${props => props.$visible ? 'auto' : 'none'};
@@ -73,7 +72,6 @@ const MobileCommentSection = styled.div`
     height: 100vh;
     max-height: 100vh;
     background: var(--card-bg);
-    z-index: 1003;
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
     overflow: hidden;
@@ -106,7 +104,6 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   background: var(--card-bg);
   height: 80vh;
   max-height: 80vh;
-  z-index: 1004;
   pointer-events: auto; 
   /* Novo estilo para o handle de arraste */
   &::before {
@@ -142,7 +139,6 @@ const DragHandle = styled.div`
 
 const CommentSectionContainer = styled.div`
   flex: 1;
-  z-index: 2;
   overflow-y: auto;
   padding: 16px;
   position: relative;
@@ -214,7 +210,6 @@ const OptionsButton = styled.button`
   justify-content: center;
   color: white;
   cursor: pointer;
-  z-index: 2;
   transition: all 0.3s ease;
 
   &:hover {
@@ -233,7 +228,6 @@ const ConfirmationDialog = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
   animation: ${fadeIn} 0.3s ease-out;
 `;
 
@@ -306,7 +300,6 @@ const SuccessMessage = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  z-index: 10;
   animation: ${popIn} 0.5s forwards;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   

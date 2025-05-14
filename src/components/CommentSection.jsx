@@ -350,7 +350,6 @@ const ReactionButtons = styled.div`
 
 const ReactionButton = styled.button`
   position: relative;
-  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.25rem;
