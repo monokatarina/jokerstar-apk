@@ -70,8 +70,8 @@ const MobileCommentSection = styled.div`
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70vh;
-    max-height: 70vh;
+    height: 100vh;
+    max-height: 100vh;
     background: var(--card-bg);
     z-index: 1000;
     border-radius: 16px 16px 0 0;
@@ -104,13 +104,13 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   opacity: ${props => 1 - (props.$offset / 200)};
   border-radius: 16px 16px 0 0;
   background: var(--card-bg);
-  height: 60vh;
-  max-height: 60vh;
+  height: 80vh;
+  max-height: 80vh;
   /* Novo estilo para o handle de arraste */
   &::before {
     content: '';
     position: absolute;
-    top: 12px; 
+    top: 24px; 
     left: 50%;
     transform: translateX(-50%);
     width: 60px; 
