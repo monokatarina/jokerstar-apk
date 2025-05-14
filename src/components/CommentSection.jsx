@@ -111,16 +111,16 @@ const CommentList = styled.div`
 
 const CommentItem = styled.div`
   display: flex;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   position: relative;
   transition: var(--transition);
-  margin-left: ${props => props.$depth * 0.75}rem;
+  margin-left: ${props => props.$depth * 0.5}rem;
   border-left: ${props => props.$depth > 0 ? '2px solid var(--primary)' : 'none'};
-  padding-left: ${props => props.$depth > 0 ? '0.5rem' : '0'};
+  padding-left: ${props => props.$depth > 0 ? '0.25rem' : '0'};
 
   @media (max-width: 768px) {
-    margin-left: ${props => props.$depth * 0.5}rem;
-    padding-left: ${props => props.$depth > 0 ? '0.25rem' : '0'};
+    margin-left: ${props => props.$depth * 0.25}rem;
+    padding-left: ${props => props.$depth > 0 ? '0.125rem' : '0'};
   }
 
   &:hover {
@@ -165,7 +165,7 @@ const CommentAvatar = styled.img`
 const CommentContent = styled.div`
   flex: 1;
   background: var(--comment-bg);
-  padding: 0.5rem;
+  padding: 0.25rem;
   border-radius: var(--radius-md);
   position: relative;
   box-shadow: var(--shadow-sm);
@@ -182,13 +182,13 @@ const CommentHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   position: relative;
 `;
 
 const CommentUser = styled.div`
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text);
   display: flex;
   align-items: center;
@@ -214,10 +214,10 @@ const CommentText = styled.p`
 `;
 
 const CommentTime = styled.small`
-  display: block;
-  font-size: 0.75rem;
+  font-size: 0.65rem;  // Reduzido de 0.75rem
   color: #999;
-  margin-top: 4px;
+  margin-left: 6px;
+  font-weight: normal;
 `;
 
 const CommentForm = styled.form`
@@ -338,8 +338,8 @@ const ReplyForm = styled.form`
 
 const ReactionButtons = styled.div`
   display: flex;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 8px;
+  margin-top: 8px;
 `;
 
 const ReactionButton = styled.button`
@@ -350,8 +350,8 @@ const ReactionButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
-  padding: 0.25rem 0.625rem;
+  font-size: 0.85rem;
+  padding: 0.125rem 0.5rem;
   border-radius: 1rem;
   transition: var(--transition);
   
@@ -983,6 +983,10 @@ const Comment = memo(({
               @{safeUser.username}
               {safeUser.isVerified && <UserBadge>Verificado</UserBadge>}
               {isPopular && <PopularBadge>🔥 Popular</PopularBadge>}
+              <CommentTime>
+                {formatDate(comment.createdAt)} às {formatTime(comment.createdAt)}
+                {comment.isEdited && ' (editado)'}
+              </CommentTime>
             </CommentUser>
             
             {canEditDelete && (
@@ -1056,11 +1060,6 @@ const Comment = memo(({
                   )}
                 </SharedMemeContainer>
               )}
-              
-              <CommentTime>
-                {formatDate(comment.createdAt)} às {formatTime(comment.createdAt)}
-                {comment.isEdited && ' (editado)'}
-              </CommentTime>
             </>
           )}
           
