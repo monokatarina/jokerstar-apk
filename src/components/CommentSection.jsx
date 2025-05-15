@@ -1845,17 +1845,27 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       console.error('Erro ao buscar memes do usuário:', error);
     }
   }, [currentUser]);
+
+
   const fetchComments = useCallback(async () => {
     let isMounted = true;
     
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/memes/${memeId}/comments`);
+      
+      // Adiciona timeout para evitar espera infinita
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+      
+      const response = await api.get(`/memes/${memeId}/comments`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!isMounted) return;
       
-      // Verifica se a resposta contém dados válidos
       if (!response.data) {
         throw new Error('Resposta da API sem dados');
       }
@@ -1870,7 +1880,13 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       if (!isMounted) return;
       
       console.error('Erro ao buscar comentários:', err);
-      setError('Falha ao carregar comentários');
+      
+      if (err.name === 'AbortError') {
+        setError('Tempo limite excedido ao carregar comentários');
+      } else {
+        setError('Falha ao carregar comentários');
+      }
+      
       setComments([]);
     } finally {
       if (isMounted) {
@@ -1878,6 +1894,8 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       }
     }
   }, [memeId]);
+
+
     // Handlers simples
   const handleCommentMediaChange = useCallback((e) => {
     const file = e.target.files[0];
