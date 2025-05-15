@@ -1847,6 +1847,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   }, [currentUser]);
 
 
+// Atualize a função fetchComments para garantir que loading sempre seja definido como false no final
   const fetchComments = useCallback(async () => {
     let isMounted = true;
     
@@ -1854,40 +1855,32 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       setLoading(true);
       setError(null);
       
-      // Adiciona timeout para evitar espera infinita
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
-      
-      const response = await api.get(`/memes/${memeId}/comments`, {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
+      const response = await api.get(`/memes/${memeId}/comments`);
       
       if (!isMounted) return;
       
-      if (!response.data) {
-        throw new Error('Resposta da API sem dados');
+      // Verificação mais detalhada da resposta
+      if (!response || !response.data) {
+        throw new Error('Resposta inválida da API');
       }
       
-      const commentsArray = Array.isArray(response.data) 
+      const receivedData = Array.isArray(response.data) 
         ? response.data 
-        : response.data.data || [];
+        : response.data.data;
       
-      setComments(commentsArray);
+      if (!Array.isArray(receivedData)) {
+        throw new Error('Formato de dados inválido');
+      }
+      
+      setComments(receivedData);
       
     } catch (err) {
       if (!isMounted) return;
       
       console.error('Erro ao buscar comentários:', err);
-      
-      if (err.name === 'AbortError') {
-        setError('Tempo limite excedido ao carregar comentários');
-      } else {
-        setError('Falha ao carregar comentários');
-      }
-      
+      setError(err.message || 'Falha ao carregar comentários');
       setComments([]);
+      
     } finally {
       if (isMounted) {
         setLoading(false);
@@ -1895,7 +1888,26 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     }
   }, [memeId]);
 
-
+  // Adicione este useEffect para monitorar o estado de loading
+  useEffect(() => {
+    console.log('Loading state:', loading);
+    console.log('Comments:', comments);
+  }, [loading, comments]);
+  useEffect(() => {
+    let isMounted = true;
+    
+    const loadData = async () => {
+      if (isMounted) {
+        await fetchComments();
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchComments]);
     // Handlers simples
   const handleCommentMediaChange = useCallback((e) => {
     const file = e.target.files[0];
