@@ -1123,7 +1123,8 @@ const Comment = memo(({
                   display: 'flex', 
                   justifyContent: 'space-between',
                   alignItems: 'flex-start',
-                  marginBottom: '4px'
+                  marginBottom: '4px',
+                  position: 'relative'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <CommentUser 
@@ -1132,15 +1133,19 @@ const Comment = memo(({
                         cursor: 'pointer',
                         fontSize: '15px',
                         fontWeight: '700',
-                        color: 'var(--text-primary)'
+                        color: 'var(--text-primary)',
+                        marginRight: '8px'
                       }}
                     >
                       {safeUser.username}
                     </CommentUser>
-                    <CommentTime style={{ 
-                      fontSize: '12px',
+                    <CommentTime style={{
+                      position: 'absolute',
+                      right: canEditDelete ? '30px' : '0',
+                      top: '2px',
+                      fontSize: '11px',
                       color: 'var(--text-muted)',
-                      fontWeight: '400'
+                      opacity: '0.7'
                     }}>
                       {getTimeAgo(comment.createdAt)}
                       {comment.isEdited && ' · editado'}
