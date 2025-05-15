@@ -223,8 +223,8 @@ const CommentHeader = styled.div`
 `;
 
 const CommentUser = styled.div`
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 700;
+  font-size: 1.5 rem;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -1122,16 +1122,17 @@ const Comment = memo(({
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '8px'
+                  alignItems: 'flex-start',
+                  marginBottom: '4px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <CommentUser 
                       onClick={() => navigate(`/users/${safeUser._id}`)}
                       style={{ 
                         cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '600'
+                        fontSize: '15px',
+                        fontWeight: '700',
+                        color: 'var(--text-primary)'
                       }}
                     >
                       {safeUser.username}
@@ -1185,8 +1186,8 @@ const Comment = memo(({
                 {/* Texto do Comentário */}
                 <CommentText $isDeleted={isDeleted} style={{ 
                   fontSize: '14px',
-                  lineHeight: '1.4',
-                  marginBottom: '12px'
+                  lineHeight: '1.5',
+                  marginBottom: '8px'
                 }}>
                   {isDeleted ? <DeletedMessage>{comment.text}</DeletedMessage> : comment.text}
                 </CommentText>
