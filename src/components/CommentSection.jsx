@@ -1252,7 +1252,7 @@ const Comment = memo(({
                   display: 'flex',
                   gap: '16px'
                 }}>
-                  {/* Botão Like */}
+                  {/* Botão Like - Versão Atualizada */}
                   <ReactionButton 
                     onClick={() => onReaction(comment._id, 'like', isReply, parentCommentId)}
                     $active={comment.userReaction === 'like'}
@@ -1260,19 +1260,24 @@ const Comment = memo(({
                     aria-label="Curtir"
                     data-testid="like-button"
                     style={{
-                      padding: '4px 8px'
+                      padding: '4px 8px',
+                      backgroundColor: comment.userReaction === 'like' ? 'rgba(0, 200, 83, 0.1)' : 'transparent'
                     }}
                   >
-                    <FaSmile size={14} />
+                    <FaSmile 
+                      size={14} 
+                      color={comment.userReaction === 'like' ? '#00C853' : '#757575'} 
+                    />
                     <ReactionCount style={{ 
                       fontSize: '12px',
-                      marginLeft: '4px'
+                      marginLeft: '4px',
+                      color: comment.userReaction === 'like' ? '#00C853' : '#757575'
                     }}>
-                      {comment.likes?.length > 0 ? comment.likes.length : '0'}
+                      {comment.likesCount ?? (comment.likes?.length || 0)}
                     </ReactionCount>
                   </ReactionButton>
 
-                  {/* Botão Dislike */}
+                  {/* Botão Dislike - Versão Atualizada */}
                   <ReactionButton 
                     onClick={() => onReaction(comment._id, 'dislike', isReply, parentCommentId)}
                     $active={comment.userReaction === 'dislike'}
@@ -1280,15 +1285,20 @@ const Comment = memo(({
                     aria-label="Não curtir"
                     data-testid="dislike-button"
                     style={{
-                      padding: '4px 8px'
+                      padding: '4px 8px',
+                      backgroundColor: comment.userReaction === 'dislike' ? 'rgba(255, 82, 82, 0.1)' : 'transparent'
                     }}
                   >
-                    <FaAngry size={14} />
+                    <FaAngry 
+                      size={14} 
+                      color={comment.userReaction === 'dislike' ? '#FF5252' : '#757575'} 
+                    />
                     <ReactionCount style={{ 
                       fontSize: '12px',
-                      marginLeft: '4px'
+                      marginLeft: '4px',
+                      color: comment.userReaction === 'dislike' ? '#FF5252' : '#757575'
                     }}>
-                      {comment.dislikes?.length > 0 ? comment.dislikes.length : '0'}
+                      {comment.dislikesCount ?? (comment.dislikes?.length || 0)}
                     </ReactionCount>
                   </ReactionButton>
 
@@ -2088,48 +2098,52 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     }
   }, [memeId, comments]);
 
-  const handleReaction = useCallback(async (commentId, reaction, isReply = false, parentId = null) => {
-    try {
-      const currentComment = findComment(comments, commentId);
-      const currentReaction = currentComment?.userReaction;
-      
-      // Determina a nova reação
-      const newReaction = currentReaction === reaction ? 'none' : reaction;
-      
-      const endpoint = `/memes/${memeId}/comments/${commentId}/reaction`;
-      const response = await api.post(endpoint, { reaction: newReaction });
+ const handleReaction = useCallback(async (commentId, reaction, isReply = false, parentId = null) => {
+  try {
+    const currentComment = findComment(comments, commentId);
+    const currentReaction = currentComment?.userReaction;
+    
+    // Determina a nova reação
+    const newReaction = currentReaction === reaction ? 'none' : reaction;
+    
+    const endpoint = `/memes/${memeId}/comments/${commentId}/reaction`;
+    const response = await api.post(endpoint, { reaction: newReaction });
 
-      setComments(prevComments => {
-        const updateCommentReactions = (comments) => comments.map(c => {
-          if (c._id === commentId) {
-            return { 
-              ...c,
-              likes: response.data.likesCount || c.likes,
-              dislikes: response.data.dislikesCount || c.dislikes,
-              userReaction: newReaction === 'none' ? null : newReaction
-            };
+    setComments(prevComments => {
+      const updateCommentReactions = (comments) => comments.map(c => {
+        if (c._id === commentId) {
+          const updatedComment = { 
+            ...c,
+            userReaction: newReaction === 'none' ? null : newReaction
+          };
+          
+          // Atualiza contagens baseado na resposta do servidor
+          if (response.data) {
+            updatedComment.likes = response.data.likes || [];
+            updatedComment.dislikes = response.data.dislikes || [];
+            updatedComment.likesCount = response.data.likesCount || 0;
+            updatedComment.dislikesCount = response.data.dislikesCount || 0;
           }
           
-          if (c.replies) {
-            return {
-              ...c,
-              replies: updateCommentReactions(c.replies)
-            };
-          }
-          
-          return c;
-        });
+          return updatedComment;
+        }
         
-        return updateCommentReactions(prevComments);
+        if (c.replies) {
+          return {
+            ...c,
+            replies: updateCommentReactions(c.replies)
+          };
+        }
+        
+        return c;
       });
-    } catch (error) {
-      console.error('Erro ao reagir ao comentário:', error);
-    }
-  }, [memeId, comments, findComment]);
-// Efeitos
-useEffect(() => {
-  fetchComments();
-}, [fetchComments, memeId]); // Adicionei memeId como dependência
+      
+      return updateCommentReactions(prevComments);
+    });
+  } catch (error) {
+    console.error('Erro ao reagir ao comentário:', error);
+  }
+}, [memeId, comments, findComment]);
 
 // Otimização: Evitar recálculos desnecessários
 const processedComments = useMemo(() => {
