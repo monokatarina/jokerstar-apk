@@ -26,16 +26,17 @@ const buildUrl = (url) => {
     return '';
   }
 
-  // Se já for uma URL completa, retorna diretamente
-  if (url.startsWith('https')) {
+  // Se já for uma URL completa (http ou https), retorna diretamente
+  if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
 
+  // Remove barras iniciais para evitar duplicação
+  const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+  
   // Adiciona o prefixo da API apenas se necessário
   const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
-  const fullUrl = `${apiUrl}${url}`;
-  
-  return fullUrl;
+  return `${apiUrl}/${cleanPath}`;
 };
 
 // ============ Animations ============
@@ -1594,20 +1595,6 @@ const MemeSelectorModal = ({
 }) => {
   const isMobile = useMemo(() => window.innerWidth <= 768, []);
 
-  // Função para construir a URL corretamente
-  const getMemeUrl = (url) => {
-    if (!url) return '';
-    
-    // Se já é uma URL completa, retorna diretamente
-    if (url.startsWith('http')) {
-      return url;
-    }
-    
-    // Remove barras iniciais para evitar duplicação
-    const cleanPath = url.startsWith('/') ? url.substring(1) : url;
-    return `${process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org'}/${cleanPath}`;
-  };
-
   return (
     <ModalOverlay>
       <ModalContent $isMobile={isMobile}>
@@ -1621,7 +1608,6 @@ const MemeSelectorModal = ({
         <MemeGrid $isMobile={isMobile}>
           {memes.map(meme => {
             const isVideo = meme.mediaType === 'video' || meme.mediaUrl?.endsWith('.mp4');
-            const memeUrl = getMemeUrl(meme.mediaUrl);
             
             return (
               <MemeItem key={meme._id} $isMobile={isMobile}>
@@ -1632,11 +1618,11 @@ const MemeSelectorModal = ({
                     onClick={() => onSelect(meme._id, isForReply)}
                     crossOrigin="anonymous"
                   >
-                    <source src={memeUrl} type="video/mp4" />
+                    <source src={buildUrl(meme.mediaUrl)} type="video/mp4" />
                   </MemeVideo>
                 ) : (
                   <MemeThumbnail 
-                    src={memeUrl}
+                    src={buildUrl(meme.mediaUrl)}
                     onClick={() => onSelect(meme._id, isForReply)}
                     $selected={selectedMeme === meme._id}
                     $isMobile={isMobile}
