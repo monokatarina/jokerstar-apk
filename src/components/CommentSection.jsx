@@ -1137,8 +1137,14 @@ const Comment = memo(({
                     >
                       {safeUser.username}
                     </CommentUser>
-                    
-
+                    <CommentTime style={{ 
+                      fontSize: '12px',
+                      color: 'var(--text-muted)',
+                      fontWeight: '400'
+                    }}>
+                      {getTimeAgo(comment.createdAt)}
+                      {comment.isEdited && ' · editado'}
+                    </CommentTime>
                   </div>
                   
                   {canEditDelete && (
@@ -1175,14 +1181,7 @@ const Comment = memo(({
                     </PopularBadge>
                   )}
                 </div>
-                  <CommentTime style={{ 
-                    marginLeft: '8px',
-                    fontSize: '12px',
-                    color: '#888'
-                  }}>
-                    {getTimeAgo(comment.createdAt)}
-                    {comment.isEdited && ' · editado'}
-                  </CommentTime>
+
                 {/* Texto do Comentário */}
                 <CommentText $isDeleted={isDeleted} style={{ 
                   fontSize: '14px',
