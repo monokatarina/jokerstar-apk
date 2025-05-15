@@ -1816,16 +1816,22 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const processComments = useCallback((comments) => {
     if (!Array.isArray(comments) || comments.length < 10) return comments || [];
     
-    const sorted = sortByPopularity(comments);
+    // Apenas marca o primeiro comentário como popular se tiver pelo menos 5 likes líquidos
+    const sorted = [...comments].sort((a, b) => {
+      const aScore = (a.likesCount || a.likes?.length || 0) - (a.dislikesCount || a.dislikes?.length || 0);
+      const bScore = (b.likesCount || b.likes?.length || 0) - (b.dislikesCount || b.dislikes?.length || 0);
+      return bScore - aScore;
+    });
+
     const mostPopular = sorted[0];
-    const popularScore = (mostPopular.likes?.length || 0) - (mostPopular.dislikes?.length || 0);
+    const popularScore = (mostPopular.likesCount || mostPopular.likes?.length || 0) - 
+                        (mostPopular.dislikesCount || mostPopular.dislikes?.length || 0);
     
     if (popularScore < 5) return comments;
     
     return sorted.map((comment, index) => ({
       ...comment,
-      isPopular: index === 0,
-      replies: Array.isArray(comment.replies) ? processComments(comment.replies) : []
+      isPopular: index === 0
     }));
   }, [sortByPopularity]);
 
@@ -1839,26 +1845,37 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       console.error('Erro ao buscar memes do usuário:', error);
     }
   }, [currentUser]);
-
   const fetchComments = useCallback(async () => {
+    let isMounted = true;
+    
     try {
       setLoading(true);
       setError(null);
       const response = await api.get(`/memes/${memeId}/comments`);
       
-      // Garante que estamos trabalhando com um array
+      if (!isMounted) return;
+      
+      // Verifica se a resposta contém dados válidos
+      if (!response.data) {
+        throw new Error('Resposta da API sem dados');
+      }
+      
       const commentsArray = Array.isArray(response.data) 
         ? response.data 
-        : response.data?.data || [];
+        : response.data.data || [];
       
       setComments(commentsArray);
       
     } catch (err) {
-      setError('Falha ao carregar comentários');
+      if (!isMounted) return;
+      
       console.error('Erro ao buscar comentários:', err);
+      setError('Falha ao carregar comentários');
       setComments([]);
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   }, [memeId]);
     // Handlers simples
