@@ -135,8 +135,8 @@ const CommentList = styled.div`
 
   @media (max-width: 768px) {
     max-height: none;
-    height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
-    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
+    height: calc(100vh - 180px - ${props => props.$keyboardHeight}px);
+    padding-bottom: ${props => props.$keyboardActive ? '129px' : '60px'};
     margin-bottom: 0;
     transition: all 0.3s ease;
   }
@@ -859,7 +859,7 @@ const MediaPreview = ({ file, meme, onRemove }) => {
     
     video, img {
       width: 100%;
-      max-height: ${isMobile ? '50vh' : '60vh'};
+      max-height: ${isMobile ? '30vh' : '60vh'};
       object-fit: contain;
       background: #f0f0f0;
     }
@@ -1201,7 +1201,8 @@ const Comment = memo(({
                 {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
                   <SharedMemeContainer style={{ 
                     marginTop: '8px',
-                    maxWidth: '100%'
+                    maxWidth: '100%',
+                    width: 'auto'
                   }}>
                     {comment.sharedMeme.mediaType === 'video' || comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
                       <video 
@@ -2475,16 +2476,25 @@ const EndOfListMessage = styled.div`
             </SubmitButton>
           </ActionButtons>
           
+            
           {(commentMedia || selectedMeme) && (
-            <MediaPreview 
-              file={commentMedia} 
-              meme={selectedMeme ? userMemes.find(m => m._id === selectedMeme) : null}
-              onRemove={() => {
-                setCommentMedia(null);
-                setSelectedMeme(null);
-              }}
-              data-testid="media-preview"
-            />
+            <div style={{
+              position: isMobile ? 'fixed' : 'relative',
+              bottom: isMobile ? `${keyboardHeight + 60}px` : 'auto',
+              left: 0,
+              right: 0,
+              padding: isMobile ? '0 16px' : '0',
+              zIndex: 1004
+            }}>
+              <MediaPreview 
+                file={commentMedia} 
+                meme={selectedMeme ? userMemes.find(m => m._id === selectedMeme) : null}
+                onRemove={() => {
+                  setCommentMedia(null);
+                  setSelectedMeme(null);
+                }}
+              />
+            </div>
           )}
         </CommentForm>
 
