@@ -1210,7 +1210,8 @@ const Comment = memo(({
                         style={{ 
                           width: '100%', 
                           display: 'block',
-                          maxHeight: '200px'
+                          maxHeight: '300px',
+                          backgroundColor: 'var(--media-bg)'
                         }}
                         crossOrigin="anonymous"
                       >
@@ -1222,7 +1223,10 @@ const Comment = memo(({
                         alt={comment.sharedMeme.caption || 'Meme compartilhado'}
                         crossOrigin="anonymous"
                         style={{
-                          maxHeight: '200px'
+                          width: '100%',
+                          maxHeight: '300px',
+                          objectFit: 'contain',
+                          backgroundColor: 'var(--media-bg)'
                         }}
                         onError={(e) => {
                           console.error('Failed to load meme:', e.target.src);
@@ -1233,7 +1237,8 @@ const Comment = memo(({
                     {comment.sharedMeme.caption && (
                       <SharedMemeCaption style={{
                         fontSize: '12px',
-                        padding: '8px'
+                        padding: '8px',
+                        backgroundColor: 'var(--media-caption-bg)'
                       }}>
                         {comment.sharedMeme.caption}
                       </SharedMemeCaption>
