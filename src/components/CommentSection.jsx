@@ -27,7 +27,7 @@ const buildUrl = (url) => {
   }
 
   // Se já for uma URL completa (http ou https), retorna diretamente
-  if (url.startsWith('https') || url.startsWith('data:')) {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
 
@@ -38,7 +38,6 @@ const buildUrl = (url) => {
   const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
   return `${apiUrl}/${cleanPath}`;
 };
-
 // ============ Animations ============
 const bounceHappy = keyframes`
   0%, 100% { transform: scale(1) rotate(0deg); }
@@ -1005,11 +1004,6 @@ const Comment = memo(({
   const isDeleted = comment.isDeleted;
   const MAX_DEPTH = 10;
 
-  const sharedMeme = useMemo(() => {
-    if (!comment.meme) return null;
-    return userMemes.find(m => m._id === comment.meme);
-  }, [comment.meme, userMemes]);
-
   const safeUser = comment.user || { 
     _id: 'deleted', 
     username: "[Removido]", 
@@ -1203,30 +1197,50 @@ const Comment = memo(({
                 </CommentText>
                 
                 {/* Mídia Compartilhada */}
-                {sharedMeme && sharedMeme.mediaUrl && (
-                  <SharedMemeContainer>
-                    {sharedMeme.mediaType === 'video' || sharedMeme.mediaUrl.endsWith('.mp4') ? (
+                {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
+                  <SharedMemeContainer style={{ 
+                    marginTop: '8px',
+                    maxWidth: '100%',
+                    width: 'auto'
+                  }}>
+                    {comment.sharedMeme.mediaType === 'video' || comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
                       <video 
                         controls 
-                        style={{ width: '100%', display: 'block' }}
+                        playsInline
+                        style={{ 
+                          width: '100%', 
+                          display: 'block',
+                          maxHeight: '300px',
+                          backgroundColor: 'var(--media-bg)'
+                        }}
                         crossOrigin="anonymous"
                       >
-                        <source src={buildUrl(sharedMeme.mediaUrl)} type="video/mp4" />
-                        Seu navegador não suporta vídeos HTML5.
+                        <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
                       </video>
                     ) : (
                       <SharedMeme 
-                        src={buildUrl(sharedMeme.mediaUrl)}
-                        alt={sharedMeme.caption || 'Meme compartilhado'}
+                        src={buildUrl(comment.sharedMeme.mediaUrl)}
+                        alt={comment.sharedMeme.caption || 'Meme compartilhado'}
                         crossOrigin="anonymous"
+                        style={{
+                          width: '100%',
+                          maxHeight: '300px',
+                          objectFit: 'contain',
+                          backgroundColor: 'var(--media-bg)'
+                        }}
                         onError={(e) => {
                           console.error('Failed to load meme:', e.target.src);
                           e.target.style.display = 'none';
                         }}
                       />
                     )}
-                    {sharedMeme.caption && (
-                      <SharedMemeCaption>{sharedMeme.caption}</SharedMemeCaption>
+                    {comment.sharedMeme.caption && (
+                      <SharedMemeCaption style={{
+                        fontSize: '12px',
+                        padding: '8px'
+                      }}>
+                        {comment.sharedMeme.caption}
+                      </SharedMemeCaption>
                     )}
                   </SharedMemeContainer>
                 )}
@@ -1874,7 +1888,6 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     let isMounted = true;
     
     const loadData = async () => {
-      fetchUserMemes(); 
       if (isMounted) {
         await fetchComments();
       }
@@ -1885,7 +1898,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     return () => {
       isMounted = false;
     };
-  }, [fetchComments, fetchUserMemes]);
+  }, [fetchComments]);
     // Handlers simples
   const handleCommentMediaChange = useCallback((e) => {
     const file = e.target.files[0];
@@ -1940,36 +1953,48 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     e.preventDefault();
     
     const formData = new FormData();
-    
-    // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
     formData.append('text', commentText || '');
 
-  
     if (commentMedia) {
       formData.append('media', commentMedia);
     }
     if (selectedMeme) {
-      formData.append('meme', selectedMeme);
+      formData.append('sharedMeme', selectedMeme);
     }
-  
+
     try {
       setError(null);
-      await onCommentSubmit(formData);
-      const response = await api.get(`/memes/${memeId}/comments`);
-      const newCommentCount = response.data.length;
-      if (onCommentCountChange) {
-        onCommentCountChange(newCommentCount);
+      const response = await api.post(`/memes/${memeId}/comments`, formData);
+      
+      // Verifique se o backend retornou o meme compartilhado completo
+      if (response.data.sharedMeme) {
+        // Adiciona os dados do usuário ao comentário
+        const newComment = {
+          ...response.data,
+          user: currentUser,
+          // Garante que sharedMeme tenha a estrutura correta
+          sharedMeme: response.data.sharedMeme
+        };
+        
+        setComments(prev => [newComment, ...prev]);
+        
+        // Atualiza a contagem de comentários
+        if (onCommentCountChange) {
+          onCommentCountChange(prev => prev + 1);
+        }
+      } else {
+        // Se não veio o meme compartilhado, busca os comentários novamente
+        await fetchComments();
       }
+
       setCommentText('');
       setCommentMedia(null);
       setSelectedMeme(null);
-      await fetchComments();
-      await fetchUserMemes();
     } catch (error) {
       console.error('Erro ao enviar comentário:', error);
       setError(error.message || 'Erro ao enviar comentário');
     }
-  }, [commentText, commentMedia, selectedMeme, onCommentSubmit, fetchComments, onCommentCountChange, fetchUserMemes]);
+  }, [commentText, commentMedia, selectedMeme, currentUser, memeId, onCommentCountChange, fetchComments]);
 
   const handleReply = useCallback((commentId, parentId = null) => {
     setReplyingTo(prev => prev === commentId ? null : commentId);
@@ -1989,41 +2014,39 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const handleReplySubmit = useCallback(async (commentId) => {
     const currentReplyText = replyTexts[commentId] || '';
     const currentReplyMeme = replySelectedMeme[commentId];
-  
+
     if (!currentReplyText.trim() && !currentReplyMeme) {
       setError('Por favor, adicione texto ou um meme');
       return;
     }
-  
+
     try {
       const formData = new FormData();
       formData.append('text', currentReplyText);
       formData.append('parentId', commentId);
       
       if (currentReplyMeme) {
-        formData.append('meme', currentReplyMeme);
+        formData.append('sharedMeme', currentReplyMeme);
       }
-  
+
       const response = await api.post(`/memes/${memeId}/comments`, formData);
-      const commentsResponse = await api.get(`/memes/${memeId}/comments`);
-      if (onCommentCountChange) {
-        onCommentCountChange(commentsResponse.data.length);
-      }
       
-      // Adiciona os dados do usuário atual à resposta
+      // Verifica se o backend retornou o meme compartilhado completo
       const replyWithUser = {
         ...response.data,
         user: currentUser,
-        meme: currentReplyMeme
+        // Garante que sharedMeme tenha a estrutura correta
+        sharedMeme: response.data.sharedMeme
       };
-  
-      // Atualiza o estado dos comentários incluindo a nova resposta
-      setComments(prevComments => {
+
+      // Atualiza o estado dos comentários
+      setComments(prev => {
         const updateReplies = (comments) => comments.map(c => {
           if (c._id === commentId) {
             return {
               ...c,
-              replies: [...(c.replies || []), replyWithUser] // Usa replyWithUser em vez de response.data
+              replies: [...(c.replies || []), replyWithUser],
+              repliesCount: (c.repliesCount || 0) + 1
             };
           }
           if (c.replies) {
@@ -2034,10 +2057,9 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
           }
           return c;
         });
-        
-        return updateReplies(prevComments);
+        return updateReplies(prev);
       });
-  
+
       // Limpa os estados
       setReplyTexts(prev => {
         const newState = {...prev};
@@ -2050,15 +2072,19 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
         delete newState[commentId];
         return newState;
       });
-  
+
       setReplyingTo(null);
-      await fetchUserMemes();
+      
+      // Atualiza a contagem de comentários
+      if (onCommentCountChange) {
+        const commentsResponse = await api.get(`/memes/${memeId}/comments`);
+        onCommentCountChange(commentsResponse.data.length);
+      }
     } catch (error) {
       setError('Erro ao enviar resposta');
       console.error('Erro:', error);
     }
   }, [memeId, replyTexts, replySelectedMeme, currentUser, onCommentCountChange]);
-
   const handleEdit = useCallback((comment) => {
     setEditingId(comment?._id || null);
     setEditText(comment?.text || '');
