@@ -998,6 +998,21 @@ const Comment = memo(({
   expandedReplies,
   setExpandedReplies
 }) => {
+  // Adicione ESTES LOGS no começo do componente:
+  console.log('--- Comment Debug ---');
+  console.log('Comment ID:', comment._id);
+  console.log('Has sharedMeme:', !!comment.sharedMeme);
+  if (comment.sharedMeme) {
+    console.log('sharedMeme details:', {
+      mediaUrl: comment.sharedMeme.mediaUrl,
+      mediaType: comment.sharedMeme.mediaType,
+      caption: comment.sharedMeme.caption,
+      builtUrl: buildUrl(comment.sharedMeme.mediaUrl)
+    });
+  }
+
+
+
   const navigate = useNavigate();
   const isEditing = editingId === comment._id;
   const isReplying = replyingTo === comment._id;
@@ -1199,6 +1214,11 @@ const Comment = memo(({
                 
                 {/* Mídia Compartilhada */}
                 {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
+                  console.log('Rendering shared media for comment:', comment._id, {
+                    url: comment.sharedMeme.mediaUrl,
+                    builtUrl: buildUrl(comment.sharedMeme.mediaUrl),
+                    type: comment.sharedMeme.mediaType || 'unknown'
+                  }),
                   <SharedMemeContainer style={{ 
                     marginTop: '8px',
                     maxWidth: '100%'
@@ -1224,7 +1244,12 @@ const Comment = memo(({
                           maxHeight: '200px'
                         }}
                         onError={(e) => {
-                          console.error('Failed to load meme:', e.target.src);
+                          console.error('FAILED TO LOAD MEDIA:', {
+                            commentId: comment._id,
+                            src: e.target.src,
+                            builtUrl: buildUrl(comment.sharedMeme.mediaUrl),
+                            error: e
+                          });
                           e.target.style.display = 'none';
                         }}
                       />
