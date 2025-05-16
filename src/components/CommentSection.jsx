@@ -1867,6 +1867,10 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       setError(null);
       
       const response = await api.get(`/memes/${memeId}/comments`);
+      console.log('API Response RAW:', response);
+      console.log('First comment with sharedMeme:', 
+        response.data.find(c => c.sharedMeme));
+      setComments(response.data);
       
       if (!isMounted) return;
       
@@ -1971,7 +1975,12 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   // Handlers complexos
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
+    console.log('Submitting with:', { // <-- LOG AQUI
+      text: commentText,
+      media: !!commentMedia,
+      sharedMeme: selectedMeme
+    });
+      
     const formData = new FormData();
     
     // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
