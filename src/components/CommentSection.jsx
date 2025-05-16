@@ -1199,6 +1199,7 @@ const Comment = memo(({
                 
                 {/* Mídia Compartilhada */}
                 {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
+                  console.log('Shared meme data:', comment.sharedMeme), 
                   <SharedMemeContainer style={{ 
                     marginTop: '8px',
                     maxWidth: '100%',
