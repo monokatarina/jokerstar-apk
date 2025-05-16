@@ -1867,10 +1867,25 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       setError(null);
       
       const response = await api.get(`/memes/${memeId}/comments`);
-      console.log('API Response RAW:', response);
-      console.log('First comment with sharedMeme:', 
-        response.data.find(c => c.sharedMeme));
+      console.log('API Response:', response);
       setComments(response.data);
+
+      let commentsData = [];
+      if (Array.isArray(response.data)) {
+        // Caso 1: A resposta já é um array
+        commentsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        // Caso 2: A resposta está em response.data.data
+        commentsData = response.data.data;
+      } else if (response.data && Array.isArray(response.data.comments)) {
+        // Caso 3: A resposta está em response.data.comments
+        commentsData = response.data.comments;
+      } else {
+        throw new Error('Formato de dados inesperado da API');
+      }
+      
+      console.log('Comments data:', commentsData); // Log dos dados processados
+      console.log('First comment with sharedMeme:', commentsData.find(c => c.sharedMeme));
       
       if (!isMounted) return;
       
