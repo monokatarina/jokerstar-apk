@@ -1987,45 +1987,51 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   }, [currentReplyForMeme]);
 
   // Handlers complexos
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    console.log('Submitting with:', { // <-- LOG AQUI
-      text: commentText,
-      media: !!commentMedia,
-      sharedMeme: selectedMeme
-    });
-      
-    const formData = new FormData();
-    
-    // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
-    formData.append('text', commentText || '');
+const handleSubmit = useCallback(async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData();
+  
+  // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
+  formData.append('text', commentText || '');
 
+  if (commentMedia) {
+    formData.append('media', commentMedia);
+  }
   
-    if (commentMedia) {
-      formData.append('media', commentMedia);
-    }
-    if (selectedMeme) {
-      formData.append('sharedMeme', selectedMeme);
-    }
-  
-    try {
-      setError(null);
-      await onCommentSubmit(formData);
-      const response = await api.post(`/memes/${memeId}/comments`, formData);
-      const newCommentCount = response.data.length;
-      if (onCommentCountChange) {
-        onCommentCountChange(newCommentCount);
+  if (selectedMeme) {
+    // Envia apenas o ID do meme compartilhado
+    formData.append('sharedMeme', selectedMeme);
+  }
+
+  try {
+    setError(null);
+    const response = await api.post(`/memes/${memeId}/comments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-      setComments(prev => [response.data, ...prev]);
-      setCommentText('');
-      setCommentMedia(null);
-      setSelectedMeme(null);
-      await fetchComments();
-    } catch (error) {
-      console.error('Erro ao enviar comentário:', error);
-      setError(error.message || 'Erro ao enviar comentário');
+    });
+    
+    const newCommentCount = response.data.length;
+    if (onCommentCountChange) {
+      onCommentCountChange(newCommentCount);
     }
-  }, [commentText, commentMedia, selectedMeme, onCommentSubmit, fetchComments, onCommentCountChange]);
+    
+    setComments(prev => [response.data, ...prev]);
+    setCommentText('');
+    setCommentMedia(null);
+    setSelectedMeme(null);
+    
+  } catch (error) {
+    console.error('Erro detalhado ao enviar comentário:', {
+      error: error,
+      response: error.response,
+      config: error.config
+    });
+    
+    setError(error.response?.data?.message || 'Erro ao enviar comentário');
+  }
+}, [commentText, commentMedia, selectedMeme, memeId, onCommentCountChange]);
 
   const handleReply = useCallback((commentId, parentId = null) => {
     setReplyingTo(prev => prev === commentId ? null : commentId);
@@ -2045,12 +2051,12 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
   const handleReplySubmit = useCallback(async (commentId) => {
     const currentReplyText = replyTexts[commentId] || '';
     const currentReplyMeme = replySelectedMeme[commentId];
-  
+
     if (!currentReplyText.trim() && !currentReplyMeme) {
       setError('Por favor, adicione texto ou um meme');
       return;
     }
-  
+
     try {
       const formData = new FormData();
       formData.append('text', currentReplyText);
@@ -2059,40 +2065,25 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       if (currentReplyMeme) {
         formData.append('sharedMeme', currentReplyMeme);
       }
-  
-      const response = await api.post(`/memes/${memeId}/comments`, formData);
-      const commentsResponse = await api.get(`/memes/${memeId}/comments`);
-      if (onCommentCountChange) {
-        onCommentCountChange(commentsResponse.data.length);
-      }
+
+      const response = await api.post(
+        `/memes/${memeId}/comments`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      // Atualiza os comentários
+      const updatedMeme = await api.get(`/memes/${memeId}`);
+      setComments(updatedMeme.data.comments || []);
       
-      // Adiciona os dados do usuário atual à resposta
-      const replyWithUser = {
-        ...response.data,
-        user: currentUser // Adiciona o usuário atual ao objeto de resposta
-      };
-  
-      // Atualiza o estado dos comentários incluindo a nova resposta
-      setComments(prevComments => {
-        const updateReplies = (comments) => comments.map(c => {
-          if (c._id === commentId) {
-            return {
-              ...c,
-              replies: [...(c.replies || []), replyWithUser] // Usa replyWithUser em vez de response.data
-            };
-          }
-          if (c.replies) {
-            return {
-              ...c,
-              replies: updateReplies(c.replies)
-            };
-          }
-          return c;
-        });
-        
-        return updateReplies(prevComments);
-      });
-  
+      if (onCommentCountChange) {
+        onCommentCountChange(updatedMeme.data.commentCount || 0);
+      }
+
       // Limpa os estados
       setReplyTexts(prev => {
         const newState = {...prev};
@@ -2105,13 +2096,18 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
         delete newState[commentId];
         return newState;
       });
-  
+
       setReplyingTo(null);
     } catch (error) {
-      setError('Erro ao enviar resposta');
-      console.error('Erro:', error);
+      console.error('Erro detalhado:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
+      setError(error.response?.data?.message || 'Erro ao enviar resposta');
     }
-  }, [memeId, replyTexts, replySelectedMeme, currentUser, onCommentCountChange]);
+  }, [memeId, replyTexts, replySelectedMeme, onCommentCountChange]);
 
   const handleEdit = useCallback((comment) => {
     setEditingId(comment?._id || null);
