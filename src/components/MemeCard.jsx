@@ -976,6 +976,10 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
           }
         }
       );
+      if (onCommentCountChange) {
+        const updatedMeme = await api.get(`/memes/${meme._id}`);
+        onCommentCountChange(updatedMeme.data.commentCount || 0);
+      }
   
       const updatedMeme = await api.get(`/memes/${meme._id}`);
       const commentCount = meme.commentCount || 0;

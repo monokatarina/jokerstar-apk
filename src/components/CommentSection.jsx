@@ -27,7 +27,7 @@ const buildUrl = (url) => {
   }
 
   // Se já for uma URL completa (http ou https), retorna diretamente
-  if (url.startsWith('http://') || url.startsWith('https://')) {
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
     return url;
   }
 
@@ -1868,41 +1868,40 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
       
       const response = await api.get(`/memes/${memeId}/comments`);
       console.log('API Response:', response);
-      setComments(response.data);
 
-      let commentsData = [];
-      if (Array.isArray(response.data)) {
-        // Caso 1: A resposta já é um array
-        commentsData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        // Caso 2: A resposta está em response.data.data
-        commentsData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.comments)) {
-        // Caso 3: A resposta está em response.data.comments
-        commentsData = response.data.comments;
-      } else {
-        throw new Error('Formato de dados inesperado da API');
-      }
-      
-      console.log('Comments data:', commentsData); // Log dos dados processados
-      console.log('First comment with sharedMeme:', commentsData.find(c => c.sharedMeme));
-      
       if (!isMounted) return;
+
+      // Extrai os dados de comentários de diferentes formatos de resposta
+      const extractCommentsData = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.comments)) return data.comments;
+        throw new Error('Formato de dados inesperado da API');
+      };
+
+      const commentsData = extractCommentsData(response.data);
+      console.log('Comments data:', commentsData);
       
-      // Verificação mais detalhada da resposta
-      if (!response || !response.data) {
-        throw new Error('Resposta inválida da API');
-      }
+      // Processa os sharedMemes para garantir estrutura consistente
+      const processedComments = commentsData.map(comment => {
+        if (comment.sharedMeme && typeof comment.sharedMeme === 'string') {
+          return {
+            ...comment,
+            sharedMeme: {
+              _id: comment.sharedMeme,
+              mediaUrl: '', // Será preenchido pelo backend
+              caption: '',
+              mediaType: 'image' // Valor padrão
+            }
+          };
+        }
+        return comment;
+      });
+
+      console.log('First comment with sharedMeme:', 
+        processedComments.find(c => c.sharedMeme));
       
-      const receivedData = Array.isArray(response.data) 
-        ? response.data 
-        : response.data.data;
-      
-      if (!Array.isArray(receivedData)) {
-        throw new Error('Formato de dados inválido');
-      }
-      
-      setComments(receivedData);
+      setComments(processedComments);
       
     } catch (err) {
       if (!isMounted) return;
