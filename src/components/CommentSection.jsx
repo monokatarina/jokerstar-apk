@@ -26,15 +26,16 @@ const buildUrl = (url) => {
     return '';
   }
 
-  // Se já for uma URL completa (http ou https), retorna diretamente
+  // Se já for uma URL completa
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
-    return url;
+    // Forçar HTTPS substituindo http:// por https://
+    return url.replace(/^http:\/\//i, 'https://');
   }
 
   // Remove barras iniciais para evitar duplicação
   const cleanPath = url.startsWith('/') ? url.substring(1) : url;
   
-  // Adiciona o prefixo da API apenas se necessário
+  // Adiciona o prefixo da API com HTTPS
   const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
   return `${apiUrl}/${cleanPath}`;
 };
