@@ -2012,11 +2012,12 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
     try {
       setError(null);
       await onCommentSubmit(formData);
-      const response = await api.get(`/memes/${memeId}/comments`);
+      const response = await api.post(`/memes/${memeId}/comments`, formData);
       const newCommentCount = response.data.length;
       if (onCommentCountChange) {
         onCommentCountChange(newCommentCount);
       }
+      setComments(prev => [response.data, ...prev]);
       setCommentText('');
       setCommentMedia(null);
       setSelectedMeme(null);
