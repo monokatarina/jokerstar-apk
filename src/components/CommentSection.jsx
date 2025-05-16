@@ -1892,7 +1892,6 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
               _id: comment.sharedMeme,
               mediaUrl: '', // Será preenchido pelo backend
               caption: '',
-              mediaType: 'image' // Valor padrão
             }
           };
         }
