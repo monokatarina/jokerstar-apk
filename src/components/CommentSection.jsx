@@ -1198,36 +1198,21 @@ const Comment = memo(({
                 
                 {/* Mídia Compartilhada */}
                 {comment.sharedMeme && comment.sharedMeme.mediaUrl && (
-                  <SharedMemeContainer style={{ 
-                    marginTop: '8px',
-                    maxWidth: '100%',
-                    width: 'auto'
-                  }}>
+                  <SharedMemeContainer>
                     {comment.sharedMeme.mediaType === 'video' || comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
                       <video 
                         controls 
-                        playsInline
-                        style={{ 
-                          width: '100%', 
-                          display: 'block',
-                          maxHeight: '300px',
-                          backgroundColor: 'var(--media-bg)'
-                        }}
+                        style={{ width: '100%', display: 'block' }}
                         crossOrigin="anonymous"
                       >
                         <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
+                        Seu navegador não suporta vídeos HTML5.
                       </video>
                     ) : (
                       <SharedMeme 
                         src={buildUrl(comment.sharedMeme.mediaUrl)}
                         alt={comment.sharedMeme.caption || 'Meme compartilhado'}
                         crossOrigin="anonymous"
-                        style={{
-                          width: '100%',
-                          maxHeight: '300px',
-                          objectFit: 'contain',
-                          backgroundColor: 'var(--media-bg)'
-                        }}
                         onError={(e) => {
                           console.error('Failed to load meme:', e.target.src);
                           e.target.style.display = 'none';
@@ -1235,12 +1220,7 @@ const Comment = memo(({
                       />
                     )}
                     {comment.sharedMeme.caption && (
-                      <SharedMemeCaption style={{
-                        fontSize: '12px',
-                        padding: '8px'
-                      }}>
-                        {comment.sharedMeme.caption}
-                      </SharedMemeCaption>
+                      <SharedMemeCaption>{comment.sharedMeme.caption}</SharedMemeCaption>
                     )}
                   </SharedMemeContainer>
                 )}
@@ -1973,7 +1953,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => 
           ...response.data,
           user: currentUser,
           // Garante que sharedMeme tenha a estrutura correta
-          sharedMeme: response.data.sharedMeme
+          sharedMeme: response.data.sharedMeme || (selectedMeme && userMemes.find(m => m._id === selectedMeme))
         };
         
         setComments(prev => [newComment, ...prev]);
