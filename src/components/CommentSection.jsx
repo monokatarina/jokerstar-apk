@@ -286,6 +286,7 @@ const CommentForm = styled.form`
     padding: 0.5rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     transition: bottom 0.3s ease;
+    z-index: 10;
   }
 `;
 
@@ -866,7 +867,6 @@ const MediaPreview = ({ file, meme, onRemove }) => {
     }
   `;
 
-  // Caption otimizado para mobile
   const MobileCaption = styled(SharedMemeCaption)`
     padding: ${isMobile ? '10px' : '8px'};
     font-size: ${isMobile ? '0.9rem' : '0.8rem'};
@@ -2464,10 +2464,12 @@ const EndOfListMessage = styled.div`
 
     {currentUser && (
       <>
-        <CommentForm onSubmit={handleSubmit} role="form"
-        ref={commentFormRef}
-        $keyboardActive={keyboardActive}
-        $keyboardHeight={keyboardHeight}
+        <CommentForm 
+          onSubmit={handleSubmit} 
+          role="form"
+          ref={commentFormRef}
+          $keyboardActive={keyboardActive}
+          $keyboardHeight={keyboardHeight}
         >
           <CommentInput
             type="text"
@@ -2519,8 +2521,15 @@ const EndOfListMessage = styled.div`
               <FiSend size={18} aria-hidden="true" />
             </SubmitButton>
           </ActionButtons>
-          
-          {(commentMedia || selectedMeme) && (
+        </CommentForm>
+
+        {/* Mova o MediaPreview para fora do CommentForm mas mantenha no mesmo container */}
+        {(commentMedia || selectedMeme) && (
+          <div style={{ 
+            marginTop: isMobile ? '8px' : '0',
+            padding: isMobile ? '0 16px' : '0',
+            marginBottom: isMobile ? '60px' : '0' // Espaço para o formulário fixo
+          }}>
             <MediaPreview 
               file={commentMedia} 
               meme={selectedMeme ? userMemes.find(m => m._id === selectedMeme) : null}
@@ -2530,8 +2539,8 @@ const EndOfListMessage = styled.div`
               }}
               data-testid="media-preview"
             />
-          )}
-        </CommentForm>
+          </div>
+        )}
 
         {showMemeSelector && (
           <MemeSelectorModal
