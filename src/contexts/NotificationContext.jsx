@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAuth } from './AuthContext';
 import { initSocket } from '../services/socket';
 import { debounce } from 'lodash';
+import { initNotifications } from '../utils/notifications';
 
 const NotificationContext = createContext();
 
@@ -133,15 +134,19 @@ const handleNewNotification = useCallback((notification) => {
   // Configura WebSocket e carrega dados iniciais
   useEffect(() => {
     if (!user) {
-      // Limpa notificações quando o usuário desloga
       setNotifications([]);
       setUnreadCount(0);
       return;
     }
 
-    // Solicita permissão para notificações
-    if ('Notification' in window && Notification.permission !== 'denied') {
-      Notification.requestPermission();
+    // Inicializa notificações nativas
+    if (Capacitor.isNativePlatform()) {
+      initNotifications().catch(console.error);
+    } else {
+      // Configuração para web
+      if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
     }
 
     // Inicializa o socket

@@ -9,6 +9,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar/Navbar';
 import { StatusBar } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
+import { Capacitor } from '@capacitor/core';
 
 // Importações individuais de páginas
 import HomePage from './pages/HomePage';
@@ -25,7 +26,7 @@ const AppContainer = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background: var(--background);
-  padding-top: env(safe-area-inset-top);
+  padding-top: ${Capacitor.isNativePlatform() ? '20px' : 'env(safe-area-inset-top)'};
   padding-bottom: env(safe-area-inset-bottom);
 `;
 
@@ -55,19 +56,21 @@ const NavbarWrapper = styled.div`
 function App() {
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      StatusBar.setOverlaysWebView({ overlay: true });
-      StatusBar.setBackgroundColor({ color: '#00000000' });
-
+      // Configuração correta da StatusBar
+      StatusBar.setOverlaysWebView({ overlay: false });
+      StatusBar.setBackgroundColor({ color: '#121212' });
+      StatusBar.setStyle({ style: 'dark' });
+      
+      // Configuração do teclado
+      Keyboard.setAccessoryBarVisible({ isVisible: true });
       Keyboard.addListener('keyboardWillShow', (info) => {
         document.documentElement.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
       });
-
       Keyboard.addListener('keyboardWillHide', () => {
         document.documentElement.style.setProperty('--keyboard-height', '0px');
       });
     }
   }, []);
-
   return (
     <AuthProvider>
       <NotificationProvider>
