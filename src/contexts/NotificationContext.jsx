@@ -130,56 +130,132 @@ const handleNewNotification = useCallback((notification) => {
     showNotificationAlert(notification);
   }
 }, [showNotificationAlert]);
-
-  // Configura WebSocket e carrega dados iniciais
-  useEffect(() => {
-    if (!user) {
-      setNotifications([]);
-      setUnreadCount(0);
-      return;
+// Configura WebSocket e carrega dados iniciais
+useEffect(() => {
+  if (!user) {
+    setNotifications([]);
+    setUnreadCount(0);
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
     }
+    return;
+  }
 
-    // Inicializa notificações nativas
+  // Inicializa notificações nativas
+  const initializeNotifications = async () => {
     if (Capacitor.isNativePlatform()) {
-      initNotifications().catch(console.error);
-    } else {
-      // Configuração para web
-      if ('Notification' in window && Notification.permission !== 'denied') {
-        Notification.requestPermission();
+      try {
+        await initNotifications();
+      } catch (error) {
+        console.error('Notification initialization error:', error);
       }
+    } else if ('Notification' in window && Notification.permission !== 'denied') {
+      Notification.requestPermission().catch(console.error);
     }
+  };
+  initializeNotifications();
 
-    // Inicializa o socket
+  // Configuração do WebSocket
+  const setupSocket = () => {
     const token = localStorage.getItem('token');
-    const newSocket = initSocket(token);
-    setSocket(newSocket);
+    if (!token) return null;
 
-    // Configura handlers de eventos
-    newSocket.on('connect_error', (err) => {
-      console.error('Connection error:', err);
+    const newSocket = initSocket(token);
+    
+    // Evento de conexão estabelecida
+    newSocket.on('connect', () => {
+      console.log('WebSocket connected');
+      // Autentica o socket após conexão
+      newSocket.emit('authenticate', token);
     });
 
+    // Evento de erro de conexão
+    newSocket.on('connect_error', (err) => {
+      console.error('WebSocket connection error:', err.message);
+      
+      // Tentativa de reconexão após um delay
+      setTimeout(() => {
+        console.log('Attempting to reconnect WebSocket...');
+        newSocket.connect();
+      }, 5000); // 5 segundos
+    });
+
+    // Evento de desconexão
+    newSocket.on('disconnect', (reason) => {
+      console.log('WebSocket disconnected:', reason);
+      
+      // Reconecta apenas se não foi uma desconexão intencional
+      if (reason !== 'io client disconnect') {
+        setTimeout(() => {
+          console.log('Reconnecting after disconnect...');
+          newSocket.connect();
+        }, 3000); // 3 segundos
+      }
+    });
+
+    // Evento de reconexão falha
+    newSocket.on('reconnect_failed', () => {
+      console.error('WebSocket reconnection failed');
+    });
+
+    // Evento de nova notificação
     newSocket.on('new-notification', handleNewNotification);
 
-    // Carrega dados iniciais
-    const loadInitialData = async () => {
-      try {
-        await Promise.all([loadNotifications(), loadUnreadCount()]);
-      } catch (error) {
-        console.error('Error loading initial data:', error);
-      }
-    };
-    
-    loadInitialData();
+    // Evento de notificações marcadas como lidas
+    newSocket.on('notifications-read', (readIds) => {
+      setNotifications(prev => 
+        prev.map(n => 
+          readIds.includes(n._id) ? { ...n, read: true } : n
+        )
+      );
+    });
 
-    // Cleanup
-    return () => {
-      if (newSocket) {
-        newSocket.off('new-notification', handleNewNotification);
-        newSocket.disconnect();
-      }
-    };
-  }, [user, handleNewNotification, loadNotifications, loadUnreadCount]);
+    return newSocket;
+  };
+
+  const socketInstance = setupSocket();
+  setSocket(socketInstance);
+
+  // Carrega dados iniciais com tratamento de erro
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadNotifications(),
+        loadUnreadCount()
+      ]);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadInitialData();
+
+  // Verifica periodicamente a conexão (opcional)
+  const connectionCheckInterval = setInterval(() => {
+    if (socketInstance && !socketInstance.connected) {
+      console.log('WebSocket not connected, attempting to reconnect...');
+      socketInstance.connect();
+    }
+  }, 30000); // A cada 30 segundos
+
+  // Cleanup
+  return () => {
+    clearInterval(connectionCheckInterval);
+    if (socketInstance) {
+      socketInstance.off('connect');
+      socketInstance.off('connect_error');
+      socketInstance.off('disconnect');
+      socketInstance.off('reconnect_failed');
+      socketInstance.off('new-notification');
+      socketInstance.off('notifications-read');
+      socketInstance.disconnect();
+    }
+  };
+}, [user, handleNewNotification, loadNotifications, loadUnreadCount]);
 
   // Funções auxiliares para texto de notificação
   const getNotificationTitle = (notification) => {

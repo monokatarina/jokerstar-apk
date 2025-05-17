@@ -1,50 +1,56 @@
-import { PushNotifications } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 
 export const initNotifications = async () => {
-  if (!Capacitor.isNativePlatform()) return;
-
-  // Solicita permissões
-  let permissionStatus = await PushNotifications.checkPermissions();
-  
-  if (permissionStatus.receive !== 'granted') {
-    permissionStatus = await PushNotifications.requestPermissions();
-    if (permissionStatus.receive !== 'granted') {
-      throw new Error('Permissão negada para notificações');
+  if (!Capacitor.isNativePlatform()) {
+    // Configuração para web
+    if ('Notification' in window && Notification.permission !== 'denied') {
+      await Notification.requestPermission();
     }
+    return;
   }
 
-  // Registra para push
-  await PushNotifications.register();
+  // Configuração para mobile
+  const permissionStatus = await LocalNotifications.requestPermissions();
+  
+  if (permissionStatus.display !== 'granted') {
+    throw new Error('Permissão negada para notificações');
+  }
 
-  // Configura listeners
-  PushNotifications.addListener('registration', (token) => {
-    console.log('Push registration success, token:', token.value);
-    // Envie este token para seu backend
-    api.post('/notifications/register', { token: token.value });
+  // Configura listeners para notificações locais
+  LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+    console.log('Notificação local clicada:', notification);
+    // Navegação baseada nos dados extras
+    if (notification.notification.extra?.memeId) {
+      window.location.href = `/memes/${notification.notification.extra.memeId}`;
+    }
   });
-
-  PushNotifications.addListener('registrationError', (error) => {
-    console.error('Push registration error:', error);
-  });
-
-  PushNotifications.addListener('pushNotificationReceived', (notification) => {
-    console.log('Push received:', notification);
-    showLocalNotification(notification);
-  });
-
-  // Configura notificações locais
-  await LocalNotifications.requestPermissions();
 };
 
-const showLocalNotification = async (notification) => {
-  await LocalNotifications.schedule({
-    notifications: [{
-      title: notification.title,
-      body: notification.body,
-      id: new Date().getTime(),
-      extra: notification.data
-    }]
-  });
+export const showLocalNotification = async (title, body, data = {}) => {
+  if (Capacitor.isNativePlatform()) {
+    await LocalNotifications.schedule({
+      notifications: [{
+        title,
+        body,
+        id: new Date().getTime(),
+        extra: data,
+        smallIcon: 'ic_stat_icon', // Nome do ícone (deve estar nos recursos Android)
+        iconColor: '#121212' // Cor do ícone
+      }]
+    });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    // Fallback para web
+    const notification = new Notification(title, {
+      body,
+      data,
+      icon: '/logo192.png'
+    });
+    
+    notification.onclick = () => {
+      if (data.memeId) {
+        window.location.href = `/memes/${data.memeId}`;
+      }
+    };
+  }
 };
