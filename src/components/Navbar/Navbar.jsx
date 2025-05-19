@@ -23,7 +23,7 @@ const popIn = keyframes`
 // Styled Components
 const MobileNavbarContainer = styled.nav`
   position: fixed;
-  top: 0;
+  top: env(safe-area-inset-top);
   left: 0;
   right: 0;
   height: 60px;

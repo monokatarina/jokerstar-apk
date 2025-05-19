@@ -27,7 +27,7 @@ const AppContainer = styled.div`
   flex-direction: column;
   min-height: 100vh;
   background: var(--background);
-  padding-top: env(safe-area-inset-top);
+  padding-top: calc(60px + env(safe-area-inset-top));
   padding-bottom: env(safe-area-inset-bottom);
 `;
 
