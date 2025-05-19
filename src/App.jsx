@@ -11,8 +11,6 @@ import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
-import { LocalNotifications } from '@capacitor/local-notifications';
-import api from './services/api';
 
 // Importações de páginas
 import HomePage from './pages/HomePage';
@@ -57,30 +55,9 @@ const NavbarWrapper = styled.div`
 `;
 
 function App() {
-  const checkForNotifications = async () => {
-    try {
-      // Chamada real à API para verificar notificações não lidas
-      const response = await api.get('/notifications/unread-count');
-      if (response.data.count > 0) {
-        await LocalNotifications.schedule({
-          notifications: [{
-            title: 'Novas notificações',
-            body: `Você tem ${response.data.count} novas notificações`,
-            id: new Date().getTime(),
-            extra: { type: 'unread-notifications' },
-            smallIcon: 'ic_stat_icon',
-            iconColor: '#121212'
-          }]
-        });
-      }
-    } catch (error) {
-      console.error('Error checking notifications:', error);
-    }
-  };
-
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Configuração da StatusBar - Corrigido
+      // Configuração da StatusBar
       StatusBar.setBackgroundColor({ color: '#121212' }).catch(console.error);
       StatusBar.setStyle({ style: Style.Dark }).catch(console.error);
       StatusBar.setOverlaysWebView({ overlay: false }).catch(console.error);
@@ -94,27 +71,11 @@ function App() {
         document.documentElement.style.setProperty('--keyboard-height', '0px');
       });
 
-      // Verifica notificações quando o app é aberto
-      checkForNotifications();
-
       // Listener para quando o app volta ao foreground
       CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        if (isActive) {
-          checkForNotifications();
-        }
+        // Você pode adicionar outras lógicas aqui se necessário
       });
-
-      // Solicita permissão para notificações
-      LocalNotifications.requestPermissions().catch(console.error);
     }
-
-    // Configuração inicial de notificações (para web também)
-    const init = async () => {
-      if ('Notification' in window && Notification.permission !== 'denied') {
-        await Notification.requestPermission();
-      }
-    };
-    init();
 
     return () => {
       // Limpeza dos listeners
