@@ -7,14 +7,14 @@ import { ThemeProvider } from './styles/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar/Navbar';
-import { StatusBar } from '@capacitor/status-bar';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
-import { BackgroundFetch } from '@transistorsoft/capacitor-background-fetch';
+import api from './services/api';
 
-// Importações de páginas (mantidas as mesmas)
+// Importações de páginas
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -24,13 +24,12 @@ import ProfilePage from './pages/ProfilePage';
 import TrendingPage from './pages/TrendingPage';
 import MemeDetailPage from './pages/MemeDetailPage';
 
-
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background: var(--background);
-  padding-top: ${Capacitor.isNativePlatform() ? '20px' : 'env(safe-area-inset-top)'};
+  padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 `;
 
@@ -60,7 +59,7 @@ const NavbarWrapper = styled.div`
 function App() {
   const checkForNotifications = async () => {
     try {
-      // Simulação - substitua por sua chamada real à API
+      // Chamada real à API para verificar notificações não lidas
       const response = await api.get('/notifications/unread-count');
       if (response.data.count > 0) {
         await LocalNotifications.schedule({
@@ -81,10 +80,10 @@ function App() {
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Configuração da StatusBar
-      StatusBar.setOverlaysWebView({ overlay: false });
-      StatusBar.setBackgroundColor({ color: '#121212' });
-      StatusBar.setStyle({ style: 'dark' });
+      // Configuração da StatusBar - Corrigido
+      StatusBar.setBackgroundColor({ color: '#121212' }).catch(console.error);
+      StatusBar.setStyle({ style: Style.Dark }).catch(console.error);
+      StatusBar.setOverlaysWebView({ overlay: false }).catch(console.error);
       
       // Configuração do teclado
       Keyboard.setAccessoryBarVisible({ isVisible: true });
@@ -95,35 +94,18 @@ function App() {
         document.documentElement.style.setProperty('--keyboard-height', '0px');
       });
 
-      // Configuração de notificações em segundo plano
-      const setupBackgroundTasks = async () => {
-        // 1. Verifica notificações quando o app é aberto
-        await checkForNotifications();
+      // Verifica notificações quando o app é aberto
+      checkForNotifications();
 
-        // 2. Configura o Background Fetch (para iOS/Android)
-        try {
-          await BackgroundFetch.configure({
-            minimumFetchInterval: 15, // mínimo 15 minutos entre execuções
-            stopOnTerminate: false,  // continuar mesmo quando app é fechado
-            startOnBoot: true        // iniciar quando dispositivo é ligado
-          }, async (taskId) => {
-            console.log('BackgroundFetch executado', taskId);
-            await checkForNotifications();
-            BackgroundFetch.finish({ taskId });
-          });
-        } catch (error) {
-          console.log('BackgroundFetch não suportado ou configurado', error);
+      // Listener para quando o app volta ao foreground
+      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          checkForNotifications();
         }
+      });
 
-        // 3. Listener para quando o app volta ao foreground
-        CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-          if (isActive) {
-            checkForNotifications();
-          }
-        });
-      };
-
-      setupBackgroundTasks();
+      // Solicita permissão para notificações
+      LocalNotifications.requestPermissions().catch(console.error);
     }
 
     // Configuração inicial de notificações (para web também)
