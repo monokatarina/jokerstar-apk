@@ -2102,7 +2102,8 @@ const handleSubmit = useCallback(async (e) => {
       });
       setError(error.response?.data?.message || 'Erro ao enviar resposta');
     }
-  }, [memeId, replyTexts, replySelectedMeme, onCommentCountChange]);
+    setCommentOpen(false);
+  }, [memeId, replyTexts, replySelectedMeme, onCommentCountChange, setCommentOpen]);
 
   const handleEdit = useCallback((comment) => {
     setEditingId(comment?._id || null);
@@ -2255,11 +2256,7 @@ useEffect(() => {
       }
     }
   };
-  useEffect(() => {
-    return () => {
-      setCommentOpen(false);
-    };
-  }, []);
+  
 
   const visualViewport = window.visualViewport;
   if (visualViewport) {
