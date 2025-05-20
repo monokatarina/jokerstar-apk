@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import api from '../services/api';
 import MemeCard from '../components/MemeCard';
@@ -14,31 +14,30 @@ const FeedContainer = styled.div`
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
-  padding: 16px 0;
   scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none; /* Firefox */
+  &::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
 `;
 
 const FeedGrid = styled.div`
   display: inline-flex;
-  gap: 24px;
-  padding: 0 16px;
+  gap: 0;
   height: 100%;
 `;
 
 const MemeWrapper = styled.div`
-  display: inline-block;
-  width: 95vw;
-  max-width: 500px;
-  height: 95vh;
-  max-height: 500px;
-  scroll-snap-align: start;
   position: relative;
-  border-radius: 12px;
+  width: 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  flex: 0 0 auto;
   overflow: hidden;
-  background: var(--card-bg);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  flex-shrink: 0;
 `;
 
 const EmptyFeed = styled.div`
@@ -50,6 +49,7 @@ const EmptyFeed = styled.div`
   width: 100vw;
   text-align: center;
   color: var(--text);
+  scroll-snap-align: start;
 
   h3 {
     font-size: 1.5rem;
@@ -67,7 +67,9 @@ const LoadingIndicator = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
+  width: 100vw;
   color: var(--text-light);
+  scroll-snap-align: start;
 `;
 
 const ErrorMessage = styled.div`
@@ -76,8 +78,10 @@ const ErrorMessage = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
+  width: 100vw;
   color: var(--danger);
   padding: 20px;
+  scroll-snap-align: start;
 
   button {
     margin-top: 20px;
@@ -97,6 +101,8 @@ const FeedPage = () => {
   const [memes, setMemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const feedContainerRef = useRef(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -127,13 +133,40 @@ const FeedPage = () => {
     setMemes(prevMemes => prevMemes.filter(meme => meme._id !== deletedMemeId));
   };
 
+  const handleScroll = () => {
+    if (feedContainerRef.current) {
+      const scrollLeft = feedContainerRef.current.scrollLeft;
+      const width = feedContainerRef.current.offsetWidth;
+      const newIndex = Math.round(scrollLeft / width);
+      setCurrentIndex(newIndex);
+    }
+  };
+
+  const scrollToIndex = (index) => {
+    if (feedContainerRef.current) {
+      const width = feedContainerRef.current.offsetWidth;
+      feedContainerRef.current.scrollTo({
+        left: width * index,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  useEffect(() => {
+    const container = feedContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
   useEffect(() => {
     fetchMemes();
   }, []);
 
   if (loading) {
     return (
-      <FeedContainer>
+      <FeedContainer ref={feedContainerRef}>
         <LoadingIndicator>Carregando...</LoadingIndicator>
       </FeedContainer>
     );
@@ -141,7 +174,7 @@ const FeedPage = () => {
 
   if (error) {
     return (
-      <FeedContainer>
+      <FeedContainer ref={feedContainerRef}>
         <ErrorMessage>
           {error}
           <button onClick={fetchMemes}>
@@ -153,7 +186,7 @@ const FeedPage = () => {
   }
 
   return (
-    <FeedContainer>
+    <FeedContainer ref={feedContainerRef}>
       <FeedGrid>
         {memes.length === 0 ? (
           <EmptyFeed>
@@ -162,7 +195,7 @@ const FeedPage = () => {
             <UploadButton size="large" />
           </EmptyFeed>
         ) : (
-          memes.map(meme => (
+          memes.map((meme, index) => (
             <MemeWrapper key={meme._id}>
               <MemeCard 
                 meme={meme}
@@ -172,11 +205,11 @@ const FeedPage = () => {
                     m._id === meme._id ? { ...m, commentCount: newCount } : m
                   ))}
                 }
-                isSquareView={true}
+                isSquareView={false}
+                isActive={index === currentIndex}
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '12px' // Mantém o border-radius consistente
+                  width: '90%',
+                  height: '90%',
                 }}
               />
             </MemeWrapper>
