@@ -13,31 +13,46 @@ const FeedContainer = styled.div`
   background-color: var(--background);
   overflow-x: auto;
   overflow-y: hidden;
-  white-space: nowrap;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
   overscroll-behavior-x: contain;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
   &::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
   }
 `;
 
 const FeedGrid = styled.div`
   display: inline-flex;
-  gap: 0;
   height: 100%;
+  padding-left: 8px; /* Espaço inicial */
 `;
 
 const MemeWrapper = styled.div`
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  scroll-snap-align: start;
+  width: calc(100vw - 16px); /* Largura menos o espaçamento */
+  height: calc(100vh - 32px); /* Altura menos o espaçamento */
+  margin: 16px 8px; /* Espaçamento entre posts */
+  scroll-snap-align: center; /* Alinhar no centro para melhor snap */
   flex: 0 0 auto;
   overflow: hidden;
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+
+  /* Efeito visual durante o scroll */
+  &:not(.active) {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+
+  &.active {
+    opacity: 1;
+    transform: scale(1);
+  }
 `;
 
 const EmptyFeed = styled.div`
@@ -46,10 +61,13 @@ const EmptyFeed = styled.div`
   align-items: center;
   justify-content: center;
   height: 100%;
-  width: 100vw;
+  width: calc(100vw - 16px);
+  margin: 0 8px;
   text-align: center;
   color: var(--text);
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  background: var(--card-bg);
+  border-radius: 12px;
 
   h3 {
     font-size: 1.5rem;
@@ -67,9 +85,12 @@ const LoadingIndicator = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  width: 100vw;
+  width: calc(100vw - 16px);
+  margin: 0 8px;
   color: var(--text-light);
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  background: var(--card-bg);
+  border-radius: 12px;
 `;
 
 const ErrorMessage = styled.div`
@@ -78,10 +99,13 @@ const ErrorMessage = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  width: 100vw;
+  width: calc(100vw - 16px);
+  margin: 0 8px;
   color: var(--danger);
   padding: 20px;
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  background: var(--card-bg);
+  border-radius: 12px;
 
   button {
     margin-top: 20px;
@@ -196,7 +220,10 @@ const FeedPage = () => {
           </EmptyFeed>
         ) : (
           memes.map((meme, index) => (
-            <MemeWrapper key={meme._id}>
+            <MemeWrapper 
+              key={meme._id}
+              className={index === currentIndex ? 'active' : ''}
+            >
               <MemeCard 
                 meme={meme}
                 onDelete={handleMemeDeleted}
@@ -208,8 +235,8 @@ const FeedPage = () => {
                 isSquareView={false}
                 isActive={index === currentIndex}
                 style={{
-                  width: '90%',
-                  height: '90%',
+                  width: '100%',
+                  height: '100%',
                 }}
               />
             </MemeWrapper>
