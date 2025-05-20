@@ -127,6 +127,7 @@ const FeedPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const feedContainerRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
+  const isScrollingRef = useRef(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -152,16 +153,24 @@ const FeedPage = () => {
   };
 
   const scrollToIndex = (index) => {
-    if (feedContainerRef.current) {
+    if (feedContainerRef.current && !isScrollingRef.current) {
+      isScrollingRef.current = true;
       const width = feedContainerRef.current.offsetWidth;
       feedContainerRef.current.scrollTo({
         left: width * index,
         behavior: 'smooth',
       });
+      
+      // Reset the flag after scroll completes
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 500);
     }
   };
 
   const handleScroll = () => {
+    if (isScrollingRef.current) return;
+
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
@@ -172,14 +181,22 @@ const FeedPage = () => {
         const width = feedContainerRef.current.offsetWidth;
         const index = Math.round(scrollLeft / width);
 
-        setCurrentIndex(index);
-        scrollToIndex(index); // trava no mais próximo
+        if (index !== currentIndex) {
+          setCurrentIndex(index);
+          scrollToIndex(index);
+        }
       }
-    }, 100); // tempo para considerar que o scroll terminou
+    }, 100);
   };
 
   const handleMemeDeleted = (deletedMemeId) => {
     setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
+    
+    // Adjust current index if we deleted the current meme
+    if (memes[currentIndex]?._id === deletedMemeId) {
+      const newIndex = Math.min(currentIndex, memes.length - 2);
+      setCurrentIndex(newIndex >= 0 ? newIndex : 0);
+    }
   };
 
   useEffect(() => {
@@ -188,11 +205,18 @@ const FeedPage = () => {
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, []);
+  }, [currentIndex]);
 
   useEffect(() => {
     fetchMemes();
   }, []);
+
+  useEffect(() => {
+    // Scroll to current index when memes change
+    if (memes.length > 0) {
+      scrollToIndex(currentIndex);
+    }
+  }, [memes, currentIndex]);
 
   if (loading) {
     return (
