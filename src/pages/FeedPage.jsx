@@ -11,20 +11,31 @@ const FeedContainer = styled.div`
   width: 100%;
   height: 100vh;
   background-color: var(--background);
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const FeedGrid = styled.div`
-  display: flex;
+  display: inline-flex;
   height: 100%;
+  padding-left: 8px;
 `;
 
 const MemeWrapper = styled.div`
   position: relative;
-  width: 100vw;
-  height: 115vh;
+  width: calc(100vw - 16px);
+  height: calc(100vh - 16px);
+  margin: 16px 8px;
+  scroll-snap-align: center;
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: 12px;
@@ -49,9 +60,11 @@ const EmptyFeed = styled.div`
   align-items: center;
   justify-content: center;
   height: 100%;
-  width: 100vw;
+  width: calc(100vw - 16px);
+  margin: 0 8px;
   text-align: center;
   color: var(--text);
+  scroll-snap-align: center;
   background: var(--card-bg);
   border-radius: 12px;
 
@@ -71,8 +84,10 @@ const LoadingIndicator = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  width: 100vw;
+  width: calc(100vw - 16px);
+  margin: 0 8px;
   color: var(--text-light);
+  scroll-snap-align: center;
   background: var(--card-bg);
   border-radius: 12px;
 `;
@@ -83,9 +98,11 @@ const ErrorMessage = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  width: 100vw;
+  width: calc(100vw - 16px);
+  margin: 0 8px;
   color: var(--danger);
   padding: 20px;
+  scroll-snap-align: center;
   background: var(--card-bg);
   border-radius: 12px;
 
@@ -109,22 +126,18 @@ const FeedPage = () => {
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const feedContainerRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
-
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
 
   const fetchMemes = async () => {
     try {
       setLoading(true);
       setError(null);
       const { data } = await api.get('/memes');
-
       const validMemes = Array.isArray(data?.data)
         ? data.data.filter(meme => !meme.isDeleted)
         : [];
-
       setMemes(validMemes);
     } catch (error) {
       console.error('Erro ao carregar feed:', error);
@@ -138,43 +151,44 @@ const FeedPage = () => {
     }
   };
 
-  const handleMemeDeleted = (deletedMemeId) => {
-    setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
-  };
-
   const scrollToIndex = (index) => {
     if (feedContainerRef.current) {
+      const width = feedContainerRef.current.offsetWidth;
       feedContainerRef.current.scrollTo({
-        left: index * window.innerWidth,
+        left: width * index,
         behavior: 'smooth',
       });
     }
   };
 
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const delta = touchStartX.current - touchEndX.current;
-    const swipeThreshold = 50;
-
-    if (delta > swipeThreshold && currentIndex < memes.length - 1) {
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      scrollToIndex(nextIndex);
-    } else if (delta < -swipeThreshold && currentIndex > 0) {
-      const prevIndex = currentIndex - 1;
-      setCurrentIndex(prevIndex);
-      scrollToIndex(prevIndex);
-    } else {
-      scrollToIndex(currentIndex); // Volta pro atual
+  const handleScroll = () => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
     }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (feedContainerRef.current) {
+        const scrollLeft = feedContainerRef.current.scrollLeft;
+        const width = feedContainerRef.current.offsetWidth;
+        const index = Math.round(scrollLeft / width);
+
+        setCurrentIndex(index);
+        scrollToIndex(index); // trava no mais próximo
+      }
+    }, 100); // tempo para considerar que o scroll terminou
   };
+
+  const handleMemeDeleted = (deletedMemeId) => {
+    setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
+  };
+
+  useEffect(() => {
+    const container = feedContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   useEffect(() => {
     fetchMemes();
@@ -202,12 +216,7 @@ const FeedPage = () => {
   }
 
   return (
-    <FeedContainer
-      ref={feedContainerRef}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <FeedContainer ref={feedContainerRef}>
       <FeedGrid>
         {memes.length === 0 ? (
           <EmptyFeed>
@@ -233,10 +242,7 @@ const FeedPage = () => {
                 }}
                 isSquareView={false}
                 isActive={index === currentIndex}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                }}
+                style={{ width: '100%', height: '100%' }}
               />
             </MemeWrapper>
           ))
