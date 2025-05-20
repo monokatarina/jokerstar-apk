@@ -1339,6 +1339,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
                 memeId={meme._id}
                 onCommentSubmit={handleCommentSubmit}
                 onCommentCountChange={onCommentCountChange} 
+                setCommentOpen={setCommentOpen} 
               />
             </CommentSectionContainer>
           </ImprovedMobileCommentSection>

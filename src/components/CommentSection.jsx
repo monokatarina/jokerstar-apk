@@ -1685,7 +1685,7 @@ const MemeSelectorModal = ({
 };
 
 // ============ Main Component ============
-const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange  }) => {
+const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCommentOpen  }) => {
   const { user: currentUser } = useAuth();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
