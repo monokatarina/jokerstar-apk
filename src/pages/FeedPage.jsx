@@ -166,7 +166,7 @@ const FeedPage = () => {
       
       // Adicionando resistência - só atualiza o índice se estiver perto o suficiente
       const scrollProgress = (scrollLeft % width) / width;
-      const threshold = 0.3; // 30% de threshold (aumente para mais resistência)
+      const threshold = 0.1; 
       
       if (scrollProgress > 1 - threshold || scrollProgress < threshold) {
         setCurrentIndex(newIndex);
@@ -207,7 +207,7 @@ const FeedPage = () => {
       }
       
       const deltaX = container.startX - moveX;
-      container.scrollLeft = container.scrollLeftStart + deltaX * 0.7; // Fator de redução (0.7 = 30% mais lento)
+      container.scrollLeft = container.scrollLeftStart + deltaX * 0.4; // Fator de redução (0.7 = 30% mais lento)
     }
   };
 
