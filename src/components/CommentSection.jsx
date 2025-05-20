@@ -71,12 +71,14 @@ const CommentContainer = styled.div`
   height: 100%;
   display: flex;
   flex-direction: column;
+  max-height: 100vh;
   
   @media (max-width: 768px) {
-    padding: 0;
-    padding-bottom: 60px; /* Espaço para o formulário fixo */
+    padding: 8px;
+    padding-bottom: ${props => props.$keyboardActive ? '300px' : '60px'};
   }
 `;
+
 
 const ExpandAllButton = styled.button`
   background: none;
@@ -145,14 +147,17 @@ const CommentItem = styled.div`
   transition: var(--transition);
 
   ${props => props.$depth > 0 && css`
-    margin-left: ${props.$depth * 12}px;
+    margin-left: ${props.$depth * 16}px;
     padding-left: 8px;
     border-left: 2px solid var(--primary);
   `}
 
   @media (max-width: 768px) {
-    margin-left: ${props => props.$depth * 0.25}rem;
-    padding-left: ${props => props.$depth > 0 ? '0.125rem' : '0'};
+    margin-bottom: 0.5rem;
+    ${props => props.$depth > 0 && css`
+      margin-left: ${props.$depth * 12}px;
+      padding-left: 6px;
+    `}
   }
 
   &:hover {
@@ -197,7 +202,7 @@ const CommentAvatar = styled.img`
 const CommentContent = styled.div`
   flex: 1;
   background: var(--comment-bg);
-  padding: 0.75rem;
+  padding: 12px;
   border-radius: var(--radius-md);
   position: relative;
   box-shadow: var(--shadow-sm);
@@ -208,8 +213,16 @@ const CommentContent = styled.div`
   ${props => props.$isReply && css`
     background: var(--reply-bg);
     border-left: 3px solid var(--primary);
-    margin-left: 8px;
+    margin-left: 12px;
+    padding: 10px;
   `}
+
+  @media (max-width: 768px) {
+    padding: 10px;
+    ${props => props.$isReply && css`
+      margin-left: 8px;
+    `}
+  }
 `;
 
 const CommentHeader = styled.div`
@@ -335,7 +348,7 @@ const SubmitButton = styled.button`
 const ReplyForm = styled.form`
   display: flex;
   margin: 12px 0 16px 52px;
-  background: var(--reply-form-bg);
+  background: var(--reply-form-bg, var(--reply-bg));
   border-radius: var(--radius-lg);
   padding: 0.5rem;
   box-shadow: var(--shadow-sm);
@@ -344,6 +357,11 @@ const ReplyForm = styled.form`
 
   &:focus-within {
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+  }
+
+  @media (max-width: 768px) {
+    margin-left: 44px;
+    padding: 8px;
   }
 `;
 
