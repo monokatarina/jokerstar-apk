@@ -79,7 +79,8 @@ const MobileCommentSection = styled.div`
     flex-direction: column;
     transform: translateY(${props => props.$isOpen ? '0' : '100%'});
     transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    touch-action: pan-y;
+    z-index: 1000;
+    touch-action: none;
 
     &::before {
       content: '';
