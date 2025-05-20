@@ -65,16 +65,17 @@ const pulse = keyframes`
 // ============ Styled Components ============
 
 const CommentContainer = styled.div`
+  position: relative;
   padding: 16px;
   background: var(--card-bg);
   border-top: 1px solid var(--border-light);
   padding: 0.5rem;
-  padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '1rem'};
-  transition: padding-bottom 0.3s ease;
-
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
   @media (max-width: 768px) {
     padding: 0.25rem;
-    padding-bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight + 20}px` : '0.5rem'};
     border-top: none;
   }
 `;
@@ -109,7 +110,7 @@ const ExpandAllButton = styled.button`
 `;
 
 const CommentList = styled.div`
-  max-height: 31.25rem;
+  flex: 1;
   overflow-y: auto;
   margin-bottom: 1rem;
   padding-right: 0.5rem;
@@ -136,13 +137,9 @@ const CommentList = styled.div`
 
   @media (max-width: 768px) {
     max-height: none;
-    height: calc(100vh - 120px - ${props => props.$keyboardHeight}px);
-    padding-bottom: ${props => props.$keyboardActive ? '80px' : '60px'};
     margin-bottom: 0;
-    transition: all 0.3s ease;
   }
 `;
-
 const CommentItem = styled.div`
   display: flex;
   margin-bottom: 0.75rem;
@@ -262,7 +259,6 @@ const CommentTime = styled.small`
 const CommentForm = styled.form`
   display: flex;
   align-items: center;
-  margin-top: 1rem;
   background: var(--input-bg);
   border-radius: var(--radius-lg);
   padding: 0.5rem;
@@ -271,12 +267,13 @@ const CommentForm = styled.form`
   border: 1px solid var(--border-light);
   position: sticky;
   bottom: 0;
+  z-index: 100;
 
   @media (max-width: 768px) {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : '0'};
+    bottom: 0;
     margin: 0;
     border-radius: 0;
     border-left: none;
@@ -285,8 +282,7 @@ const CommentForm = styled.form`
     background: var(--card-bg);
     padding: 0.5rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    transition: bottom 0.3s ease;
-    z-index: 10;
+    z-index: 1000;
   }
 `;
 
@@ -2283,6 +2279,38 @@ useEffect(() => {
   }
 }, [keyboardActive]);
 
+useEffect(() => {
+  if (!isMobile) return;
+
+  const handleResize = () => {
+    const visualViewport = window.visualViewport;
+    if (visualViewport) {
+      const viewportHeight = visualViewport.height;
+      const windowHeight = window.innerHeight;
+      const keyboardHeight = windowHeight - viewportHeight;
+      
+      if (keyboardHeight > 50) {
+        // Teclado visível
+        const input = document.getElementById('main-comment-input');
+        if (input) {
+          input.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      }
+    }
+  };
+
+  const visualViewport = window.visualViewport;
+  if (visualViewport) {
+    visualViewport.addEventListener('resize', handleResize);
+  }
+
+  return () => {
+    if (visualViewport) {
+      visualViewport.removeEventListener('resize', handleResize);
+    }
+  };
+}, [isMobile]);
+
 // Efeito para lidar com o teclado em mobile
 useEffect(() => {
   if (!isMobile) return;
@@ -2373,15 +2401,7 @@ const EndOfListMessage = styled.div`
 `;
 
   return (
-    <CommentContainer 
-      data-testid="comment-section"
-      style={{
-        paddingBottom: keyboardActive ? '300px' : '0',
-        transition: 'padding-bottom 0.3s ease'
-      }}
-      aria-live="polite"
-      aria-atomic="true"
-    >
+    <CommentContainer data-testid="comment-section" aria-live="polite" aria-atomic="true">
       <CommentCount aria-live="polite">
         {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
       </CommentCount>
@@ -2400,8 +2420,6 @@ const EndOfListMessage = styled.div`
       
       <CommentList 
         ref={commentListRef}
-        $keyboardHeight={keyboardHeight}
-        $keyboardActive={keyboardActive}
       >
         {loading ? (
           <LoadingMessage aria-busy="true">
@@ -2468,8 +2486,6 @@ const EndOfListMessage = styled.div`
           onSubmit={handleSubmit} 
           role="form"
           ref={commentFormRef}
-          $keyboardActive={keyboardActive}
-          $keyboardHeight={keyboardHeight}
         >
           <CommentInput
             type="text"
