@@ -23,8 +23,8 @@ const FeedGrid = styled.div`
 
 const MemeWrapper = styled.div`
   position: relative;
-  width: 120vw;
-  height: 100vh;
+  width: 100vw;
+  height: 115vh;
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: 12px;
