@@ -68,15 +68,13 @@ const CommentContainer = styled.div`
   position: relative;
   padding: 16px;
   background: var(--card-bg);
-  border-top: 1px solid var(--border-light);
-  padding: 0.5rem;
   height: 100%;
   display: flex;
   flex-direction: column;
   
   @media (max-width: 768px) {
-    padding: 0.25rem;
-    border-top: none;
+    padding: 0;
+    padding-bottom: 60px; /* Espaço para o formulário fixo */
   }
 `;
 
@@ -2036,7 +2034,8 @@ const handleSubmit = useCallback(async (e) => {
       ...prev,
       [commentId]: prev[commentId] || '' // Inicializa com string vazia se não existir
     }));
-  }, []);
+    setCommentOpen(prev => prev === commentId ? null : commentId); // Adicione esta linha
+  }, [setCommentOpen]);
   
   const handleReplyChange = useCallback((commentId, text) => {
     setReplyTexts(prev => ({
@@ -2256,6 +2255,11 @@ useEffect(() => {
       }
     }
   };
+  useEffect(() => {
+    return () => {
+      setCommentOpen(false);
+    };
+  }, []);
 
   const visualViewport = window.visualViewport;
   if (visualViewport) {

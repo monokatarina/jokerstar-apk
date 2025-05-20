@@ -130,7 +130,8 @@ const FeedPage = () => {
   const isScrollingRef = useRef(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
-
+  const [commentOpen, setCommentOpen] = useState(false);
+  
   const fetchMemes = async () => {
     try {
       setLoading(true);
@@ -169,7 +170,7 @@ const FeedPage = () => {
   };
 
   const handleScroll = () => {
-    if (isScrollingRef.current) return;
+    if (isScrollingRef.current || commentOpen) return;
 
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -209,6 +210,11 @@ const FeedPage = () => {
 
   useEffect(() => {
     fetchMemes();
+  }, []);
+  useEffect(() => {
+    return () => {
+      setCommentOpen(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -267,6 +273,7 @@ const FeedPage = () => {
                 isSquareView={false}
                 isActive={index === currentIndex}
                 style={{ width: '100%', height: '100%' }}
+                setCommentOpen={setCommentOpen} 
               />
             </MemeWrapper>
           ))
