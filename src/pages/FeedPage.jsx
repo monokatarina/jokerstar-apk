@@ -13,7 +13,7 @@ const FeedContainer = styled.div`
   background-color: var(--background);
   overflow-x: auto;
   overflow-y: hidden;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x proximity;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
@@ -32,7 +32,7 @@ const FeedGrid = styled.div`
 
 const MemeWrapper = styled.div`
   position: relative;
-  width: calc(100vw - 16px); /* Largura menos o espaçamento */
+  width: calc(100vw - 32px); /* Largura menos o espaçamento */
   height: calc(100vh - 32px); /* Altura menos o espaçamento */
   margin: 16px 8px; /* Espaçamento entre posts */
   scroll-snap-align: center; /* Alinhar no centro para melhor snap */
@@ -45,8 +45,8 @@ const MemeWrapper = styled.div`
 
   /* Efeito visual durante o scroll */
   &:not(.active) {
-    opacity: 0.9;
-    transform: scale(0.98);
+    opacity: 0.85;
+    transform: scale(0.95);
   }
 
   &.active {
@@ -159,10 +159,26 @@ const FeedPage = () => {
 
   const handleScroll = () => {
     if (feedContainerRef.current) {
-      const scrollLeft = feedContainerRef.current.scrollLeft;
-      const width = feedContainerRef.current.offsetWidth;
+      const container = feedContainerRef.current;
+      const scrollLeft = container.scrollLeft;
+      const width = container.offsetWidth;
       const newIndex = Math.round(scrollLeft / width);
-      setCurrentIndex(newIndex);
+      
+      // Adicionando resistência - só atualiza o índice se estiver perto o suficiente
+      const scrollProgress = (scrollLeft % width) / width;
+      const threshold = 0.3; // 30% de threshold (aumente para mais resistência)
+      
+      if (scrollProgress > 1 - threshold || scrollProgress < threshold) {
+        setCurrentIndex(newIndex);
+        
+        // Snap programático para garantir alinhamento
+        if (Math.abs(scrollProgress - 0.5) > threshold) {
+          container.scrollTo({
+            left: width * newIndex,
+            behavior: 'smooth'
+          });
+        }
+      }
     }
   };
 
@@ -176,11 +192,45 @@ const FeedPage = () => {
     }
   };
 
+
+  const handleTouchMove = (e) => {
+    if (feedContainerRef.current) {
+      // Reduzindo a velocidade do scroll
+      e.preventDefault();
+      const container = feedContainerRef.current;
+      const touch = e.touches[0];
+      const moveX = touch.clientX;
+      
+      if (container.startX === undefined) {
+        container.startX = touch.clientX;
+        container.scrollLeftStart = container.scrollLeft;
+      }
+      
+      const deltaX = container.startX - moveX;
+      container.scrollLeft = container.scrollLeftStart + deltaX * 0.7; // Fator de redução (0.7 = 30% mais lento)
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    if (feedContainerRef.current) {
+      const container = feedContainerRef.current;
+      container.startX = e.touches[0].clientX;
+      container.scrollLeftStart = container.scrollLeft;
+    }
+  };
+
   useEffect(() => {
     const container = feedContainerRef.current;
     if (container) {
       container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
+      container.addEventListener('touchmove', handleTouchMove, { passive: false });
+      container.addEventListener('touchstart', handleTouchStart);
+      
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        container.removeEventListener('touchmove', handleTouchMove);
+        container.removeEventListener('touchstart', handleTouchStart);
+      };
     }
   }, []);
 
@@ -236,7 +286,7 @@ const FeedPage = () => {
                 isActive={index === currentIndex}
                 style={{
                   width: '100%',
-                  height: '100%',
+                  height: '90%',
                 }}
               />
             </MemeWrapper>
