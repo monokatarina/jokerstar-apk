@@ -26,8 +26,8 @@ const MobileNavbarContainer = styled.nav`
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
-  padding-top: env(safe-area-inset-top);
+  height: calc(60px + env(safe-area-inset-top)); // Ajuste aqui
+  padding-top: env(safe-area-inset-top); // Mantém espaço interno
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   display: flex;
   justify-content: space-between;
