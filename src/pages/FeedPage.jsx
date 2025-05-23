@@ -106,6 +106,7 @@ const FeedPage = () => {
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
   const lastScrollPosition = useRef(0);
+  const isScrollingRef = useRef(false);
 
   const fetchMemes = async () => {
     try {

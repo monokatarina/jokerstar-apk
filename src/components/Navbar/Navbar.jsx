@@ -33,14 +33,26 @@ const MobileNavbarContainer = styled.nav`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 0 16px;
   z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-100%)'};
+  will-change: transform;
 `;
+
+const NavbarShadow = styled.div`
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+  z-index: 999;
+  opacity: ${({ $visible }) => $visible ? 1 : 0};
+  transition: opacity 0.25s ease;
+`;
+
 const BrandWrapper = styled.div`
   display: flex;
   align-items: center;
@@ -190,6 +202,7 @@ const Navbar = ({ navbarVisible }) => {
   return (
     <>
       <MobileNavbarContainer $visible={navbarVisible}>
+        
         <IconButton onClick={() => setDrawerOpen(true)}>
           <FiMenu size={24} />
         </IconButton>

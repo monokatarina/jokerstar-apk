@@ -25,18 +25,15 @@ import MemeDetailPage from './pages/MemeDetailPage';
 const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--background);
-  padding-top: calc(60px + env(safe-area-inset-top));
-  padding-bottom: env(safe-area-inset-bottom);
 `;
 
 const MainContent = styled.main`
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  height: calc(100vh - 60px); // Altura total menos a altura da navbar
-  padding-top: 60px; // Compensar a altura da navbar fixa
+  padding-top: 60px; // Altura da navbar
   padding-bottom: env(safe-area-inset-bottom);
 `;
 
