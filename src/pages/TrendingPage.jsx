@@ -7,70 +7,81 @@ import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
 import UploadButton from '../components/UploadButton';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
+import Navbar from '../components/Navbar/Navbar';
 
 const FeedContainer = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%;
+  min-height: 100vh;
+  padding: 16px;
+  padding-top: calc(60px + env(safe-area-inset-top)); // Ajuste para navbar e status bar
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
   background-color: var(--background);
 `;
 
 const FeedHeader = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
 `;
 
 const FeedTitle = styled.h1`
-  font-size: 24px;
+  font-size: 1.5rem;
   color: var(--text);
+  margin: 0;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 12px;
 `;
 
 const RefreshButton = styled.button`
   background: var(--card-bg);
   border: 1px solid var(--border-light);
-  padding: 8px 16px;
-  border-radius: var(--radius-lg);
+  padding: 10px 16px;
+  border-radius: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: var(--text);
-  transition: var(--transition);
+  transition: all 0.2s ease;
+  touch-action: manipulation;
   
-  &:hover {
-    background: var(--border-light);
-    box-shadow: var(--shadow-hover);
-  }
-
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
+    background: var(--border-light);
   }
 `;
 
 const RepostButton = styled.button`
   background: var(--card-bg);
   border: 1px solid var(--border-light);
-  padding: 8px 16px;
-  border-radius: var(--radius-lg);
+  padding: 10px 16px;
+  border-radius: 24px;
   cursor: pointer;
-  margin-top: 8px;
+  margin-top: 12px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
+  gap: 8px;
   font-size: 14px;
   color: var(--text);
-  transition: var(--transition);
+  transition: all 0.2s ease;
+  width: 100%;
+  touch-action: manipulation;
   
-  &:hover {
-    background: var(--border-light);
-    box-shadow: var(--shadow-hover);
-  }
-
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
+    background: var(--border-light);
   }
 `;
 
@@ -78,9 +89,10 @@ const EmptyFeed = styled.div`
   text-align: center;
   padding: 40px 20px;
   background: var(--card-bg);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   box-shadow: var(--shadow);
   color: var(--text);
+  margin-top: 20px;
 `;
 
 const LoadingIndicator = styled.div`
@@ -95,7 +107,7 @@ const ErrorMessage = styled.div`
   padding: 20px;
   background: var(--card-bg);
   color: var(--dislike-color);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   margin: 20px 0;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-light);
@@ -104,28 +116,31 @@ const ErrorMessage = styled.div`
 const Filters = styled.div`
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const FilterButton = styled.button`
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-lg);
+  padding: 10px 16px;
+  border-radius: 24px;
   border: none;
   background: ${({ $active }) => $active ? 'var(--primary)' : 'var(--card-bg)'};
   color: ${({ $active }) => $active ? 'var(--text-inverse)' : 'var(--text)'};
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s ease;
   border: 1px solid var(--border-light);
   font-weight: 500;
-
-  &:hover {
-    background: ${({ $active }) => $active ? 'var(--primary-hover)' : 'var(--border-light)'};
-    box-shadow: var(--shadow-hover);
-  }
-
+  white-space: nowrap;
+  touch-action: manipulation;
+  
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.95);
   }
 `;
 
@@ -133,6 +148,12 @@ const LoadingMoreIndicator = styled.div`
   text-align: center;
   padding: 20px;
   color: var(--text-light);
+`;
+
+const MemeList = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
 `;
 
 const TrendingPage = () => {
@@ -185,6 +206,7 @@ const TrendingPage = () => {
     loading,
     hasMore,
     onLoadMore: handleLoadMore,
+    threshold: 200,
   });
 
   const handleRefresh = useCallback(() => {
@@ -194,7 +216,7 @@ const TrendingPage = () => {
   const handleRepost = async (memeId) => {
     try {
       await api.post(`/memes/${memeId}/repost`);
-      handleRefresh(); // Atualiza a lista após repostar
+      handleRefresh();
     } catch (error) {
       console.error('Erro ao repostar:', error);
       setError('Erro ao repostar');
@@ -218,95 +240,103 @@ const TrendingPage = () => {
 
   if (loading && page === 1) {
     return (
-      <FeedContainer>
-        <LoadingIndicator>Carregando memes em destaque...</LoadingIndicator>
-      </FeedContainer>
+      <>
+        <Navbar />
+        <FeedContainer>
+          <LoadingIndicator>Carregando memes em destaque...</LoadingIndicator>
+        </FeedContainer>
+      </>
     );
   }
 
   if (error) {
     return (
-      <FeedContainer>
-        <ErrorMessage>
-          {error}
-          <RefreshButton onClick={handleRefresh}>
-            <FiRefreshCw /> Tentar novamente
-          </RefreshButton>
-        </ErrorMessage>
-      </FeedContainer>
+      <>
+        <Navbar />
+        <FeedContainer>
+          <ErrorMessage>
+            {error}
+            <RefreshButton onClick={handleRefresh}>
+              <FiRefreshCw /> Tentar novamente
+            </RefreshButton>
+          </ErrorMessage>
+        </FeedContainer>
+      </>
     );
   }
 
   return (
-    <FeedContainer>
-      <FeedHeader>
-        <FeedTitle>Destaques - Os memes mais populares</FeedTitle>
-        <div>
-          <UploadButton />
-          <RefreshButton onClick={handleRefresh}>
-            <FiRefreshCw /> Atualizar
-          </RefreshButton>
-        </div>
-      </FeedHeader>
+    <>
+      <Navbar />
+      <FeedContainer>
+        <FeedHeader>
+          <FeedTitle>Destaques - Os memes mais populares</FeedTitle>
+          <ActionButtons>
+            <UploadButton />
+            <RefreshButton onClick={handleRefresh}>
+              <FiRefreshCw size={18} />
+            </RefreshButton>
+          </ActionButtons>
+        </FeedHeader>
 
-      <Filters>
-        <FilterButton 
-          $active={filter === 'all'}
-          onClick={() => setFilter('all')}
-        >
-          Todos
-        </FilterButton>
-        <FilterButton 
-          $active={filter === 'images'}
-          onClick={() => setFilter('images')}
-        >
-          Imagens
-        </FilterButton>
-        <FilterButton 
-          $active={filter === 'videos'}
-          onClick={() => setFilter('videos')}
-        >
-          Vídeos
-        </FilterButton>
-      </Filters>
-      
-      {filteredMemes.length === 0 ? (
-        <EmptyFeed>
-          <h3>Nenhum meme em destaque encontrado</h3>
-          <p>Que tal criar o primeiro?</p>
-          <UploadButton style={{ marginTop: '20px' }} />
-        </EmptyFeed>
-      ) : (
-        <div className="feed-list">
-          {filteredMemes.map((meme, index) => (
-            <div 
-              key={`${meme._id}-${index}`} 
-              style={{ marginBottom: '24px' }}
-              ref={index === filteredMemes.length - 1 ? infiniteScrollRef : null}
-            >
-              <MemeCard   meme={meme} commentCount={meme.commentCount || 0}/>
-              {user && user._id !== meme.author?._id && (
-                <RepostButton onClick={() => handleRepost(meme._id)}>
-                  <span>🔁</span> Repostar ({meme.repostCount || 0})
-                </RepostButton>
-              )}
-            </div>
-          ))}
-          
-          {loadingMore && (
-            <LoadingMoreIndicator>
-              <FiRefreshCw className="spin" /> Carregando mais memes...
-            </LoadingMoreIndicator>
-          )}
-          
-          {!hasMore && filteredMemes.length > 0 && (
-            <LoadingMoreIndicator>
-              Você chegou ao fim dos memes em destaque!
-            </LoadingMoreIndicator>
-          )}
-        </div>
-      )}
-    </FeedContainer>
+        <Filters>
+          <FilterButton 
+            $active={filter === 'all'}
+            onClick={() => setFilter('all')}
+          >
+            Todos
+          </FilterButton>
+          <FilterButton 
+            $active={filter === 'images'}
+            onClick={() => setFilter('images')}
+          >
+            Imagens
+          </FilterButton>
+          <FilterButton 
+            $active={filter === 'videos'}
+            onClick={() => setFilter('videos')}
+          >
+            Vídeos
+          </FilterButton>
+        </Filters>
+        
+        {filteredMemes.length === 0 ? (
+          <EmptyFeed>
+            <h3>Nenhum meme em destaque encontrado</h3>
+            <p>Que tal criar o primeiro?</p>
+            <UploadButton style={{ marginTop: '20px' }} />
+          </EmptyFeed>
+        ) : (
+          <MemeList>
+            {filteredMemes.map((meme, index) => (
+              <div 
+                key={`${meme._id}-${index}`}
+                ref={index === filteredMemes.length - 1 ? infiniteScrollRef : null}
+              >
+                <MemeCard meme={meme} commentCount={meme.commentCount || 0} />
+                {user && user._id !== meme.author?._id && (
+                  <RepostButton onClick={() => handleRepost(meme._id)}>
+                    <span>🔁</span> Repostar ({meme.repostCount || 0})
+                  </RepostButton>
+                )}
+              </div>
+            ))}
+            
+            {loadingMore && (
+              <LoadingMoreIndicator>
+                <FiRefreshCw className="spin" /> Carregando mais memes...
+              </LoadingMoreIndicator>
+            )}
+            
+            {!hasMore && filteredMemes.length > 0 && (
+              <LoadingMoreIndicator>
+                Você chegou ao fim dos memes em destaque!
+              </LoadingMoreIndicator>
+            )}
+          </MemeList>
+        )}
+      </FeedContainer>
+    </>
   );
 };
 
