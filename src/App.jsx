@@ -34,12 +34,10 @@ const AppContainer = styled.div`
 const MainContent = styled.main`
   flex: 1;
   overflow-y: auto;
-  padding: 60px 0 72px;
   -webkit-overflow-scrolling: touch;
-
-  @media (max-width: 768px) {
-    padding-bottom: 64px;
-  }
+  height: calc(100vh - 60px); // Altura total menos a altura da navbar
+  padding-top: 60px; // Compensar a altura da navbar fixa
+  padding-bottom: env(safe-area-inset-bottom);
 `;
 
 const KeyboardSpacer = styled.div`
@@ -54,10 +52,47 @@ const NavbarWrapper = styled.div`
   z-index: 1000;
 `;
 
+// App.jsx
 function App() {
   const [navbarVisible, setNavbarVisible] = useState(true);
   const lastScrollPosition = useRef(0);
   const mainContentRef = useRef();
+  const scrollTimeout = useRef(null);
+
+  const handleScroll = () => {
+    const currentScroll = mainContentRef.current.scrollTop;
+    const isScrollingDown = currentScroll > lastScrollPosition.current;
+
+    // Cancelar timeout anterior se existir
+    if (scrollTimeout.current) {
+      clearTimeout(scrollTimeout.current);
+    }
+
+    // Se estiver rolando para baixo e já passou um certo limite, esconde a navbar
+    if (isScrollingDown && currentScroll > 60) {
+      setNavbarVisible(false);
+    } 
+    // Se estiver rolando para cima, mostra a navbar
+    else if (!isScrollingDown) {
+      setNavbarVisible(true);
+    }
+
+    // Atualiza a última posição de scroll
+    lastScrollPosition.current = currentScroll;
+
+    // Adiciona um timeout para evitar flickering durante scroll rápido
+    scrollTimeout.current = setTimeout(() => {
+      scrollTimeout.current = null;
+    }, 100);
+  };
+
+  useEffect(() => {
+    const container = mainContentRef.current;
+    if (!container) return;
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const container = mainContentRef.current;

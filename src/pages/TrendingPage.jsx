@@ -241,7 +241,6 @@ const TrendingPage = () => {
   if (loading && page === 1) {
     return (
       <>
-        <Navbar />
         <FeedContainer>
           <LoadingIndicator>Carregando memes em destaque...</LoadingIndicator>
         </FeedContainer>
@@ -252,7 +251,6 @@ const TrendingPage = () => {
   if (error) {
     return (
       <>
-        <Navbar />
         <FeedContainer>
           <ErrorMessage>
             {error}
@@ -267,7 +265,6 @@ const TrendingPage = () => {
 
   return (
     <>
-      <Navbar />
       <FeedContainer>
         <FeedHeader>
           <FeedTitle>Destaques - Os memes mais populares</FeedTitle>

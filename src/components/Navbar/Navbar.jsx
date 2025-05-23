@@ -21,6 +21,7 @@ const popIn = keyframes`
 `;
 
 // Styled Components
+// Navbar.jsx
 const MobileNavbarContainer = styled.nav`
   position: fixed;
   top: 0;
@@ -37,7 +38,7 @@ const MobileNavbarContainer = styled.nav`
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-100%)'};
 `;
 const BrandWrapper = styled.div`

@@ -6,7 +6,6 @@ import UploadButton from '../components/UploadButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
-import Navbar from '../components/Navbar/Navbar'
 
 const FeedContainer = styled.div`
   width: 100%;
@@ -107,7 +106,6 @@ const FeedPage = () => {
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
   const lastScrollPosition = useRef(0);
-  const [navbarVisible, setNavbarVisible] = useState(true);
 
   const fetchMemes = async () => {
     try {
@@ -132,17 +130,6 @@ const FeedPage = () => {
 
   const handleScroll = () => {
     if (commentOpen) return;
-
-    // Lógica para mostrar/esconder navbar
-    const currentScrollPosition = feedContainerRef.current.scrollTop;
-    const scrollDirection = currentScrollPosition > lastScrollPosition.current ? 'down' : 'up';
-    
-    if (scrollDirection === 'down' && currentScrollPosition > 100) {
-      setNavbarVisible(false);
-    } else if (scrollDirection === 'up') {
-      setNavbarVisible(true);
-    }
-    lastScrollPosition.current = currentScrollPosition;
 
     // Lógica para snap mais preciso
     if (scrollTimeoutRef.current) {
