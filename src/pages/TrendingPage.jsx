@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
 import UploadButton from '../components/UploadButton';
-
+import Navbar from '../components/Navbar/Navbar';
 
 const FeedContainer = styled.div`
   width: 100%;
@@ -119,42 +119,10 @@ const RepostButton = styled.button`
   }
 `;
 
-const Filters = styled.div`
-  position: fixed;
-  top: calc(60px + env(safe-area-inset-top));
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding: 12px;
-  background: var(--navbar-bg);
-  z-index: 100;
-  border-bottom: 1px solid var(--border);
-`;
-
-const FilterButton = styled.button`
-  padding: 10px 16px;
-  border-radius: 24px;
-  border: none;
-  background: ${({ $active }) => $active ? 'var(--primary)' : 'var(--card-bg)'};
-  color: ${({ $active }) => $active ? 'var(--text-inverse)' : 'var(--text)'};
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  white-space: nowrap;
-  touch-action: manipulation;
-  
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
 const TrendingPage = () => {
   const [memes, setMemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('all');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -198,13 +166,6 @@ const TrendingPage = () => {
     fetchTrendingMemes();
   }, [fetchTrendingMemes]);
 
-  const filteredMemes = memes.filter(meme => {
-    if (filter === 'all') return true;
-    if (filter === 'images') return meme.mediaType === 'image';
-    if (filter === 'videos') return meme.mediaType === 'video';
-    return true;
-  });
-
   if (loading) {
     return (
       <FeedContainer>
@@ -229,36 +190,15 @@ const TrendingPage = () => {
   return (
     <>
       <FeedContainer>
-        <Filters>
-          <FilterButton 
-            $active={filter === 'all'}
-            onClick={() => setFilter('all')}
-          >
-            Todos
-          </FilterButton>
-          <FilterButton 
-            $active={filter === 'images'}
-            onClick={() => setFilter('images')}
-          >
-            Imagens
-          </FilterButton>
-          <FilterButton 
-            $active={filter === 'videos'}
-            onClick={() => setFilter('videos')}
-          >
-            Vídeos
-          </FilterButton>
-        </Filters>
-
         <FeedGrid>
-          {filteredMemes.length === 0 ? (
+          {memes.length === 0 ? (
             <EmptyFeed>
               <h3>Nenhum meme em destaque encontrado</h3>
               <p>Que tal criar o primeiro?</p>
               <UploadButton size="large" />
             </EmptyFeed>
           ) : (
-            filteredMemes.map((meme) => (
+            memes.map((meme) => (
               <MemeWrapper key={meme._id}>
                 <MemeCard
                   meme={meme}
