@@ -9,48 +9,45 @@ import { FiRefreshCw } from 'react-icons/fi';
 
 const FeedContainer = styled.div`
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 60px); // Ajuste para o navbar
   background-color: var(--background);
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
   }
+  padding-bottom: 20px; // Espaço extra no final
 `;
 
 const FeedGrid = styled.div`
-  display: inline-flex;
-  height: 100%;
-  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0 8px;
 `;
 
 const MemeWrapper = styled.div`
   position: relative;
-  width: calc(100vw - 16px);
-  height: calc(100vh - 16px);
-  margin: 16px 8px;
-  scroll-snap-align: center;
-  flex: 0 0 auto;
-  overflow: hidden;
+  width: calc(100% - 16px);
+  min-height: 80vh; // Altura mínima para garantir que o card seja visível
+  margin: 8px;
+  scroll-snap-align: start;
   border-radius: 12px;
   background: var(--card-bg);
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.2s ease;
+  overflow: hidden;
 
   &:not(.active) {
-    opacity: 0.9;
-    transform: scale(0.98);
+    opacity: 0.95;
   }
 
   &.active {
     opacity: 1;
-    transform: scale(1);
   }
 `;
 
@@ -59,12 +56,12 @@ const EmptyFeed = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  width: calc(100vw - 16px);
-  margin: 0 8px;
+  height: calc(100vh - 120px);
+  width: calc(100% - 16px);
+  margin: 8px;
   text-align: center;
   color: var(--text);
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   background: var(--card-bg);
   border-radius: 12px;
 
@@ -83,11 +80,11 @@ const LoadingIndicator = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: calc(100vw - 16px);
-  margin: 0 8px;
+  height: calc(100vh - 120px);
+  width: calc(100% - 16px);
+  margin: 8px;
   color: var(--text-light);
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   background: var(--card-bg);
   border-radius: 12px;
 `;
@@ -97,12 +94,12 @@ const ErrorMessage = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: calc(100vw - 16px);
-  margin: 0 8px;
+  height: calc(100vh - 120px);
+  width: calc(100% - 16px);
+  margin: 8px;
   color: var(--danger);
   padding: 20px;
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   background: var(--card-bg);
   border-radius: 12px;
 
@@ -131,7 +128,9 @@ const FeedPage = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
-  
+  const lastScrollPosition = useRef(0);
+  const [navbarVisible, setNavbarVisible] = useState(true);
+
   const fetchMemes = async () => {
     try {
       setLoading(true);
@@ -153,38 +152,33 @@ const FeedPage = () => {
     }
   };
 
-  const scrollToIndex = (index) => {
-    if (feedContainerRef.current && !isScrollingRef.current) {
-      isScrollingRef.current = true;
-      const width = feedContainerRef.current.offsetWidth;
-      feedContainerRef.current.scrollTo({
-        left: width * index,
-        behavior: 'smooth',
-      });
-      
-      // Reset the flag after scroll completes
-      setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 500);
-    }
-  };
-
   const handleScroll = () => {
-    if (isScrollingRef.current || commentOpen) return;
+    if (commentOpen) return;
 
+    // Lógica para mostrar/esconder navbar
+    const currentScrollPosition = feedContainerRef.current.scrollTop;
+    if (currentScrollPosition > lastScrollPosition.current && currentScrollPosition > 60) {
+      // Rolando para baixo
+      setNavbarVisible(false);
+    } else {
+      // Rolando para cima
+      setNavbarVisible(true);
+    }
+    lastScrollPosition.current = currentScrollPosition;
+
+    // Lógica para snap
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
     scrollTimeoutRef.current = setTimeout(() => {
       if (feedContainerRef.current) {
-        const scrollLeft = feedContainerRef.current.scrollLeft;
-        const width = feedContainerRef.current.offsetWidth;
-        const index = Math.round(scrollLeft / width);
+        const scrollTop = feedContainerRef.current.scrollTop;
+        const containerHeight = feedContainerRef.current.offsetHeight;
+        const index = Math.round(scrollTop / containerHeight);
 
         if (index !== currentIndex) {
           setCurrentIndex(index);
-          scrollToIndex(index);
         }
       }
     }, 100);
@@ -193,7 +187,6 @@ const FeedPage = () => {
   const handleMemeDeleted = (deletedMemeId) => {
     setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
     
-    // Adjust current index if we deleted the current meme
     if (memes[currentIndex]?._id === deletedMemeId) {
       const newIndex = Math.min(currentIndex, memes.length - 2);
       setCurrentIndex(newIndex >= 0 ? newIndex : 0);
@@ -206,11 +199,12 @@ const FeedPage = () => {
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentIndex]);
+  }, [currentIndex, commentOpen]);
 
   useEffect(() => {
     fetchMemes();
   }, []);
+
   useEffect(() => {
     return () => {
       setCommentOpen(false);
@@ -219,8 +213,12 @@ const FeedPage = () => {
 
   useEffect(() => {
     // Scroll to current index when memes change
-    if (memes.length > 0) {
-      scrollToIndex(currentIndex);
+    if (memes.length > 0 && feedContainerRef.current) {
+      const containerHeight = feedContainerRef.current.offsetHeight;
+      feedContainerRef.current.scrollTo({
+        top: currentIndex * containerHeight,
+        behavior: 'smooth'
+      });
     }
   }, [memes, currentIndex]);
 
@@ -246,40 +244,42 @@ const FeedPage = () => {
   }
 
   return (
-    <FeedContainer ref={feedContainerRef}>
-      <FeedGrid>
-        {memes.length === 0 ? (
-          <EmptyFeed>
-            <h3>Nenhum meme encontrado</h3>
-            <p>Seja o primeiro a compartilhar sua criação!</p>
-            <UploadButton size="large" />
-          </EmptyFeed>
-        ) : (
-          memes.map((meme, index) => (
-            <MemeWrapper
-              key={meme._id}
-              className={index === currentIndex ? 'active' : ''}
-            >
-              <MemeCard
-                meme={meme}
-                onDelete={handleMemeDeleted}
-                onCommentCountChange={(newCount) => {
-                  setMemes(prev =>
-                    prev.map(m =>
-                      m._id === meme._id ? { ...m, commentCount: newCount } : m
-                    )
-                  );
-                }}
-                isSquareView={false}
-                isActive={index === currentIndex}
-                style={{ width: '100%', height: '100%' }}
-                setCommentOpen={setCommentOpen} 
-              />
-            </MemeWrapper>
-          ))
-        )}
-      </FeedGrid>
-    </FeedContainer>
+    <>
+      <FeedContainer ref={feedContainerRef}>
+        <FeedGrid>
+          {memes.length === 0 ? (
+            <EmptyFeed>
+              <h3>Nenhum meme encontrado</h3>
+              <p>Seja o primeiro a compartilhar sua criação!</p>
+              <UploadButton size="large" />
+            </EmptyFeed>
+          ) : (
+            memes.map((meme, index) => (
+              <MemeWrapper
+                key={meme._id}
+                className={index === currentIndex ? 'active' : ''}
+              >
+                <MemeCard
+                  meme={meme}
+                  onDelete={handleMemeDeleted}
+                  onCommentCountChange={(newCount) => {
+                    setMemes(prev =>
+                      prev.map(m =>
+                        m._id === meme._id ? { ...m, commentCount: newCount } : m
+                      )
+                    );
+                  }}
+                  isSquareView={false}
+                  isActive={index === currentIndex}
+                  style={{ width: '100%', height: '100%' }}
+                  setCommentOpen={setCommentOpen}
+                />
+              </MemeWrapper>
+            ))
+          )}
+        </FeedGrid>
+      </FeedContainer>
+    </>
   );
 };
 

@@ -35,6 +35,8 @@ const MobileNavbarContainer = styled.nav`
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease;
+  transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-100%)'};
 `;
 const BrandWrapper = styled.div`
   display: flex;
@@ -183,7 +185,7 @@ const Navbar = () => {
 
   return (
     <>
-      <MobileNavbarContainer>
+      <MobileNavbarContainer $visible={navbarVisible}>
         <IconButton onClick={() => setDrawerOpen(true)}>
           <FiMenu size={24} />
         </IconButton>

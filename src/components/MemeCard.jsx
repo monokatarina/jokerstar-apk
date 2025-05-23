@@ -493,6 +493,7 @@ const ResponsiveVideo = styled.video`
 
 const MediaContainer = styled.div`
   width: 100%;
+  height: 60vh;
   max-height: 43.75rem;
   min-height: 18.75rem;
   background: var(--background);
@@ -665,10 +666,12 @@ const Tag = styled.span`
 
 const Actions = styled.div`
   display: flex;
-  padding: 0.75rem 1rem;
+  padding: 12px;
   border-top: 1px solid var(--border-light);
   background: var(--card-bg);
   justify-content: space-between;
+  position: sticky;
+  bottom: 0;
 `;
 
 const ActionGroup = styled.div`
