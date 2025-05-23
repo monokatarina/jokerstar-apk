@@ -10,46 +10,31 @@ import Navbar from '../components/Navbar/Navbar'
 
 const FeedContainer = styled.div`
   width: 100%;
-  height: calc(100vh - 60px); // Ajuste para o navbar
+  height: 100vh;
   background-color: var(--background);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: y proximity;
+  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
   }
-  padding-bottom: 20px; // Espaço extra no final
+  padding-top: calc(60px + env(safe-area-inset-top)); // Ajuste para navbar e status bar
 `;
 
 const FeedGrid = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 0 8px;
 `;
 
 const MemeWrapper = styled.div`
-  position: relative;
-  width: calc(100% - 16px);
-  min-height: 80vh; // Altura mínima para garantir que o card seja visível
-  margin: 8px;
+  width: 100%;
+  height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
   scroll-snap-align: start;
-  border-radius: 12px;
-  background: var(--card-bg);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease;
-  overflow: hidden;
-
-  &:not(.active) {
-    opacity: 0.95;
-  }
-
-  &.active {
-    opacity: 1;
-  }
+  position: relative;
 `;
 
 const EmptyFeed = styled.div`
@@ -57,14 +42,13 @@ const EmptyFeed = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: calc(100vh - 120px);
-  width: calc(100% - 16px);
-  margin: 8px;
+  height: calc(100vh - 60px - env(safe-area-inset-top));
+  width: 100%;
   text-align: center;
   color: var(--text);
   scroll-snap-align: start;
   background: var(--card-bg);
-  border-radius: 12px;
+  padding: 16px;
 
   h3 {
     font-size: 1.5rem;
@@ -81,13 +65,10 @@ const LoadingIndicator = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 120px);
-  width: calc(100% - 16px);
-  margin: 8px;
+  height: calc(100vh - 60px - env(safe-area-inset-top));
+  width: 100%;
   color: var(--text-light);
   scroll-snap-align: start;
-  background: var(--card-bg);
-  border-radius: 12px;
 `;
 
 const ErrorMessage = styled.div`
@@ -95,14 +76,11 @@ const ErrorMessage = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 120px);
-  width: calc(100% - 16px);
-  margin: 8px;
+  height: calc(100vh - 60px - env(safe-area-inset-top));
+  width: 100%;
   color: var(--danger);
   padding: 20px;
   scroll-snap-align: start;
-  background: var(--card-bg);
-  border-radius: 12px;
 
   button {
     margin-top: 20px;
@@ -125,7 +103,6 @@ const FeedPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const feedContainerRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
-  const isScrollingRef = useRef(false);
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
@@ -158,31 +135,38 @@ const FeedPage = () => {
 
     // Lógica para mostrar/esconder navbar
     const currentScrollPosition = feedContainerRef.current.scrollTop;
-    if (currentScrollPosition > lastScrollPosition.current && currentScrollPosition > 60) {
-      // Rolando para baixo
+    const scrollDirection = currentScrollPosition > lastScrollPosition.current ? 'down' : 'up';
+    
+    if (scrollDirection === 'down' && currentScrollPosition > 100) {
       setNavbarVisible(false);
-    } else {
-      // Rolando para cima
+    } else if (scrollDirection === 'up') {
       setNavbarVisible(true);
     }
     lastScrollPosition.current = currentScrollPosition;
 
-    // Lógica para snap
+    // Lógica para snap mais preciso
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
+    isScrollingRef.current = true;
     scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
       if (feedContainerRef.current) {
-        const scrollTop = feedContainerRef.current.scrollTop;
-        const containerHeight = feedContainerRef.current.offsetHeight;
+        const container = feedContainerRef.current;
+        const scrollTop = container.scrollTop;
+        const containerHeight = container.offsetHeight;
         const index = Math.round(scrollTop / containerHeight);
-
+        
         if (index !== currentIndex) {
           setCurrentIndex(index);
+          container.scrollTo({
+            top: index * containerHeight,
+            behavior: 'smooth'
+          });
         }
       }
-    }, 100);
+    }, 150);
   };
 
   const handleMemeDeleted = (deletedMemeId) => {
@@ -212,37 +196,30 @@ const FeedPage = () => {
     };
   }, []);
 
-  useEffect(() => {
-    // Scroll to current index when memes change
-    if (memes.length > 0 && feedContainerRef.current) {
-      const containerHeight = feedContainerRef.current.offsetHeight;
-      feedContainerRef.current.scrollTo({
-        top: currentIndex * containerHeight,
-        behavior: 'smooth'
-      });
-    }
-  }, [memes, currentIndex]);
-
   if (loading) {
     return (
-      
-      <FeedContainer ref={feedContainerRef}>
-        <LoadingIndicator>Carregando...</LoadingIndicator>
-      </FeedContainer>
+      <>
+        <Navbar navbarVisible={true} />
+        <FeedContainer ref={feedContainerRef}>
+          <LoadingIndicator>Carregando...</LoadingIndicator>
+        </FeedContainer>
+      </>
     );
   }
 
   if (error) {
     return (
-      
-      <FeedContainer ref={feedContainerRef}>
-        <ErrorMessage>
-          {error}
-          <button onClick={fetchMemes}>
-            <FiRefreshCw /> Tentar novamente
-          </button>
-        </ErrorMessage>
-      </FeedContainer>
+      <>
+        <Navbar navbarVisible={true} />
+        <FeedContainer ref={feedContainerRef}>
+          <ErrorMessage>
+            {error}
+            <button onClick={fetchMemes}>
+              <FiRefreshCw /> Tentar novamente
+            </button>
+          </ErrorMessage>
+        </FeedContainer>
+      </>
     );
   }
 
@@ -259,10 +236,7 @@ const FeedPage = () => {
             </EmptyFeed>
           ) : (
             memes.map((meme, index) => (
-              <MemeWrapper
-                key={meme._id}
-                className={index === currentIndex ? 'active' : ''}
-              >
+              <MemeWrapper key={meme._id}>
                 <MemeCard
                   meme={meme}
                   onDelete={handleMemeDeleted}

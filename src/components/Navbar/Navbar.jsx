@@ -23,15 +23,17 @@ const popIn = keyframes`
 // Styled Components
 const MobileNavbarContainer = styled.nav`
   position: fixed;
-  top: env(safe-area-inset-top);
+  top: 0;
   left: 0;
   right: 0;
   height: 60px;
+  padding-top: env(safe-area-inset-top);
   background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
+  padding-left: 16px;
+  padding-right: 16px;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -70,6 +72,7 @@ const DrawerContainer = styled.div`
   left: ${({ $isOpen }) => ($isOpen ? '0' : '-100%')};
   width: 280px;
   height: 100vh;
+  padding-top: env(safe-area-inset-top);
   background: #1A1A1A;
   z-index: 1002;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
