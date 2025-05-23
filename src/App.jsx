@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import GlobalStyles from './styles/GlobalStyles';
@@ -12,7 +12,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 
-// Importações de páginas
+// Páginas
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -36,7 +36,7 @@ const MainContent = styled.main`
   overflow-y: auto;
   padding: 60px 0 72px;
   -webkit-overflow-scrolling: touch;
-  
+
   @media (max-width: 768px) {
     padding-bottom: 64px;
   }
@@ -55,14 +55,37 @@ const NavbarWrapper = styled.div`
 `;
 
 function App() {
+  const [navbarVisible, setNavbarVisible] = useState(true);
+  const lastScrollPosition = useRef(0);
+  const mainContentRef = useRef();
+
+  useEffect(() => {
+    const container = mainContentRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const currentScroll = container.scrollTop;
+      const isScrollingDown = currentScroll > lastScrollPosition.current;
+
+      if (isScrollingDown && currentScroll > 100) {
+        setNavbarVisible(false);
+      } else {
+        setNavbarVisible(true);
+      }
+
+      lastScrollPosition.current = currentScroll;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      // Configuração da StatusBar
       StatusBar.setBackgroundColor({ color: '#121212' }).catch(console.error);
       StatusBar.setStyle({ style: Style.Dark }).catch(console.error);
       StatusBar.setOverlaysWebView({ overlay: false }).catch(console.error);
-      
-      // Configuração do teclado
+
       Keyboard.setAccessoryBarVisible({ isVisible: true });
       Keyboard.addListener('keyboardWillShow', (info) => {
         document.documentElement.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
@@ -71,14 +94,10 @@ function App() {
         document.documentElement.style.setProperty('--keyboard-height', '0px');
       });
 
-      // Listener para quando o app volta ao foreground
-      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-        // Você pode adicionar outras lógicas aqui se necessário
-      });
+      CapacitorApp.addListener('appStateChange', ({ isActive }) => {});
     }
 
     return () => {
-      // Limpeza dos listeners
       Keyboard.removeAllListeners();
       CapacitorApp.removeAllListeners();
     };
@@ -92,10 +111,10 @@ function App() {
             <GlobalStyles />
             <AppContainer>
               <NavbarWrapper>
-                <Navbar />
+                <Navbar navbarVisible={navbarVisible} />
               </NavbarWrapper>
-            
-              <MainContent>
+
+              <MainContent ref={mainContentRef}>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/memes/:id" element={<MemeDetailPage />} />

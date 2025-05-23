@@ -199,7 +199,6 @@ const FeedPage = () => {
   if (loading) {
     return (
       <>
-        <Navbar navbarVisible={true} />
         <FeedContainer ref={feedContainerRef}>
           <LoadingIndicator>Carregando...</LoadingIndicator>
         </FeedContainer>
@@ -210,7 +209,6 @@ const FeedPage = () => {
   if (error) {
     return (
       <>
-        <Navbar navbarVisible={true} />
         <FeedContainer ref={feedContainerRef}>
           <ErrorMessage>
             {error}
@@ -225,7 +223,6 @@ const FeedPage = () => {
 
   return (
     <>
-      <Navbar navbarVisible={navbarVisible} />
       <FeedContainer ref={feedContainerRef}>
         <FeedGrid>
           {memes.length === 0 ? (
