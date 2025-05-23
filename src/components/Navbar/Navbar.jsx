@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styled, { keyframes } from 'styled-components';
-import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiMenu, FiBell, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiMenu, FiBell, FiSearch, FiCalendar, FiZap, FiStar, FiAward } from 'react-icons/fi';
 import { useTheme } from '../../styles/ThemeContext';
 import { FiMoon, FiSun } from 'react-icons/fi';
 import { useSwipeable } from 'react-swipeable';
@@ -188,11 +188,25 @@ const DrawerUserInfo = styled.div`
 const DrawerUsername = styled.div`
   font-weight: 600;
   color: var(--text);
+  margin-bottom: 4px;
 `;
 
-const DrawerKarma = styled.div`
-  font-size: 0.8rem;
+const DrawerDaysBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
   color: var(--text-light);
+  background: ${({ days }) => {
+    if (days >= 365) return 'linear-gradient(135deg, #f39c12, #e67e22)';
+    if (days >= 180) return 'linear-gradient(135deg, #2ecc71, #27ae60)';
+    if (days >= 30) return 'linear-gradient(135deg, var(--secondary), #2980b9)';
+    return 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+  }};
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
 `;
 
 const DrawerItem = styled(Link)`
@@ -219,8 +233,34 @@ const DrawerItem = styled(Link)`
 
 const DrawerFooter = styled.div`
   margin-top: auto;
-  padding: 16px;
+  padding: 8px 0;
   border-top: 1px solid var(--border);
+  margin-bottom: env(safe-area-inset-bottom);
+`;
+
+const DrawerActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+  
+  &:hover {
+    background: var(--hover-bg);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    color: var(--text-light);
+  }
 `;
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
@@ -238,6 +278,20 @@ const getImageUrl = (imagePath) => {
 
   const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
   return `${API_BASE_URL}${normalizedPath}`;
+};
+
+const calculateDaysSinceJoin = (createdAt) => {
+  if (!createdAt) return 1;
+  const joinDate = new Date(createdAt);
+  const today = new Date();
+  return Math.max(1, Math.floor((today - joinDate) / (1000 * 60 * 60 * 24)));
+};
+
+const getBadgeIcon = (days) => {
+  if (days >= 365) return <FiAward size={12} />;
+  if (days >= 180) return <FiStar size={12} />;
+  if (days >= 30) return <FiZap size={12} />;
+  return <FiCalendar size={12} />;
 };
 
 const Navbar = ({ navbarVisible }) => {
@@ -266,6 +320,8 @@ const Navbar = ({ navbarVisible }) => {
       console.error('Logout error:', error);
     }
   };
+
+  const daysSinceJoin = user ? calculateDaysSinceJoin(user.createdAt) : 0;
 
   return (
     <>
@@ -348,7 +404,11 @@ const Navbar = ({ navbarVisible }) => {
               )}
             </DrawerAvatar>
             <DrawerUserInfo>
-              <DrawerUsername>u/{user.username}</DrawerUsername>
+              <DrawerUsername>{user.username}</DrawerUsername>
+              <DrawerDaysBadge days={daysSinceJoin}>
+                {getBadgeIcon(daysSinceJoin)}
+                {daysSinceJoin} dias
+              </DrawerDaysBadge>
             </DrawerUserInfo>
           </DrawerHeader>
         )}
@@ -404,24 +464,16 @@ const Navbar = ({ navbarVisible }) => {
         </div>
 
         <DrawerFooter>
-          <DrawerItem 
-            as="button" 
-            onClick={toggleTheme}
-            $active={false}
-          >
+          <DrawerActionButton onClick={toggleTheme}>
             {theme === 'light' ? <FiMoon /> : <FiSun />}
             {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-          </DrawerItem>
+          </DrawerActionButton>
 
           {user && (
-            <DrawerItem 
-              as="button" 
-              onClick={handleLogout}
-              $active={false}
-            >
+            <DrawerActionButton onClick={handleLogout}>
               <FiLogOut />
               Logout
-            </DrawerItem>
+            </DrawerActionButton>
           )}
         </DrawerFooter>
       </DrawerContainer>
