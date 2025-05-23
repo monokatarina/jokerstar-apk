@@ -751,7 +751,7 @@ const ReactionAnimation = styled.div`
   z-index: 10;
 `;
 
-const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFullScreen = false ,  setCommentOpen}) => {
+const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFullScreen = false ,  setCommentOpen = () => {}}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
@@ -1026,11 +1026,16 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     setShowComments(!showComments);
     setCommentOpen(!showComments);
   };
+  
   useEffect(() => {
     return () => {
-      setCommentOpen(false);
+      if (typeof setCommentOpen === 'function') {
+        setCommentOpen(false);
+      }
     };
   }, [setCommentOpen]);
+
+  
   const handleTouchStart = (e) => {
     // Verificar se o toque começou na área de arraste superior
     const isHandleTouch = e.target.closest('.drag-handle');
