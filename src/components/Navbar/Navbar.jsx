@@ -156,7 +156,7 @@ const IconButton = styled.button`
   }
 `;
 
-const Navbar = () => {
+const Navbar = ({ navbarVisible }) => {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();

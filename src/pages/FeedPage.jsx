@@ -6,6 +6,7 @@ import UploadButton from '../components/UploadButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
+import Navbar from '../components/Navbar/Navbar'
 
 const FeedContainer = styled.div`
   width: 100%;
@@ -224,6 +225,7 @@ const FeedPage = () => {
 
   if (loading) {
     return (
+      
       <FeedContainer ref={feedContainerRef}>
         <LoadingIndicator>Carregando...</LoadingIndicator>
       </FeedContainer>
@@ -232,6 +234,7 @@ const FeedPage = () => {
 
   if (error) {
     return (
+      
       <FeedContainer ref={feedContainerRef}>
         <ErrorMessage>
           {error}
@@ -245,6 +248,7 @@ const FeedPage = () => {
 
   return (
     <>
+      <Navbar navbarVisible={navbarVisible} />
       <FeedContainer ref={feedContainerRef}>
         <FeedGrid>
           {memes.length === 0 ? (
