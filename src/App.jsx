@@ -50,7 +50,7 @@ const NavbarWrapper = styled.div`
   right: 0;
   z-index: 1000;
   padding-top: env(safe-area-inset-top);
-  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
+  background: var(--navbar-bg); // Usa a mesma variável que o Navbar
 `;
 
 function App() {

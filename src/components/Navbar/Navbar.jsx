@@ -349,7 +349,6 @@ const Navbar = ({ navbarVisible }) => {
             </DrawerAvatar>
             <DrawerUserInfo>
               <DrawerUsername>u/{user.username}</DrawerUsername>
-              <DrawerKarma>1 karma • 1 day</DrawerKarma>
             </DrawerUserInfo>
           </DrawerHeader>
         )}
