@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import styled, { keyframes, css } from 'styled-components';
-import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiSettings, FiMenu, FiX, FiBell } from 'react-icons/fi';
+import styled, { keyframes } from 'styled-components';
+import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiMenu, FiBell } from 'react-icons/fi';
 import { FaLaughSquint } from 'react-icons/fa';
 import { useTheme } from '../../styles/ThemeContext';
 import { FiMoon, FiSun } from 'react-icons/fi';
@@ -21,7 +21,6 @@ const popIn = keyframes`
 `;
 
 // Styled Components
-// Navbar.jsx
 const MobileNavbarContainer = styled.nav`
   position: fixed;
   top: 0;
@@ -29,13 +28,13 @@ const MobileNavbarContainer = styled.nav`
   right: 0;
   height: 60px;
   padding-top: env(safe-area-inset-top);
-  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
   z-index: 1000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-100%)'};
   will-change: transform;
@@ -43,7 +42,7 @@ const MobileNavbarContainer = styled.nav`
 
 const NavbarShadow = styled.div`
   position: fixed;
-  top: 60px;
+  top: calc(60px + env(safe-area-inset-top));
   left: 0;
   right: 0;
   height: 4px;
@@ -66,7 +65,7 @@ const BrandWrapper = styled.div`
 
 const BrandLogo = styled(FaLaughSquint)`
   font-size: 1.8rem;
-  color: #FFF;
+  color: var(--text-inverse);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 `;
 
@@ -74,9 +73,9 @@ const BrandText = styled.span`
   font-family: 'Roboto Condensed', sans-serif;
   font-size: 1.4rem;
   font-weight: 700;
-  color: #FFF;
+  color: var(--text-inverse);
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2));
 `;
 
 const DrawerContainer = styled.div`
@@ -86,12 +85,12 @@ const DrawerContainer = styled.div`
   width: 280px;
   height: 100vh;
   padding-top: env(safe-area-inset-top);
-  background: #1A1A1A;
+  background: var(--card-bg);
   z-index: 1002;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--border);
 `;
 
 const Overlay = styled.div`
@@ -110,8 +109,8 @@ const Overlay = styled.div`
 
 const DrawerHeader = styled.div`
   padding: 24px 20px;
-  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  border-bottom: 1px solid var(--border);
 `;
 
 const DrawerItem = styled(Link)`
@@ -119,12 +118,12 @@ const DrawerItem = styled(Link)`
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  color: ${({ $active }) => ($active ? '#FF6B00' : '#FFF')};
+  color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--text)')};
   text-decoration: none;
   font-size: 1rem;
-  transition: all 0.2s ease;
+  transition: var(--transition);
   position: relative;
-  background: ${({ $active }) => ($active ? 'rgba(255, 107, 0, 0.1)' : 'transparent')};
+  background: ${({ $active }) => ($active ? 'rgba(var(--primary-rgb), 0.1)' : 'transparent')};
 
   &::before {
     content: '';
@@ -133,35 +132,35 @@ const DrawerItem = styled(Link)`
     top: 0;
     bottom: 0;
     width: 3px;
-    background: #FF6B00;
+    background: var(--primary);
     opacity: ${({ $active }) => ($active ? '1' : '0')};
     transition: opacity 0.2s ease;
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--border-light);
   }
 
   svg {
     width: 20px;
     height: 20px;
-    color: ${({ $active }) => ($active ? '#FF6B00' : 'rgba(255, 255, 255, 0.7)')};
+    color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--text-light)')};
   }
 `;
 
 const DrawerFooter = styled.div`
   margin-top: auto;
   padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
 `;
 
 const IconButton = styled.button`
   background: none;
   border: none;
   padding: 8px;
-  color: #FFF;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  color: var(--text-inverse);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -202,24 +201,45 @@ const Navbar = ({ navbarVisible }) => {
   return (
     <>
       <MobileNavbarContainer $visible={navbarVisible}>
-        
-        <IconButton onClick={() => setDrawerOpen(true)}>
+        <IconButton 
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Open menu"
+        >
           <FiMenu size={24} />
         </IconButton>
 
-        <Link to="/" style={{ textDecoration: 'none' }}>
+        <Link 
+          to="/" 
+          style={{ 
+            textDecoration: 'none',
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
+        >
           <BrandWrapper>
             <BrandLogo />
             <BrandText>iFunny</BrandText>
           </BrandWrapper>
         </Link>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: '12px', 
+          marginLeft: 'auto',
+          alignItems: 'center'
+        }}>
           {user && <NotificationDropdown />}
         </div>
       </MobileNavbarContainer>
 
-      <Overlay $isOpen={drawerOpen} onClick={() => setDrawerOpen(false)} {...handlers} />
+      <NavbarShadow $visible={navbarVisible} />
+
+      <Overlay 
+        $isOpen={drawerOpen} 
+        onClick={() => setDrawerOpen(false)} 
+        {...handlers} 
+      />
 
       <DrawerContainer $isOpen={drawerOpen} {...handlers}>
         <DrawerHeader>
@@ -267,10 +287,12 @@ const Navbar = ({ navbarVisible }) => {
           ) : (
             <>
               <DrawerItem to="/login" $active={activeRoute === '/login'}>
+                <FiUser />
                 Login
               </DrawerItem>
 
               <DrawerItem to="/register" $active={activeRoute === '/register'}>
+                <FiUser />
                 Register
               </DrawerItem>
             </>
@@ -278,13 +300,21 @@ const Navbar = ({ navbarVisible }) => {
         </div>
 
         <DrawerFooter>
-          <DrawerItem as="button" onClick={toggleTheme}>
+          <DrawerItem 
+            as="button" 
+            onClick={toggleTheme}
+            $active={false}
+          >
             {theme === 'light' ? <FiMoon /> : <FiSun />}
             {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
           </DrawerItem>
 
           {user && (
-            <DrawerItem as="button" onClick={handleLogout}>
+            <DrawerItem 
+              as="button" 
+              onClick={handleLogout}
+              $active={false}
+            >
               <FiLogOut />
               Logout
             </DrawerItem>

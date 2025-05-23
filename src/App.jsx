@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import GlobalStyles from './styles/GlobalStyles';
@@ -33,8 +33,9 @@ const MainContent = styled.main`
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-top: 60px; // Altura da navbar
+  padding-top: calc(60px + env(safe-area-inset-top)); // Navbar + status bar
   padding-bottom: env(safe-area-inset-bottom);
+  scroll-behavior: smooth;
 `;
 
 const KeyboardSpacer = styled.div`
@@ -44,94 +45,72 @@ const KeyboardSpacer = styled.div`
 
 const NavbarWrapper = styled.div`
   position: fixed;
-  top: env(safe-area-inset-top);
-  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
+  padding-top: env(safe-area-inset-top);
+  background: linear-gradient(135deg, #FF6B00 0%, #FF3D00 100%);
 `;
 
-// App.jsx
 function App() {
   const [navbarVisible, setNavbarVisible] = useState(true);
   const lastScrollPosition = useRef(0);
   const mainContentRef = useRef();
   const scrollTimeout = useRef(null);
 
-  const handleScroll = () => {
-    const currentScroll = mainContentRef.current.scrollTop;
-    const isScrollingDown = currentScroll > lastScrollPosition.current;
+  const handleScroll = useCallback(() => {
+    const currentScroll = mainContentRef.current?.scrollTop || 0;
+    const scrollDirection = currentScroll > lastScrollPosition.current ? 'down' : 'up';
+    const scrollDistance = Math.abs(currentScroll - lastScrollPosition.current);
 
-    // Cancelar timeout anterior se existir
     if (scrollTimeout.current) {
       clearTimeout(scrollTimeout.current);
     }
 
-    // Se estiver rolando para baixo e já passou um certo limite, esconde a navbar
-    if (isScrollingDown && currentScroll > 60) {
-      setNavbarVisible(false);
-    } 
-    // Se estiver rolando para cima, mostra a navbar
-    else if (!isScrollingDown) {
-      setNavbarVisible(true);
+    if (scrollDistance > 5) {
+      if (scrollDirection === 'down' && currentScroll > 60) {
+        setNavbarVisible(false);
+      } else if (scrollDirection === 'up') {
+        setNavbarVisible(true);
+      }
     }
 
-    // Atualiza a última posição de scroll
     lastScrollPosition.current = currentScroll;
-
-    // Adiciona um timeout para evitar flickering durante scroll rápido
     scrollTimeout.current = setTimeout(() => {
       scrollTimeout.current = null;
     }, 100);
-  };
-
-  useEffect(() => {
-    const container = mainContentRef.current;
-    if (!container) return;
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
     const container = mainContentRef.current;
     if (!container) return;
 
-    const handleScroll = () => {
-      const currentScroll = container.scrollTop;
-      const isScrollingDown = currentScroll > lastScrollPosition.current;
-
-      if (isScrollingDown && currentScroll > 100) {
-        setNavbarVisible(false);
-      } else {
-        setNavbarVisible(true);
-      }
-
-      lastScrollPosition.current = currentScroll;
-    };
-
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [handleScroll]);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
-      StatusBar.setBackgroundColor({ color: '#121212' }).catch(console.error);
-      StatusBar.setStyle({ style: Style.Dark }).catch(console.error);
+      StatusBar.setBackgroundColor({ color: '#FF6B00' }).catch(console.error);
+      StatusBar.setStyle({ style: Style.Light }).catch(console.error);
       StatusBar.setOverlaysWebView({ overlay: false }).catch(console.error);
 
-      Keyboard.setAccessoryBarVisible({ isVisible: true });
-      Keyboard.addListener('keyboardWillShow', (info) => {
-        document.documentElement.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
-      });
-      Keyboard.addListener('keyboardWillHide', () => {
-        document.documentElement.style.setProperty('--keyboard-height', '0px');
-      });
-
-      CapacitorApp.addListener('appStateChange', ({ isActive }) => {});
+      if (Capacitor.getPlatform() !== 'web') {
+        Keyboard.setAccessoryBarVisible({ isVisible: true });
+        Keyboard.addListener('keyboardWillShow', (info) => {
+          document.documentElement.style.setProperty('--keyboard-height', `${info.keyboardHeight}px`);
+        });
+        Keyboard.addListener('keyboardWillHide', () => {
+          document.documentElement.style.setProperty('--keyboard-height', '0px');
+        });
+      }
     }
 
     return () => {
-      Keyboard.removeAllListeners();
-      CapacitorApp.removeAllListeners();
+      if (Capacitor.getPlatform() !== 'web') {
+        Keyboard.removeAllListeners();
+      }
     };
   }, []);
 
@@ -160,7 +139,7 @@ function App() {
                 </Routes>
               </MainContent>
 
-              <KeyboardSpacer />
+              {Capacitor.isNativePlatform() && <KeyboardSpacer />}
             </AppContainer>
           </ThemeProvider>
         </Router>
