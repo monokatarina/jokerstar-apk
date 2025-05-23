@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import api from '../services/api';
 import MemeCard from '../components/MemeCard';
@@ -20,7 +20,7 @@ const FeedContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-  padding-top: calc(60px + env(safe-area-inset-top)); // Ajuste para navbar e status bar
+  padding-top: calc(60px + env(safe-area-inset-top));
 `;
 
 const FeedGrid = styled.div`
@@ -31,9 +31,27 @@ const FeedGrid = styled.div`
 
 const MemeWrapper = styled.div`
   width: 100%;
-  height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
+  height: calc(100vh - 60px - env(safe-area-inset-top));
   scroll-snap-align: start;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+`;
+
+const StyledMemeCard = styled.div`
+  width: 100%;
+  height: 100%;
+  max-width: 600px;
+  max-height: 92%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: ${({ isActive }) => isActive ? 'scale(1)' : 'scale(0.94)'};
+  opacity: ${({ isActive }) => isActive ? 1 : 0.6};
 `;
 
 const EmptyFeed = styled.div`
@@ -107,6 +125,33 @@ const FeedPage = () => {
   const [commentOpen, setCommentOpen] = useState(false);
   const lastScrollPosition = useRef(0);
   const isScrollingRef = useRef(false);
+  const [navbarVisible, setNavbarVisible] = useState(true);
+  const navbarScrollTimeout = useRef(null);
+
+  const handleNavbarVisibility = useCallback(() => {
+    if (commentOpen) return;
+
+    const currentScroll = feedContainerRef.current?.scrollTop || 0;
+    const scrollDirection = currentScroll > lastScrollPosition.current ? 'down' : 'up';
+    const scrollDistance = Math.abs(currentScroll - lastScrollPosition.current);
+
+    if (navbarScrollTimeout.current) {
+      clearTimeout(navbarScrollTimeout.current);
+    }
+
+    if (scrollDistance > 5) {
+      if (scrollDirection === 'down' && currentScroll > 60) {
+        setNavbarVisible(false);
+      } else if (scrollDirection === 'up') {
+        setNavbarVisible(true);
+      }
+    }
+
+    lastScrollPosition.current = currentScroll;
+    navbarScrollTimeout.current = setTimeout(() => {
+      navbarScrollTimeout.current = null;
+    }, 100);
+  }, [commentOpen]);
 
   const fetchMemes = async () => {
     try {
@@ -132,7 +177,8 @@ const FeedPage = () => {
   const handleScroll = () => {
     if (commentOpen) return;
 
-    // Lógica para snap mais preciso
+    handleNavbarVisibility();
+
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
@@ -145,7 +191,7 @@ const FeedPage = () => {
         const scrollTop = container.scrollTop;
         const containerHeight = container.offsetHeight;
         const index = Math.round(scrollTop / containerHeight);
-        
+
         if (index !== currentIndex) {
           setCurrentIndex(index);
           container.scrollTo({
@@ -159,7 +205,7 @@ const FeedPage = () => {
 
   const handleMemeDeleted = (deletedMemeId) => {
     setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
-    
+
     if (memes[currentIndex]?._id === deletedMemeId) {
       const newIndex = Math.min(currentIndex, memes.length - 2);
       setCurrentIndex(newIndex >= 0 ? newIndex : 0);
@@ -172,7 +218,7 @@ const FeedPage = () => {
       container.addEventListener('scroll', handleScroll);
       return () => container.removeEventListener('scroll', handleScroll);
     }
-  }, [currentIndex, commentOpen]);
+  }, [currentIndex, commentOpen, handleNavbarVisibility]);
 
   useEffect(() => {
     fetchMemes();
@@ -186,42 +232,38 @@ const FeedPage = () => {
 
   if (loading) {
     return (
-      <>
-        <FeedContainer ref={feedContainerRef}>
-          <LoadingIndicator>Carregando...</LoadingIndicator>
-        </FeedContainer>
-      </>
+      <FeedContainer ref={feedContainerRef}>
+        <LoadingIndicator>Carregando...</LoadingIndicator>
+      </FeedContainer>
     );
   }
 
   if (error) {
     return (
-      <>
-        <FeedContainer ref={feedContainerRef}>
-          <ErrorMessage>
-            {error}
-            <button onClick={fetchMemes}>
-              <FiRefreshCw /> Tentar novamente
-            </button>
-          </ErrorMessage>
-        </FeedContainer>
-      </>
+      <FeedContainer ref={feedContainerRef}>
+        <ErrorMessage>
+          {error}
+          <button onClick={fetchMemes}>
+            <FiRefreshCw /> Tentar novamente
+          </button>
+        </ErrorMessage>
+      </FeedContainer>
     );
   }
 
   return (
-    <>
-      <FeedContainer ref={feedContainerRef}>
-        <FeedGrid>
-          {memes.length === 0 ? (
-            <EmptyFeed>
-              <h3>Nenhum meme encontrado</h3>
-              <p>Seja o primeiro a compartilhar sua criação!</p>
-              <UploadButton size="large" />
-            </EmptyFeed>
-          ) : (
-            memes.map((meme, index) => (
-              <MemeWrapper key={meme._id}>
+    <FeedContainer ref={feedContainerRef}>
+      <FeedGrid>
+        {memes.length === 0 ? (
+          <EmptyFeed>
+            <h3>Nenhum meme encontrado</h3>
+            <p>Seja o primeiro a compartilhar sua criação!</p>
+            <UploadButton size="large" />
+          </EmptyFeed>
+        ) : (
+          memes.map((meme, index) => (
+            <MemeWrapper key={meme._id}>
+              <StyledMemeCard isActive={index === currentIndex}>
                 <MemeCard
                   meme={meme}
                   onDelete={handleMemeDeleted}
@@ -234,15 +276,15 @@ const FeedPage = () => {
                   }}
                   isSquareView={false}
                   isActive={index === currentIndex}
-                  style={{ width: '100%', height: '100%' }}
                   setCommentOpen={setCommentOpen}
+                  navbarVisible={navbarVisible}
                 />
-              </MemeWrapper>
-            ))
-          )}
-        </FeedGrid>
-      </FeedContainer>
-    </>
+              </StyledMemeCard>
+            </MemeWrapper>
+          ))
+        )}
+      </FeedGrid>
+    </FeedContainer>
   );
 };
 
