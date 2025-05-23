@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styled, { keyframes } from 'styled-components';
-import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiMenu, FiBell, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiMenu, FiBell } from 'react-icons/fi';
 import { FaLaughSquint } from 'react-icons/fa';
 import { useTheme } from '../../styles/ThemeContext';
 import { FiMoon, FiSun } from 'react-icons/fi';
@@ -26,15 +26,17 @@ const MobileNavbarContainer = styled.nav`
   top: 0;
   left: 0;
   right: 0;
-  height: 60px;
-  padding-top: env(safe-area-inset-top);
-  background: ${({ theme }) => theme === 'dark' ? 'var(--background-dark)' : 'var(--background)'};
+  height: 60px; // Mantém altura visual consistente
+  padding-top: env(safe-area-inset-top); // Só adiciona espaçamento superior
+  box-sizing: content-box; // Garante que padding não afete altura total
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
+  padding-left: 16px;
+  padding-right: 16px;
   z-index: 1000;
-  box-shadow: ${({ theme }) => theme === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)'};
+  box-shadow: var(--shadow-sm);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-100%)'};
   will-change: transform;
@@ -65,14 +67,17 @@ const BrandWrapper = styled.div`
 
 const BrandLogo = styled(FaLaughSquint)`
   font-size: 1.8rem;
-  color: var(--primary);
+  color: var(--text-inverse);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 `;
 
 const BrandText = styled.span`
   font-family: 'Roboto Condensed', sans-serif;
   font-size: 1.4rem;
   font-weight: 700;
-  color: ${({ theme }) => theme === 'dark' ? 'var(--text-inverse)' : 'var(--text)'};
+  color: var(--text-inverse);
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2));
 `;
 
 const DrawerContainer = styled.div`
@@ -82,12 +87,12 @@ const DrawerContainer = styled.div`
   width: 280px;
   height: 100vh;
   padding-top: env(safe-area-inset-top);
-  background: ${({ theme }) => theme === 'dark' ? 'var(--card-bg-dark)' : 'var(--card-bg)'};
+  background: var(--card-bg);
   z-index: 1002;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid ${({ theme }) => theme === 'dark' ? 'var(--border-dark)' : 'var(--border)'};
+  border-right: 1px solid var(--border);
 `;
 
 const Overlay = styled.div`
@@ -105,79 +110,66 @@ const Overlay = styled.div`
 `;
 
 const DrawerHeader = styled.div`
-  padding: 20px;
-  background: ${({ theme }) => theme === 'dark' ? 'var(--primary-dark)' : 'var(--primary)'};
-  border-bottom: 1px solid ${({ theme }) => theme === 'dark' ? 'var(--border-dark)' : 'var(--border)'};
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const UserAvatar = styled.img`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--text-inverse);
-  cursor: pointer;
-  transition: transform 0.2s ease;
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
-const UserInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const Username = styled.span`
-  font-weight: 600;
-  color: var(--text-inverse);
+  padding: 24px 20px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  border-bottom: 1px solid var(--border);
 `;
 
 const DrawerItem = styled(Link)`
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 14px 20px;
-  color: ${({ $active, theme }) => ($active ? 'var(--primary)' : theme === 'dark' ? 'var(--text-inverse)' : 'var(--text)')};
+  padding: 16px 20px;
+  color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--text)')};
   text-decoration: none;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  background: ${({ $active, theme }) => ($active ? theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' : 'transparent')};
+  font-size: 1rem;
+  transition: var(--transition);
+  position: relative;
+  background: ${({ $active }) => ($active ? 'rgba(var(--primary-rgb), 0.1)' : 'transparent')};
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary);
+    opacity: ${({ $active }) => ($active ? '1' : '0')};
+    transition: opacity 0.2s ease;
+  }
 
   &:hover {
-    background: ${({ theme }) => theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'};
+    background: var(--border-light);
   }
 
   svg {
     width: 20px;
     height: 20px;
-    color: ${({ $active }) => ($active ? 'var(--primary)' : 'inherit')};
+    color: ${({ $active }) => ($active ? 'var(--primary)' : 'var(--text-light)')};
   }
 `;
 
 const DrawerFooter = styled.div`
   margin-top: auto;
   padding: 20px;
-  border-top: 1px solid ${({ theme }) => theme === 'dark' ? 'var(--border-dark)' : 'var(--border)'};
+  border-top: 1px solid var(--border);
 `;
 
 const IconButton = styled.button`
   background: none;
   border: none;
   padding: 8px;
-  color: ${({ theme }) => theme === 'dark' ? 'var(--text-inverse)' : 'var(--text)'};
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  color: var(--text-inverse);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
 
   &:active {
-    background: ${({ theme }) => theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(0.9);
   }
 `;
 
@@ -208,23 +200,12 @@ const Navbar = ({ navbarVisible }) => {
     }
   };
 
-  const buildUrl = (url) => {
-    if (!url) return 'https://i.pravatar.cc/150?img=3';
-    if (url.startsWith('http://')) url = 'https://' + url.substring(7);
-    if (url.startsWith('https://') || url.startsWith('blob:')) return url;
-    
-    const normalizedPath = url.startsWith('/') ? url : `/${url}`;
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
-    return `${apiUrl}${normalizedPath}`;
-  };
-
   return (
     <>
-      <MobileNavbarContainer $visible={navbarVisible} theme={theme}>
+      <MobileNavbarContainer $visible={navbarVisible}>
         <IconButton 
           onClick={() => setDrawerOpen(true)}
           aria-label="Open menu"
-          theme={theme}
         >
           <FiMenu size={24} />
         </IconButton>
@@ -239,8 +220,8 @@ const Navbar = ({ navbarVisible }) => {
           }}
         >
           <BrandWrapper>
-            <BrandLogo theme={theme} />
-            <BrandText theme={theme}>iFunny</BrandText>
+            <BrandLogo />
+            <BrandText>iFunny</BrandText>
           </BrandWrapper>
         </Link>
 
@@ -250,35 +231,7 @@ const Navbar = ({ navbarVisible }) => {
           marginLeft: 'auto',
           alignItems: 'center'
         }}>
-          {user ? (
-            <IconButton 
-              onClick={() => navigate(`/users/${user._id}`)}
-              aria-label="Profile"
-              theme={theme}
-            >
-              <UserAvatar 
-                src={
-                  user.profile?.avatar 
-                    ? buildUrl(user.profile.avatar)
-                    : 'https://i.pravatar.cc/150?img=3'
-                }
-                alt={user.username}
-                onError={(e) => {
-                  e.target.src = 'https://i.pravatar.cc/150?img=3';
-                }}
-              />
-            </IconButton>
-          ) : (
-            <IconButton 
-              onClick={() => navigate('/login')}
-              aria-label="Login"
-              theme={theme}
-            >
-              <FiUser size={24} />
-            </IconButton>
-          )}
-          
-          {user && <NotificationDropdown theme={theme} />}
+          {user && <NotificationDropdown />}
         </div>
       </MobileNavbarContainer>
 
@@ -290,35 +243,12 @@ const Navbar = ({ navbarVisible }) => {
         {...handlers} 
       />
 
-      <DrawerContainer $isOpen={drawerOpen} {...handlers} theme={theme}>
-        <DrawerHeader theme={theme}>
-          {user ? (
-            <>
-              <UserAvatar 
-                src={
-                  user.profile?.avatar 
-                    ? buildUrl(user.profile.avatar)
-                    : 'https://i.pravatar.cc/150?img=3'
-                }
-                alt={user.username}
-                onClick={() => {
-                  setDrawerOpen(false);
-                  navigate(`/users/${user._id}`);
-                }}
-                onError={(e) => {
-                  e.target.src = 'https://i.pravatar.cc/150?img=3';
-                }}
-              />
-              <UserInfo>
-                <Username>@{user.username}</Username>
-              </UserInfo>
-            </>
-          ) : (
-            <BrandWrapper>
-              <BrandLogo theme={theme} />
-              <BrandText theme={theme}>iFunny</BrandText>
-            </BrandWrapper>
-          )}
+      <DrawerContainer $isOpen={drawerOpen} {...handlers}>
+        <DrawerHeader>
+          <BrandWrapper>
+            <BrandLogo />
+            <BrandText>iFunny</BrandText>
+          </BrandWrapper>
         </DrawerHeader>
 
         <div style={{ padding: '16px 0', flex: 1 }}>
@@ -327,25 +257,22 @@ const Navbar = ({ navbarVisible }) => {
               <DrawerItem 
                 to="/" 
                 $active={activeRoute === '/'}
-                theme={theme}
-              >
-                <FiHome />
-                Home
-              </DrawerItem>
-
-              <DrawerItem 
-                to="/trending" 
-                $active={activeRoute === '/trending'}
-                theme={theme}
               >
                 <FiTrendingUp />
                 Trending
               </DrawerItem>
 
               <DrawerItem 
+                to="/feed" 
+                $active={activeRoute === '/feed'}
+              >
+                <FiHome />
+                Feed
+              </DrawerItem>
+
+              <DrawerItem 
                 to="/upload" 
                 $active={activeRoute === '/upload'}
-                theme={theme}
               >
                 <FiPlus />
                 Create
@@ -354,7 +281,6 @@ const Navbar = ({ navbarVisible }) => {
               <DrawerItem 
                 to={`/users/${user._id}`} 
                 $active={activeRoute === `/users/${user._id}`}
-                theme={theme}
               >
                 <FiUser />
                 Profile
@@ -362,20 +288,12 @@ const Navbar = ({ navbarVisible }) => {
             </>
           ) : (
             <>
-              <DrawerItem 
-                to="/login" 
-                $active={activeRoute === '/login'}
-                theme={theme}
-              >
+              <DrawerItem to="/login" $active={activeRoute === '/login'}>
                 <FiUser />
                 Login
               </DrawerItem>
 
-              <DrawerItem 
-                to="/register" 
-                $active={activeRoute === '/register'}
-                theme={theme}
-              >
+              <DrawerItem to="/register" $active={activeRoute === '/register'}>
                 <FiUser />
                 Register
               </DrawerItem>
@@ -383,12 +301,11 @@ const Navbar = ({ navbarVisible }) => {
           )}
         </div>
 
-        <DrawerFooter theme={theme}>
+        <DrawerFooter>
           <DrawerItem 
             as="button" 
             onClick={toggleTheme}
             $active={false}
-            theme={theme}
           >
             {theme === 'light' ? <FiMoon /> : <FiSun />}
             {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
@@ -399,7 +316,6 @@ const Navbar = ({ navbarVisible }) => {
               as="button" 
               onClick={handleLogout}
               $active={false}
-              theme={theme}
             >
               <FiLogOut />
               Logout
