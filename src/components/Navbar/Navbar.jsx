@@ -26,13 +26,15 @@ const MobileNavbarContainer = styled.nav`
   top: 0;
   left: 0;
   right: 0;
-  height: calc(60px + env(safe-area-inset-top)); // Ajuste aqui
-  padding-top: env(safe-area-inset-top); // Mantém espaço interno
+  height: 60px; // Mantém altura visual consistente
+  padding-top: env(safe-area-inset-top); // Só adiciona espaçamento superior
+  box-sizing: content-box; // Garante que padding não afete altura total
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 16px;
+  padding-left: 16px;
+  padding-right: 16px;
   z-index: 1000;
   box-shadow: var(--shadow-sm);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
