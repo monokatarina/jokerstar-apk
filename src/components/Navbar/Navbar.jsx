@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import styled, { keyframes } from 'styled-components';
 import { FiPlus, FiUser, FiLogOut, FiHome, FiTrendingUp, FiMenu, FiBell, FiSearch } from 'react-icons/fi';
-import { FaReddit } from 'react-icons/fa';
+import { FaLaughSquint } from 'react-icons/fa';
 import { useTheme } from '../../styles/ThemeContext';
 import { FiMoon, FiSun } from 'react-icons/fi';
 import { useSwipeable } from 'react-swipeable';
@@ -26,16 +26,15 @@ const MobileNavbarContainer = styled.nav`
   top: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  height: 60px;
   padding-top: env(safe-area-inset-top);
-  background: ${({ theme }) => theme === 'dark' ? '#1A1A1B' : '#FFFFFF'};
+  background: ${({ theme }) => theme === 'dark' ? 'var(--background-dark)' : 'var(--background)'};
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 0 16px;
   z-index: 1000;
-  border-bottom: 1px solid ${({ theme }) => theme === 'dark' ? '#343536' : '#EDEFF1'};
+  box-shadow: ${({ theme }) => theme === 'dark' ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)'};
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform: ${({ $visible }) => $visible ? 'translateY(0)' : 'translateY(-100%)'};
   will-change: transform;
@@ -43,7 +42,7 @@ const MobileNavbarContainer = styled.nav`
 
 const NavbarShadow = styled.div`
   position: fixed;
-  top: calc(56px + env(safe-area-inset-top));
+  top: calc(60px + env(safe-area-inset-top));
   left: 0;
   right: 0;
   height: 4px;
@@ -64,17 +63,16 @@ const BrandWrapper = styled.div`
   }
 `;
 
-const BrandLogo = styled(FaReddit)`
+const BrandLogo = styled(FaLaughSquint)`
   font-size: 1.8rem;
-  color: ${({ theme }) => theme === 'dark' ? '#D7DADC' : '#FF4500'};
+  color: var(--primary);
 `;
 
 const BrandText = styled.span`
   font-family: 'Roboto Condensed', sans-serif;
   font-size: 1.4rem;
   font-weight: 700;
-  color: ${({ theme }) => theme === 'dark' ? '#D7DADC' : '#1A1A1B'};
-  letter-spacing: -0.5px;
+  color: ${({ theme }) => theme === 'dark' ? 'var(--text-inverse)' : 'var(--text)'};
 `;
 
 const DrawerContainer = styled.div`
@@ -84,12 +82,12 @@ const DrawerContainer = styled.div`
   width: 280px;
   height: 100vh;
   padding-top: env(safe-area-inset-top);
-  background: ${({ theme }) => theme === 'dark' ? '#1A1A1B' : '#FFFFFF'};
+  background: ${({ theme }) => theme === 'dark' ? 'var(--card-bg-dark)' : 'var(--card-bg)'};
   z-index: 1002;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  border-right: 1px solid ${({ theme }) => theme === 'dark' ? '#343536' : '#EDEFF1'};
+  border-right: 1px solid ${({ theme }) => theme === 'dark' ? 'var(--border-dark)' : 'var(--border)'};
 `;
 
 const Overlay = styled.div`
@@ -107,9 +105,9 @@ const Overlay = styled.div`
 `;
 
 const DrawerHeader = styled.div`
-  padding: 24px 20px;
-  background: ${({ theme }) => theme === 'dark' ? '#1A1A1B' : '#FFFFFF'};
-  border-bottom: 1px solid ${({ theme }) => theme === 'dark' ? '#343536' : '#EDEFF1'};
+  padding: 20px;
+  background: ${({ theme }) => theme === 'dark' ? 'var(--primary-dark)' : 'var(--primary)'};
+  border-bottom: 1px solid ${({ theme }) => theme === 'dark' ? 'var(--border-dark)' : 'var(--border)'};
   display: flex;
   align-items: center;
   gap: 12px;
@@ -120,7 +118,7 @@ const UserAvatar = styled.img`
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid ${({ theme }) => theme === 'dark' ? '#343536' : '#EDEFF1'};
+  border: 2px solid var(--text-inverse);
   cursor: pointer;
   transition: transform 0.2s ease;
 
@@ -136,12 +134,7 @@ const UserInfo = styled.div`
 
 const Username = styled.span`
   font-weight: 600;
-  color: ${({ theme }) => theme === 'dark' ? '#D7DADC' : '#1A1A1B'};
-`;
-
-const Karma = styled.span`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme === 'dark' ? '#818384' : '#787C7E'};
+  color: var(--text-inverse);
 `;
 
 const DrawerItem = styled(Link)`
@@ -149,35 +142,34 @@ const DrawerItem = styled(Link)`
   align-items: center;
   gap: 16px;
   padding: 14px 20px;
-  color: ${({ $active, theme }) => ($active ? '#FF4500' : theme === 'dark' ? '#D7DADC' : '#1A1A1B')};
+  color: ${({ $active, theme }) => ($active ? 'var(--primary)' : theme === 'dark' ? 'var(--text-inverse)' : 'var(--text)')};
   text-decoration: none;
   font-size: 0.95rem;
   transition: all 0.2s ease;
-  position: relative;
-  background: ${({ $active }) => ($active ? 'rgba(255, 69, 0, 0.1)' : 'transparent')};
+  background: ${({ $active, theme }) => ($active ? theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' : 'transparent')};
 
   &:hover {
-    background: ${({ theme }) => theme === 'dark' ? '#272729' : '#F6F7F8'};
+    background: ${({ theme }) => theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'};
   }
 
   svg {
     width: 20px;
     height: 20px;
-    color: ${({ $active }) => ($active ? '#FF4500' : 'inherit')};
+    color: ${({ $active }) => ($active ? 'var(--primary)' : 'inherit')};
   }
 `;
 
 const DrawerFooter = styled.div`
   margin-top: auto;
   padding: 20px;
-  border-top: 1px solid ${({ theme }) => theme === 'dark' ? '#343536' : '#EDEFF1'};
+  border-top: 1px solid ${({ theme }) => theme === 'dark' ? 'var(--border-dark)' : 'var(--border)'};
 `;
 
 const IconButton = styled.button`
   background: none;
   border: none;
   padding: 8px;
-  color: ${({ theme }) => theme === 'dark' ? '#D7DADC' : '#1A1A1B'};
+  color: ${({ theme }) => theme === 'dark' ? 'var(--text-inverse)' : 'var(--text)'};
   border-radius: 50%;
   transition: all 0.2s ease;
   display: flex;
@@ -185,24 +177,8 @@ const IconButton = styled.button`
   justify-content: center;
 
   &:active {
-    background: ${({ theme }) => theme === 'dark' ? '#272729' : '#F6F7F8'};
+    background: ${({ theme }) => theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'};
   }
-`;
-
-const SearchButton = styled(IconButton)`
-  background: ${({ theme }) => theme === 'dark' ? '#272729' : '#F6F7F8'};
-  border-radius: 20px;
-  padding: 8px 12px;
-  flex: 1;
-  max-width: 200px;
-  justify-content: flex-start;
-  gap: 8px;
-  margin: 0 8px;
-`;
-
-const SearchText = styled.span`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme === 'dark' ? '#818384' : '#787C7E'};
 `;
 
 const Navbar = ({ navbarVisible }) => {
@@ -253,42 +229,57 @@ const Navbar = ({ navbarVisible }) => {
           <FiMenu size={24} />
         </IconButton>
 
-        <SearchButton 
-          onClick={() => navigate('/search')}
-          theme={theme}
+        <Link 
+          to="/" 
+          style={{ 
+            textDecoration: 'none',
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
         >
-          <FiSearch size={18} />
-          <SearchText theme={theme}>Search</SearchText>
-        </SearchButton>
+          <BrandWrapper>
+            <BrandLogo theme={theme} />
+            <BrandText theme={theme}>iFunny</BrandText>
+          </BrandWrapper>
+        </Link>
 
-        {user ? (
-          <IconButton 
-            onClick={() => navigate(`/users/${user._id}`)}
-            aria-label="Profile"
-            theme={theme}
-          >
-            <UserAvatar 
-              src={
-                user.profile?.avatar 
-                  ? buildUrl(user.profile.avatar)
-                  : 'https://i.pravatar.cc/150?img=3'
-              }
-              alt={user.username}
-              onError={(e) => {
-                e.target.src = 'https://i.pravatar.cc/150?img=3';
-              }}
+        <div style={{ 
+          display: 'flex', 
+          gap: '12px', 
+          marginLeft: 'auto',
+          alignItems: 'center'
+        }}>
+          {user ? (
+            <IconButton 
+              onClick={() => navigate(`/users/${user._id}`)}
+              aria-label="Profile"
               theme={theme}
-            />
-          </IconButton>
-        ) : (
-          <IconButton 
-            onClick={() => navigate('/login')}
-            aria-label="Login"
-            theme={theme}
-          >
-            <FiUser size={24} />
-          </IconButton>
-        )}
+            >
+              <UserAvatar 
+                src={
+                  user.profile?.avatar 
+                    ? buildUrl(user.profile.avatar)
+                    : 'https://i.pravatar.cc/150?img=3'
+                }
+                alt={user.username}
+                onError={(e) => {
+                  e.target.src = 'https://i.pravatar.cc/150?img=3';
+                }}
+              />
+            </IconButton>
+          ) : (
+            <IconButton 
+              onClick={() => navigate('/login')}
+              aria-label="Login"
+              theme={theme}
+            >
+              <FiUser size={24} />
+            </IconButton>
+          )}
+          
+          {user && <NotificationDropdown theme={theme} />}
+        </div>
       </MobileNavbarContainer>
 
       <NavbarShadow $visible={navbarVisible} />
@@ -317,11 +308,9 @@ const Navbar = ({ navbarVisible }) => {
                 onError={(e) => {
                   e.target.src = 'https://i.pravatar.cc/150?img=3';
                 }}
-                theme={theme}
               />
               <UserInfo>
-                <Username theme={theme}>u/{user.username}</Username>
-                <Karma theme={theme}>1 karma</Karma>
+                <Username>@{user.username}</Username>
               </UserInfo>
             </>
           ) : (
@@ -350,7 +339,7 @@ const Navbar = ({ navbarVisible }) => {
                 theme={theme}
               >
                 <FiTrendingUp />
-                Popular
+                Trending
               </DrawerItem>
 
               <DrawerItem 
@@ -359,7 +348,7 @@ const Navbar = ({ navbarVisible }) => {
                 theme={theme}
               >
                 <FiPlus />
-                Create Post
+                Create
               </DrawerItem>
 
               <DrawerItem 
