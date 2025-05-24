@@ -73,9 +73,14 @@ const CommentContainer = styled.div`
   flex-direction: column;
   max-height: 100vh;
   
+  /* Adiciona padding para a área segura */
+  padding-bottom: calc(env(safe-area-inset-bottom, 0) + 16px);
+  padding-bottom: calc(constant(safe-area-inset-bottom, 0) + 16px);
+  
   @media (max-width: 768px) {
     padding: 8px;
-    padding-bottom: ${props => props.$keyboardActive ? '300px' : '60px'};
+    padding-bottom: calc(${props => props.$keyboardActive ? '300px' : '60px'} + env(safe-area-inset-bottom, 0));
+    padding-bottom: calc(${props => props.$keyboardActive ? '300px' : '60px'} + constant(safe-area-inset-bottom, 0));
   }
 `;
 
@@ -279,12 +284,17 @@ const CommentForm = styled.form`
   position: sticky;
   bottom: 0;
   z-index: 100;
+  
+  /* Adiciona margem para a área segura */
+  margin-bottom: env(safe-area-inset-bottom, 0);
+  margin-bottom: constant(safe-area-inset-bottom, 0);
 
   @media (max-width: 768px) {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: env(safe-area-inset-bottom, 0);
+    bottom: constant(safe-area-inset-bottom, 0);
     margin: 0;
     border-radius: 0;
     border-left: none;

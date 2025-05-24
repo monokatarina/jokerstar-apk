@@ -107,7 +107,11 @@ const ImprovedMobileCommentSection = styled(MobileCommentSection)`
   height: 80vh;
   max-height: 80vh;
   pointer-events: auto;
-  touch-action: none; /* Importante para controle total do toque */
+  touch-action: none;
+  
+  /* Adiciona padding para a área segura */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-bottom: constant(safe-area-inset-bottom, 0); /* Para versões mais antigas */
   
   &::before {
     content: '';
