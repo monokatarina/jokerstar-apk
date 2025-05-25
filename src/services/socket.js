@@ -4,8 +4,8 @@ import { io } from 'socket.io-client';
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
 let socket;
 
-// Nova função para garantir conexão imediata
-const ensureSocketConnection = (token) => {
+// Função para garantir conexão imediata
+export const ensureSocketConnection = (token) => {
   if (!socket || !socket.connected) {
     return initSocket(token);
   }
@@ -19,19 +19,19 @@ export const initSocket = (token) => {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,
-      reconnectionAttempts: Infinity, // Tentativas ilimitadas
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       randomizationFactor: 0.5,
       timeout: 20000,
       withCredentials: true,
-      upgrade: false, // Força WebSocket apenas
+      upgrade: false,
     });
 
-    // Eventos melhorados
+    // Eventos de conexão
     socket.on('connect', () => {
       console.log('[Socket] Conectado com ID:', socket.id);
-      socket.emit('client-ready'); // Novo evento para sincronização imediata
+      socket.emit('client-ready');
     });
 
     socket.on('disconnect', (reason) => {
@@ -46,7 +46,7 @@ export const initSocket = (token) => {
       setTimeout(() => socket.connect(), 2000);
     });
 
-    // Novo: Heartbeat para manter conexão ativa
+    // Heartbeat para manter conexão ativa
     setInterval(() => {
       if (socket.connected) {
         socket.emit('heartbeat', { timestamp: Date.now() });
@@ -56,7 +56,6 @@ export const initSocket = (token) => {
   return socket;
 };
 
-// Nova função para emitir eventos com confirmação
 export const emitWithAck = async (event, data, timeout = 5000) => {
   if (!socket) throw new Error('Socket não inicializado');
   
@@ -75,11 +74,6 @@ export const emitWithAck = async (event, data, timeout = 5000) => {
 
 export const getSocket = () => socket;
 
-
-/**
- * Configura um listener para notificações
- * @param {function} callback - Função a ser chamada quando uma notificação chegar
- */
 export const setupNotificationListener = (callback) => {
   if (socket) {
     socket.on('new-notification', callback);
@@ -88,21 +82,26 @@ export const setupNotificationListener = (callback) => {
   }
 };
 
-/**
- * Remove todos os listeners de notificação
- */
 export const removeNotificationListeners = () => {
   if (socket) {
     socket.off('new-notification');
   }
 };
 
-/**
- * Desconecta o socket
- */
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
     socket = null;
   }
+};
+
+// Exportação consolidada de todas as funções
+export default {
+  initSocket,
+  getSocket,
+  disconnectSocket,
+  ensureSocketConnection,
+  emitWithAck,
+  setupNotificationListener,
+  removeNotificationListeners
 };

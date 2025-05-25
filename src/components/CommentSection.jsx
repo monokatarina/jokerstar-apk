@@ -4,7 +4,12 @@ import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaSmile, FaAngry } from 'react-icons/fa';
-import { initSocket, getSocket, disconnectSocket } from '../services/socket';
+import { 
+  initSocket, 
+  getSocket, 
+  disconnectSocket,
+  ensureSocketConnection
+} from '../services/socket';
 import { 
   FiSend, 
   FiCornerDownLeft, 
