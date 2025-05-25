@@ -9,7 +9,7 @@ let socket;
  * @param {string} token - Token JWT do usuário
  * @returns {Socket} Instância do socket
  */
-export const initSocket = (token) => {
+const initSocket = (token) => {
   if (!socket) {
     console.log('Inicializando socket com token:', token ? 'presente' : 'ausente');
     socket = io(API_URL, {
@@ -50,13 +50,13 @@ export const initSocket = (token) => {
  * Obtém a instância atual do socket
  * @returns {Socket|null} Instância do socket ou null
  */
-export const getSocket = () => socket;
+const getSocket = () => socket;
 
 /**
  * Configura um listener para notificações
  * @param {function} callback - Função a ser chamada quando uma notificação chegar
  */
-export const setupNotificationListener = (callback) => {
+const setupNotificationListener = (callback) => {
   if (socket) {
     socket.on('new-notification', callback);
   } else {
@@ -67,7 +67,7 @@ export const setupNotificationListener = (callback) => {
 /**
  * Remove todos os listeners de notificação
  */
-export const removeNotificationListeners = () => {
+const removeNotificationListeners = () => {
   if (socket) {
     socket.off('new-notification');
   }
@@ -76,9 +76,40 @@ export const removeNotificationListeners = () => {
 /**
  * Desconecta o socket
  */
-export const disconnectSocket = () => {
+const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
     socket = null;
   }
+};
+
+/**
+ * Garante que existe uma conexão de socket ativa
+ * @param {string} token - Token JWT do usuário
+ * @returns {Socket} Instância do socket garantida
+ */
+const ensureSocketConnection = (token) => {
+  // Se já existe um socket e está conectado, retorna ele
+  if (socket && socket.connected) {
+    return socket;
+  }
+  
+  // Se existe mas não está conectado, tenta reconectar
+  if (socket && !socket.connected) {
+    socket.connect();
+    return socket;
+  }
+  
+  // Se não existe, cria um novo
+  return initSocket(token);
+};
+
+// Exportação única de todas as funções
+export {
+  initSocket,
+  getSocket,
+  ensureSocketConnection,
+  setupNotificationListener,
+  removeNotificationListeners,
+  disconnectSocket
 };
