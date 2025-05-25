@@ -294,8 +294,8 @@ const CommentForm = styled.form`
     position: fixed;
     left: 0;
     right: 0;
-    bottom: env(safe-area-inset-bottom, 0);
-    bottom: constant(safe-area-inset-bottom, 0);
+    bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : 'env(safe-area-inset-bottom, 0)'};
+    bottom: ${props => props.$keyboardActive ? `${props.$keyboardHeight}px` : 'constant(safe-area-inset-bottom, 0)'};
     margin: 0;
     border-radius: 0;
     border-left: none;
@@ -305,6 +305,8 @@ const CommentForm = styled.form`
     padding: 0.5rem;
     box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
     z-index: 1000;
+    transform: ${props => props.$keyboardActive ? 'translateY(0)' : 'none'};
+    transition: transform 0.3s ease, bottom 0.3s ease;
   }
 `;
 
@@ -1736,10 +1738,11 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
   const [expandedReplies, setExpandedReplies] = useState({});
   const [repliesPagination, setRepliesPagination] = useState({});
   const [loadingReplies, setLoadingReplies] = useState({});
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const commentListRef = useRef(null);
   const [fullyExpanded, setFullyExpanded] = useState({});
   const commentFormRef = useRef(null);
+  const [keyboardActive, setKeyboardActive] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
   // Funções auxiliares independentes
@@ -2414,9 +2417,6 @@ const isMobile = useMemo(() => {
   return typeof window !== 'undefined' ? window.innerWidth <= 768 : false;
 }, []);
 
-// Estado para controle do teclado virtual
-const [keyboardActive, setKeyboardActive] = useState(false);
-
 useEffect(() => {
   if (typeof window === 'undefined' || window.innerWidth > 768) return;
 
@@ -2466,6 +2466,17 @@ useEffect(() => {
 }, [keyboardActive]);
 
 useEffect(() => {
+  if (keyboardActive && commentListRef.current) {
+    setTimeout(() => {
+      commentListRef.current.scrollTo({
+        top: commentListRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
+  }
+}, [keyboardActive, comments]);
+
+useEffect(() => {
   if (!isMobile) return;
 
   const handleResize = () => {
@@ -2504,7 +2515,6 @@ useEffect(() => {
   const handleFocus = (e) => {
     if (e.target.id === 'main-comment-input') {
       setKeyboardActive(true);
-      // Tempo aumentado para garantir que o scroll ocorra após o teclado aparecer
       setTimeout(() => {
         if (commentFormRef.current) {
           commentFormRef.current.scrollIntoView({
@@ -2512,7 +2522,7 @@ useEffect(() => {
             block: 'center'
           });
         }
-      }, 300); // Reduzi o tempo de 500ms para 300ms para melhor resposta
+      }, 300);
     }
   };
 
@@ -2533,6 +2543,50 @@ useEffect(() => {
     }
   };
 }, [isMobile]);
+useEffect(() => {
+  if (Capacitor.isNativePlatform()) {
+    Keyboard.addListener('keyboardWillShow', (info) => {
+      setKeyboardHeight(info.keyboardHeight);
+      setKeyboardActive(true);
+    });
+
+    Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardActive(false);
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      Keyboard.removeAllListeners();
+    };
+  }
+}, []);
+
+useEffect(() => {
+  if (typeof window === 'undefined' || window.innerWidth > 768) return;
+
+  const handleResize = () => {
+    const visualViewport = window.visualViewport;
+    if (visualViewport) {
+      const viewportHeight = visualViewport.height;
+      const windowHeight = window.innerHeight;
+      const keyboardHeight = windowHeight - viewportHeight;
+      
+      setKeyboardHeight(Math.max(keyboardHeight, 250));
+      setKeyboardActive(keyboardHeight > 50);
+    }
+  };
+
+  const visualViewport = window.visualViewport;
+  if (visualViewport) {
+    visualViewport.addEventListener('resize', handleResize);
+  }
+
+  return () => {
+    if (visualViewport) {
+      visualViewport.removeEventListener('resize', handleResize);
+    }
+  };
+}, []);
 
 // Efeito adicional para ajustar a altura quando o teclado aparece
 useEffect(() => {
@@ -2587,7 +2641,7 @@ const EndOfListMessage = styled.div`
 `;
 
   return (
-    <CommentContainer data-testid="comment-section" aria-live="polite" aria-atomic="true">
+    <CommentContainer data-testid="comment-section" aria-live="polite" aria-atomic="true" $keyboardActive={keyboardActive}>
       <CommentCount aria-live="polite">
         {comments.length} {comments.length === 1 ? 'comentário' : 'comentários'}
       </CommentCount>
@@ -2672,6 +2726,8 @@ const EndOfListMessage = styled.div`
           onSubmit={handleSubmit} 
           role="form"
           ref={commentFormRef}
+          $keyboardActive={keyboardActive}
+          $keyboardHeight={keyboardHeight}
         >
           <CommentInput
             type="text"
