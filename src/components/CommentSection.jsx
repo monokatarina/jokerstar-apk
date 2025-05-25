@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaSmile, FaAngry } from 'react-icons/fa';
+import { initSocket, getSocket, disconnectSocket } from '../services/socket';
 import { 
   FiSend, 
   FiCornerDownLeft, 
@@ -1938,6 +1939,110 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
       }
     }
   }, [memeId]);
+
+  useEffect(() => {
+    if (!memeId) return;
+
+    // Inicializa o socket apenas se não estiver inicializado
+    const socket = initSocket(currentUser?.token);
+
+    const handleNewComment = (comment) => {
+      // Verifica se o comentário pertence ao meme atual
+      if (comment.meme === memeId) {
+        setComments(prev => {
+          // Se for uma resposta, adiciona ao comentário pai
+          if (comment.parentComment) {
+            const updateComments = (comments) => comments.map(c => {
+              if (c._id === comment.parentComment) {
+                return {
+                  ...c,
+                  replies: [...(c.replies || []), comment],
+                  repliesCount: (c.repliesCount || 0) + 1
+                };
+              }
+              if (c.replies) {
+                return {
+                  ...c,
+                  replies: updateComments(c.replies)
+                };
+              }
+              return c;
+            });
+            return updateComments(prev);
+          }
+          
+          // Se for um comentário principal, adiciona no início
+          return [comment, ...prev];
+        });
+      }
+    };
+
+    const handleCommentEdited = (comment) => {
+      if (comment.meme === memeId) {
+        setComments(prev => {
+          const updateComments = (comments) => comments.map(c => {
+            if (c._id === comment._id) {
+              return { ...c, ...comment, isEdited: true };
+            }
+            if (c.replies) {
+              return {
+                ...c,
+                replies: updateComments(c.replies)
+              };
+            }
+            return c;
+          });
+          return updateComments(prev);
+        });
+      }
+    };
+
+    const handleCommentDeleted = ({ commentId }) => {
+      setComments(prev => {
+        const updateComments = (comments) => comments.map(c => {
+          if (c._id === commentId) {
+            return { 
+              ...c, 
+              text: "[Comentário removido]", 
+              isDeleted: true,
+              user: { _id: 'deleted', username: "[Removido]" }
+            };
+          }
+          if (c.replies) {
+            return {
+              ...c,
+              replies: updateComments(c.replies)
+            };
+          }
+          return c;
+        });
+        return updateComments(prev);
+      });
+    };
+
+    // Configura os listeners
+    socket?.on('new-comment', handleNewComment);
+    socket?.on('new-reply', handleNewComment);
+    socket?.on('comment-edited', handleCommentEdited);
+    socket?.on('comment-deleted', handleCommentDeleted);
+
+    // Entra na sala do meme para receber atualizações
+    socket?.emit('joinMemeRoom', memeId);
+
+    return () => {
+      // Remove os listeners ao desmontar
+      socket?.off('new-comment', handleNewComment);
+      socket?.off('new-reply', handleNewComment);
+      socket?.off('comment-edited', handleCommentEdited);
+      socket?.off('comment-deleted', handleCommentDeleted);
+      
+      // Sai da sala do meme
+      socket?.emit('leaveMemeRoom', memeId);
+      
+      // Desconecta apenas se não houver outros componentes usando o socket
+      // disconnectSocket();
+    };
+  }, [memeId, currentUser?.token]);
 
   // Adicione este useEffect para monitorar o estado de loading
   useEffect(() => {
