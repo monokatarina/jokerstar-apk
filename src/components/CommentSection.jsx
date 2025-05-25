@@ -15,9 +15,9 @@ import {
   FiImage,
   FiLoader,
   FiMessageCircle,
-  FiChevronDown,  // Add this
-  FiChevronUp,    // Add this
-  FiPlusCircle    // Add this
+  FiChevronDown,  
+  FiChevronUp,
+  FiPlusCircle    
 } from 'react-icons/fi';
 import PropTypes from 'prop-types';
 const buildUrl = (url) => {
@@ -2074,11 +2074,60 @@ const handleSubmit = useCallback(async (e) => {
   const handleReplySubmit = useCallback(async (commentId) => {
     const currentReplyText = replyTexts[commentId] || '';
     const currentReplyMeme = replySelectedMeme[commentId];
+    const currentReplyMedia = replyMedia[commentId];
 
-    if (!currentReplyText.trim() && !currentReplyMeme) {
+    if (!currentReplyText.trim() && !currentReplyMeme && !currentReplyMedia) {
       setError('Por favor, adicione texto ou um meme');
       return;
     }
+
+    // Cria um ID temporário para a resposta
+    const tempReplyId = `temp-${Date.now()}`;
+    
+    // Cria o objeto de resposta otimista
+    const optimisticReply = {
+      _id: tempReplyId,
+      text: currentReplyText,
+      user: currentUser,
+      createdAt: new Date().toISOString(),
+      likes: [],
+      dislikes: [],
+      likesCount: 0,
+      dislikesCount: 0,
+      replies: [],
+      repliesCount: 0,
+      userReaction: null,
+      isOptimistic: true, // Flag para identificar como otimista
+      sharedMeme: currentReplyMeme ? {
+        _id: currentReplyMeme,
+        mediaUrl: userMemes.find(m => m._id === currentReplyMeme)?.mediaUrl || '',
+        caption: userMemes.find(m => m._id === currentReplyMeme)?.caption || ''
+      } : null
+    };
+
+    // Atualiza o estado otimisticamente
+    setComments(prev => {
+      const updateCommentsWithReply = (comments) => comments.map(c => {
+        if (c._id === commentId) {
+          return {
+            ...c,
+            replies: [...(c.replies || []), optimisticReply],
+            repliesCount: (c.repliesCount || 0) + 1
+          };
+        }
+        
+        if (c.replies) {
+          return {
+            ...c,
+            replies: updateCommentsWithReply(c.replies)
+          };
+        }
+        
+        return c;
+      });
+      
+      return updateCommentsWithReply(prev);
+    });
 
     try {
       const formData = new FormData();
@@ -2087,6 +2136,8 @@ const handleSubmit = useCallback(async (e) => {
       
       if (currentReplyMeme) {
         formData.append('sharedMeme', currentReplyMeme);
+      } else if (currentReplyMedia) {
+        formData.append('media', currentReplyMedia);
       }
 
       const response = await api.post(
@@ -2099,11 +2150,33 @@ const handleSubmit = useCallback(async (e) => {
         }
       );
 
-      // Atualiza os comentários
-      const updatedMeme = await api.get(`/memes/${memeId}`);
-      setComments(updatedMeme.data.comments || []);
-      
+      // Substitui a resposta otimista pela real
+      setComments(prev => {
+        const replaceOptimisticReply = (comments) => comments.map(c => {
+          if (c._id === commentId) {
+            return {
+              ...c,
+              replies: (c.replies || []).map(r => 
+                r._id === tempReplyId ? response.data : r
+              )
+            };
+          }
+          
+          if (c.replies) {
+            return {
+              ...c,
+              replies: replaceOptimisticReply(c.replies)
+            };
+          }
+          
+          return c;
+        });
+        
+        return replaceOptimisticReply(prev);
+      });
+
       if (onCommentCountChange) {
+        const updatedMeme = await api.get(`/memes/${memeId}`);
         onCommentCountChange(updatedMeme.data.commentCount || 0);
       }
 
@@ -2120,18 +2193,43 @@ const handleSubmit = useCallback(async (e) => {
         return newState;
       });
 
+      setReplyMedia(prev => {
+        const newState = {...prev};
+        delete newState[commentId];
+        return newState;
+      });
+
       setReplyingTo(null);
     } catch (error) {
-      console.error('Erro detalhado:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config
+      console.error('Erro ao enviar resposta:', error);
+      
+      // Reverte a atualização otimista em caso de erro
+      setComments(prev => {
+        const removeOptimisticReply = (comments) => comments.map(c => {
+          if (c._id === commentId) {
+            return {
+              ...c,
+              replies: (c.replies || []).filter(r => r._id !== tempReplyId),
+              repliesCount: (c.repliesCount || 0) - 1
+            };
+          }
+          
+          if (c.replies) {
+            return {
+              ...c,
+              replies: removeOptimisticReply(c.replies)
+            };
+          }
+          
+          return c;
+        });
+        
+        return removeOptimisticReply(prev);
       });
+
       setError(error.response?.data?.message || 'Erro ao enviar resposta');
     }
-    setCommentOpen(false);
-  }, [memeId, replyTexts, replySelectedMeme, onCommentCountChange, setCommentOpen]);
+  }, [memeId, replyTexts, replySelectedMeme, replyMedia, currentUser, userMemes, onCommentCountChange]);
 
   const handleEdit = useCallback((comment) => {
     setEditingId(comment?._id || null);
