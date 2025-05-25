@@ -2466,15 +2466,71 @@ useEffect(() => {
 }, [keyboardActive]);
 
 useEffect(() => {
-  if (keyboardActive && commentListRef.current) {
-    setTimeout(() => {
-      commentListRef.current.scrollTo({
-        top: commentListRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }, 100);
+  if (typeof window === 'undefined') return;
+
+  // --- Parte 1: Configuração para apps nativos (Capacitor) ---
+  let keyboardListeners = [];
+  
+  if (Capacitor.isNativePlatform()) {
+    const showListener = Keyboard.addListener('keyboardWillShow', (info) => {
+      setKeyboardHeight(info.keyboardHeight);
+      setKeyboardActive(true);
+    });
+
+    const hideListener = Keyboard.addListener('keyboardWillHide', () => {
+      setKeyboardActive(false);
+      setKeyboardHeight(0);
+    });
+
+    keyboardListeners = [showListener, hideListener];
   }
-}, [keyboardActive, comments]);
+
+  // --- Parte 2: Configuração para navegadores mobile ---
+  let visualViewportCleanup = () => {};
+
+  if (window.innerWidth <= 768) {
+    const visualViewport = window.visualViewport;
+    
+    const handleResize = () => {
+      if (visualViewport) {
+        const keyboardHeight = window.innerHeight - visualViewport.height;
+        const active = keyboardHeight > 50;
+        
+        setKeyboardActive(active);
+        setKeyboardHeight(active ? Math.max(keyboardHeight, 300) : 0);
+        
+        // Scroll automático quando o teclado aparece
+        if (active && commentFormRef.current) {
+          setTimeout(() => {
+            commentFormRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'end'
+            });
+          }, 100);
+        }
+      }
+    };
+
+    if (visualViewport) {
+      visualViewport.addEventListener('resize', handleResize);
+    }
+
+    visualViewportCleanup = () => {
+      if (visualViewport) {
+        visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }
+
+  // --- Cleanup unificado ---
+  return () => {
+    // Remove listeners do Capacitor
+    keyboardListeners.forEach(listener => listener.remove());
+    
+    // Remove listeners do VisualViewport
+    visualViewportCleanup();
+  };
+}, []); // Dependências vazias = executa apenas no mount/unmount
 
 useEffect(() => {
   if (!isMobile) return;
@@ -2543,50 +2599,7 @@ useEffect(() => {
     }
   };
 }, [isMobile]);
-useEffect(() => {
-  if (Capacitor.isNativePlatform()) {
-    Keyboard.addListener('keyboardWillShow', (info) => {
-      setKeyboardHeight(info.keyboardHeight);
-      setKeyboardActive(true);
-    });
 
-    Keyboard.addListener('keyboardWillHide', () => {
-      setKeyboardActive(false);
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      Keyboard.removeAllListeners();
-    };
-  }
-}, []);
-
-useEffect(() => {
-  if (typeof window === 'undefined' || window.innerWidth > 768) return;
-
-  const handleResize = () => {
-    const visualViewport = window.visualViewport;
-    if (visualViewport) {
-      const viewportHeight = visualViewport.height;
-      const windowHeight = window.innerHeight;
-      const keyboardHeight = windowHeight - viewportHeight;
-      
-      setKeyboardHeight(Math.max(keyboardHeight, 250));
-      setKeyboardActive(keyboardHeight > 50);
-    }
-  };
-
-  const visualViewport = window.visualViewport;
-  if (visualViewport) {
-    visualViewport.addEventListener('resize', handleResize);
-  }
-
-  return () => {
-    if (visualViewport) {
-      visualViewport.removeEventListener('resize', handleResize);
-    }
-  };
-}, []);
 
 // Efeito adicional para ajustar a altura quando o teclado aparece
 useEffect(() => {
