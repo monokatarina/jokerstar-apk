@@ -1943,106 +1943,60 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
   useEffect(() => {
     if (!memeId) return;
 
-    // Inicializa o socket apenas se não estiver inicializado
-    const socket = initSocket(currentUser?.token);
+    // Conexão imediata com fallback
+    const socket = ensureSocketConnection(currentUser?.token);
+    let pollingInterval;
 
     const handleNewComment = (comment) => {
-      // Verifica se o comentário pertence ao meme atual
       if (comment.meme === memeId) {
         setComments(prev => {
-          // Se for uma resposta, adiciona ao comentário pai
-          if (comment.parentComment) {
-            const updateComments = (comments) => comments.map(c => {
-              if (c._id === comment.parentComment) {
-                return {
-                  ...c,
-                  replies: [...(c.replies || []), comment],
-                  repliesCount: (c.repliesCount || 0) + 1
-                };
-              }
-              if (c.replies) {
-                return {
-                  ...c,
-                  replies: updateComments(c.replies)
-                };
-              }
-              return c;
-            });
-            return updateComments(prev);
-          }
-          
-          // Se for um comentário principal, adiciona no início
-          return [comment, ...prev];
+          // Verifica duplicatas
+          const exists = prev.some(c => c._id === comment._id);
+          if (exists) return prev;
+
+          // Atualização otimista
+          return comment.parentComment 
+            ? updateReplies(prev, comment)
+            : [comment, ...prev];
         });
       }
     };
 
-    const handleCommentEdited = (comment) => {
-      if (comment.meme === memeId) {
-        setComments(prev => {
-          const updateComments = (comments) => comments.map(c => {
-            if (c._id === comment._id) {
-              return { ...c, ...comment, isEdited: true };
-            }
-            if (c.replies) {
-              return {
-                ...c,
-                replies: updateComments(c.replies)
-              };
-            }
-            return c;
-          });
-          return updateComments(prev);
-        });
-      }
-    };
-
-    const handleCommentDeleted = ({ commentId }) => {
-      setComments(prev => {
-        const updateComments = (comments) => comments.map(c => {
-          if (c._id === commentId) {
-            return { 
-              ...c, 
-              text: "[Comentário removido]", 
-              isDeleted: true,
-              user: { _id: 'deleted', username: "[Removido]" }
-            };
-          }
-          if (c.replies) {
-            return {
-              ...c,
-              replies: updateComments(c.replies)
-            };
-          }
-          return c;
-        });
-        return updateComments(prev);
+    const updateReplies = (comments, newReply) => {
+      return comments.map(c => {
+        if (c._id === newReply.parentComment) {
+          return {
+            ...c,
+            replies: [...(c.replies || []), newReply],
+            repliesCount: (c.repliesCount || 0) + 1
+          };
+        }
+        return c.replies ? { ...c, replies: updateReplies(c.replies, newReply) } : c;
       });
     };
 
-    // Configura os listeners
-    socket?.on('new-comment', handleNewComment);
-    socket?.on('new-reply', handleNewComment);
-    socket?.on('comment-edited', handleCommentEdited);
-    socket?.on('comment-deleted', handleCommentDeleted);
+    // Configura listeners
+    socket.on('new-comment', handleNewComment);
+    socket.on('new-reply', handleNewComment);
+    socket.emit('joinMemeRoom', memeId);
 
-    // Entra na sala do meme para receber atualizações
-    socket?.emit('joinMemeRoom', memeId);
+    // Fallback polling
+    const startPolling = () => {
+      pollingInterval = setInterval(fetchComments, 15000);
+    };
+
+    // Se não conectar em 2 segundos, inicia polling
+    const pollingTimeout = setTimeout(() => {
+      if (!socket.connected) startPolling();
+    }, 2000);
 
     return () => {
-      // Remove os listeners ao desmontar
-      socket?.off('new-comment', handleNewComment);
-      socket?.off('new-reply', handleNewComment);
-      socket?.off('comment-edited', handleCommentEdited);
-      socket?.off('comment-deleted', handleCommentDeleted);
-      
-      // Sai da sala do meme
-      socket?.emit('leaveMemeRoom', memeId);
-      
-      // Desconecta apenas se não houver outros componentes usando o socket
-      // disconnectSocket();
+      clearTimeout(pollingTimeout);
+      clearInterval(pollingInterval);
+      socket.off('new-comment', handleNewComment);
+      socket.emit('leaveMemeRoom', memeId);
     };
-  }, [memeId, currentUser?.token]);
+  }, [memeId, currentUser?.token, fetchComments]);
 
   // Adicione este useEffect para monitorar o estado de loading
   useEffect(() => {
@@ -2117,48 +2071,104 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
 const handleSubmit = useCallback(async (e) => {
   e.preventDefault();
   
-  const formData = new FormData();
-  
-  // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
-  formData.append('text', commentText || '');
+  // 1. Criação do comentário otimista
+  const tempCommentId = `temp-${Date.now()}`;
+  const optimisticComment = {
+    _id: tempCommentId,
+    text: commentText,
+    user: currentUser,
+    createdAt: new Date().toISOString(),
+    likes: [],
+    dislikes: [],
+    likesCount: 0,
+    dislikesCount: 0,
+    replies: [],
+    repliesCount: 0,
+    userReaction: null,
+    isOptimistic: true,
+    sharedMeme: selectedMeme ? {
+      _id: selectedMeme,
+      mediaUrl: userMemes.find(m => m._id === selectedMeme)?.mediaUrl || '',
+      caption: userMemes.find(m => m._id === selectedMeme)?.caption || ''
+    } : null
+  };
 
-  if (commentMedia) {
-    formData.append('media', commentMedia);
-  }
-  
-  if (selectedMeme) {
-    // Envia apenas o ID do meme compartilhado
-    formData.append('sharedMeme', selectedMeme);
-  }
+  // 2. Atualização imediata da UI
+  setComments(prev => [optimisticComment, ...prev]);
+  setCommentText('');
+  setCommentMedia(null);
+  setSelectedMeme(null);
+  setError(null);
 
   try {
-    setError(null);
-    const response = await api.post(`/memes/${memeId}/comments`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+    // 3. Preparação dos dados para envio
+    const formData = new FormData();
+    formData.append('text', commentText || '');
+    if (commentMedia) formData.append('media', commentMedia);
+    if (selectedMeme) formData.append('sharedMeme', selectedMeme);
+
+    // 4. Tentativa via Socket (rápida)
+    const socket = getSocket();
+    let response;
+    
+    if (socket?.connected) {
+      try {
+        response = await new Promise((resolve, reject) => {
+          socket.emit('create-comment', {
+            memeId,
+            data: Object.fromEntries(formData)
+          }, (res) => {
+            if (res.error) reject(res.error);
+            else resolve(res);
+          });
+          
+          // Timeout de 3 segundos para o socket
+          setTimeout(() => reject(new Error('Socket timeout')), 3000);
+        });
+      } catch (socketError) {
+        console.log('Falha no socket, tentando HTTP...', socketError);
+        throw socketError;
       }
-    });
-    
-    const newCommentCount = response.data.length;
-    if (onCommentCountChange) {
-      onCommentCountChange(newCommentCount);
     }
-    
-    setComments(prev => [response.data, ...prev]);
-    setCommentText('');
-    setCommentMedia(null);
-    setSelectedMeme(null);
-    
+
+    // 5. Fallback para HTTP (se socket falhar ou não estiver disponível)
+    if (!response) {
+      response = await api.post(`/memes/${memeId}/comments`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      response = response.data;
+    }
+
+    // 6. Atualização com dados reais do servidor
+    setComments(prev => prev.map(c => 
+      c._id === tempCommentId ? response : c
+    ));
+
+    // 7. Atualização do contador
+    if (onCommentCountChange) {
+      onCommentCountChange(prev => prev + 1);
+    }
+
   } catch (error) {
-    console.error('Erro detalhado ao enviar comentário:', {
-      error: error,
-      response: error.response,
-      config: error.config
-    });
+    console.error('Erro ao enviar comentário:', error);
     
-    setError(error.response?.data?.message || 'Erro ao enviar comentário');
+    // 8. Reversão em caso de falha
+    setComments(prev => prev.filter(c => c._id !== tempCommentId));
+    
+    // 9. Exibição de erro adequado
+    const errorMessage = error.response?.data?.message || 
+                        error.message || 
+                        'Erro ao enviar comentário';
+    setError(errorMessage);
+    
+    // 10. Restauração do formulário se necessário
+    if (!comments.some(c => c._id === tempCommentId)) {
+      setCommentText(commentText);
+      if (commentMedia) setCommentMedia(commentMedia);
+      if (selectedMeme) setSelectedMeme(selectedMeme);
+    }
   }
-}, [commentText, commentMedia, selectedMeme, memeId, onCommentCountChange]);
+}, [commentText, commentMedia, selectedMeme, memeId, currentUser, userMemes, onCommentCountChange, comments]);
 
   const handleReply = useCallback((commentId, parentId = null) => {
     setReplyingTo(prev => prev === commentId ? null : commentId);

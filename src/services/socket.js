@@ -4,53 +4,77 @@ import { io } from 'socket.io-client';
 const API_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
 let socket;
 
-/**
- * Inicializa a conexão do socket
- * @param {string} token - Token JWT do usuário
- * @returns {Socket} Instância do socket
- */
-export const initSocket = (token) => {
-  if (!socket) {
-    console.log('Inicializando socket com token:', token ? 'presente' : 'ausente');
-    socket = io(API_URL, {
-      auth: { token },
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      withCredentials: true, // Adicione esta linha para CORS
-    });
-
-    socket.on('connect', () => {
-      console.log('Socket conectado:', socket.id);
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.log('Socket desconectado. Razão:', reason);
-      if (reason === 'io server disconnect') {
-        // Reconecta manualmente se o servidor desconectar
-        socket.connect();
-      }
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('Erro de conexão:', err.message);
-      console.error('Detalhes do erro:', err);
-      
-      // Tenta reconectar após um delay
-      setTimeout(() => {
-        socket.connect();
-      }, 1000);
-    });
+// Nova função para garantir conexão imediata
+const ensureSocketConnection = (token) => {
+  if (!socket || !socket.connected) {
+    return initSocket(token);
   }
   return socket;
 };
 
-/**
- * Obtém a instância atual do socket
- * @returns {Socket|null} Instância do socket ou null
- */
+export const initSocket = (token) => {
+  if (!socket) {
+    console.log('[Socket] Inicializando conexão...');
+    socket = io(API_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: Infinity, // Tentativas ilimitadas
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      randomizationFactor: 0.5,
+      timeout: 20000,
+      withCredentials: true,
+      upgrade: false, // Força WebSocket apenas
+    });
+
+    // Eventos melhorados
+    socket.on('connect', () => {
+      console.log('[Socket] Conectado com ID:', socket.id);
+      socket.emit('client-ready'); // Novo evento para sincronização imediata
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[Socket] Desconectado. Razão:', reason);
+      if (reason === 'io server disconnect') {
+        setTimeout(() => socket.connect(), 1000);
+      }
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('[Socket] Erro de conexão:', err.message);
+      setTimeout(() => socket.connect(), 2000);
+    });
+
+    // Novo: Heartbeat para manter conexão ativa
+    setInterval(() => {
+      if (socket.connected) {
+        socket.emit('heartbeat', { timestamp: Date.now() });
+      }
+    }, 30000);
+  }
+  return socket;
+};
+
+// Nova função para emitir eventos com confirmação
+export const emitWithAck = async (event, data, timeout = 5000) => {
+  if (!socket) throw new Error('Socket não inicializado');
+  
+  try {
+    const response = await Promise.race([
+      socket.emitWithAck(event, data),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), timeout)
+    )]);
+    return response;
+  } catch (err) {
+    console.error(`[Socket] Erro no evento ${event}:`, err);
+    throw err;
+  }
+};
+
 export const getSocket = () => socket;
+
 
 /**
  * Configura um listener para notificações
