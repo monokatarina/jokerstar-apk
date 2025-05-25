@@ -4,12 +4,7 @@ import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaSmile, FaAngry } from 'react-icons/fa';
-import { 
-  initSocket, 
-  getSocket, 
-  disconnectSocket,
-  ensureSocketConnection
-} from '../services/socket';
+import { initSocket, getSocket, disconnectSocket } from '../services/socket';
 import { 
   FiSend, 
   FiCornerDownLeft, 
@@ -2076,104 +2071,48 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
 const handleSubmit = useCallback(async (e) => {
   e.preventDefault();
   
-  // 1. Criação do comentário otimista
-  const tempCommentId = `temp-${Date.now()}`;
-  const optimisticComment = {
-    _id: tempCommentId,
-    text: commentText,
-    user: currentUser,
-    createdAt: new Date().toISOString(),
-    likes: [],
-    dislikes: [],
-    likesCount: 0,
-    dislikesCount: 0,
-    replies: [],
-    repliesCount: 0,
-    userReaction: null,
-    isOptimistic: true,
-    sharedMeme: selectedMeme ? {
-      _id: selectedMeme,
-      mediaUrl: userMemes.find(m => m._id === selectedMeme)?.mediaUrl || '',
-      caption: userMemes.find(m => m._id === selectedMeme)?.caption || ''
-    } : null
-  };
+  const formData = new FormData();
+  
+  // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
+  formData.append('text', commentText || '');
 
-  // 2. Atualização imediata da UI
-  setComments(prev => [optimisticComment, ...prev]);
-  setCommentText('');
-  setCommentMedia(null);
-  setSelectedMeme(null);
-  setError(null);
+  if (commentMedia) {
+    formData.append('media', commentMedia);
+  }
+  
+  if (selectedMeme) {
+    // Envia apenas o ID do meme compartilhado
+    formData.append('sharedMeme', selectedMeme);
+  }
 
   try {
-    // 3. Preparação dos dados para envio
-    const formData = new FormData();
-    formData.append('text', commentText || '');
-    if (commentMedia) formData.append('media', commentMedia);
-    if (selectedMeme) formData.append('sharedMeme', selectedMeme);
-
-    // 4. Tentativa via Socket (rápida)
-    const socket = getSocket();
-    let response;
-    
-    if (socket?.connected) {
-      try {
-        response = await new Promise((resolve, reject) => {
-          socket.emit('create-comment', {
-            memeId,
-            data: Object.fromEntries(formData)
-          }, (res) => {
-            if (res.error) reject(res.error);
-            else resolve(res);
-          });
-          
-          // Timeout de 3 segundos para o socket
-          setTimeout(() => reject(new Error('Socket timeout')), 3000);
-        });
-      } catch (socketError) {
-        console.log('Falha no socket, tentando HTTP...', socketError);
-        throw socketError;
+    setError(null);
+    const response = await api.post(`/memes/${memeId}/comments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
-    }
-
-    // 5. Fallback para HTTP (se socket falhar ou não estiver disponível)
-    if (!response) {
-      response = await api.post(`/memes/${memeId}/comments`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      response = response.data;
-    }
-
-    // 6. Atualização com dados reais do servidor
-    setComments(prev => prev.map(c => 
-      c._id === tempCommentId ? response : c
-    ));
-
-    // 7. Atualização do contador
+    });
+    
+    const newCommentCount = response.data.length;
     if (onCommentCountChange) {
-      onCommentCountChange(prev => prev + 1);
+      onCommentCountChange(newCommentCount);
     }
-
+    
+    setComments(prev => [response.data, ...prev]);
+    setCommentText('');
+    setCommentMedia(null);
+    setSelectedMeme(null);
+    
   } catch (error) {
-    console.error('Erro ao enviar comentário:', error);
+    console.error('Erro detalhado ao enviar comentário:', {
+      error: error,
+      response: error.response,
+      config: error.config
+    });
     
-    // 8. Reversão em caso de falha
-    setComments(prev => prev.filter(c => c._id !== tempCommentId));
-    
-    // 9. Exibição de erro adequado
-    const errorMessage = error.response?.data?.message || 
-                        error.message || 
-                        'Erro ao enviar comentário';
-    setError(errorMessage);
-    
-    // 10. Restauração do formulário se necessário
-    if (!comments.some(c => c._id === tempCommentId)) {
-      setCommentText(commentText);
-      if (commentMedia) setCommentMedia(commentMedia);
-      if (selectedMeme) setSelectedMeme(selectedMeme);
-    }
+    setError(error.response?.data?.message || 'Erro ao enviar comentário');
   }
-}, [commentText, commentMedia, selectedMeme, memeId, currentUser, userMemes, onCommentCountChange, comments]);
+}, [commentText, commentMedia, selectedMeme, memeId, onCommentCountChange]);
 
   const handleReply = useCallback((commentId, parentId = null) => {
     setReplyingTo(prev => prev === commentId ? null : commentId);
