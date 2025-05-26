@@ -560,44 +560,6 @@ const useFollowStatus = (userId, isOwnProfile) => {
   return { isFollowing, loading, toggleFollow };
 };
 
-const MemberLevelBadge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin: 6px 0 0 0;
-  padding: 5px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  border-radius: 16px;
-  background: ${({ days }) => {
-    if (days >= 365) return 'linear-gradient(90deg, #f39c12 60%, #e67e22 100%)';
-    if (days >= 180) return 'linear-gradient(90deg, #2ecc71 60%, #27ae60 100%)';
-    if (days >= 30) return 'linear-gradient(90deg, var(--secondary) 60%, #2980b9 100%)';
-    return 'linear-gradient(90deg, #9b59b6 60%, #8e44ad 100%)';
-  }};
-  color: var(--text-inverse);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-  letter-spacing: 0.2px;
-  user-select: none;
-  transition: background 0.3s;
-  border: 2px solid var(--card-bg);
-  position: relative;
-
-  & > svg {
-    font-size: 15px;
-    opacity: 0.85;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 12px;
-    padding: 4px 10px;
-  }
-  @media (max-width: 480px) {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-`;
-
 const ProfileHeader = ({ user, isOwnProfile }) => {
   const [coverLoaded, setCoverLoaded] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
@@ -670,12 +632,32 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
     }
   };
 
-  // Adiciona função para pegar o ícone do nível
-  const getMemberLevelIcon = () => {
-    if (daysSinceJoin >= 365) return <FiAward />;
-    if (daysSinceJoin >= 180) return <FiStar />;
-    if (daysSinceJoin >= 30) return <FiZap />;
-    return <FiCalendar />;
+  // Remover MemberLevelBadge e criar um novo componente de texto simples
+  const MemberLevelText = styled.div`
+    margin: 6px 0 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    letter-spacing: 0.1px;
+
+    @media (max-width: 768px) {
+      font-size: 13px;
+    }
+    @media (max-width: 480px) {
+      font-size: 12px;
+    }
+  `;
+
+  // Função para pegar o emoji do nível
+  const getMemberLevelEmoji = () => {
+    if (daysSinceJoin >= 365) return '🏆';
+    if (daysSinceJoin >= 180) return '⭐';
+    if (daysSinceJoin >= 30) return '⚡';
+    return '😂';
   };
 
   return (
@@ -741,9 +723,9 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
         </AvatarContainer>
         
         <Username>{user.username}</Username>
-        <MemberLevelBadge days={daysSinceJoin}>
-          {getMemberLevelIcon()} {getMemberLevel()}
-        </MemberLevelBadge>
+        <MemberLevelText>
+          {getMemberLevel()} {getMemberLevelEmoji()}
+        </MemberLevelText>
         <Bio>{user.profile?.bio || 'Sem biografia ainda...'}</Bio>
         
         {statsLoading ? (
