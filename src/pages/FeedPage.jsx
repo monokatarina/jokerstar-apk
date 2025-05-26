@@ -18,23 +18,28 @@ const FeedContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-  padding-top: calc(6px + env(safe-area-inset-top));
-  padding-bottom: calc(5px + env(safe-area-inset-bottom)); // menor espaçamento e respeita área inferior
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  margin: 0;
 `;
 
 const FeedGrid = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 0; // sem espaçamento entre posts
+  gap: 0;
+  margin: 0;
+  padding: 0;
 `;
 
 const MemeWrapper = styled.div`
   width: 100%;
-  min-height: calc(100vh - env(safe-area-inset-top)); // Altura total menos navbar
+  /* Removido min-height para não forçar espaçamento */
   position: relative;
   background: var(--background);
-  // Removido border-radius e box-shadow para posts colarem um no outro
+  margin: 0;
+  padding: 0;
+  /* Nenhum border, shadow, radius */
 `;
 
 const EmptyFeed = styled.div`
