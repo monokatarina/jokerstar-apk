@@ -25,13 +25,14 @@ const loading = keyframes`
 // Styled Components
 const HeaderContainer = styled.div`
   position: relative;
-  margin-bottom: 20px;
+  margin: 0 auto 20px auto;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--card-bg);
   box-shadow: var(--shadow);
   animation: ${fadeIn} 0.6s ease-out;
   transition: var(--transition);
+  max-width: 400px; // deixa mais estreito
 
   &:hover {
     box-shadow: var(--shadow-hover);
@@ -41,6 +42,7 @@ const HeaderContainer = styled.div`
     border-radius: 0;
     margin-bottom: 10px;
     box-shadow: none;
+    max-width: 100%;
   }
 `;
 
@@ -177,12 +179,8 @@ const Username = styled.h1`
   margin: 8px 0 4px;
   font-size: 24px;
   font-weight: 800;
-  color: var(--text);
+  color: var(--text); // Removido gradiente, cor padrão do texto
   letter-spacing: -0.5px;
-  background: linear-gradient(to right, var(--secondary), #9b59b6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
   display: inline-block;
 
   @media (max-width: 768px) {
