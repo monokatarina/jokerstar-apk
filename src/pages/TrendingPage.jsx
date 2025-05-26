@@ -6,35 +6,36 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
 import UploadButton from '../components/UploadButton';
-import Navbar from '../components/Navbar/Navbar';
 
 const FeedContainer = styled.div`
   width: 100%;
-  height: 100vh;
   background-color: var(--background);
-  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-  overscroll-behavior-y: contain;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
   }
-  padding-top: calc(60px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  margin: 0;
 `;
 
 const FeedGrid = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
+  gap: 0;
+  margin: 0;
+  padding: 0;
 `;
 
 const MemeWrapper = styled.div`
   width: 100%;
-  height: calc(100vh - 60px - env(safe-area-inset-top));
-  scroll-snap-align: start;
   position: relative;
+  background: var(--background);
+  margin: 0;
+  padding: 0;
 `;
 
 const EmptyFeed = styled.div`
@@ -46,7 +47,6 @@ const EmptyFeed = styled.div`
   width: 100%;
   text-align: center;
   color: var(--text);
-  scroll-snap-align: start;
   background: var(--card-bg);
   padding: 16px;
 
@@ -68,7 +68,6 @@ const LoadingIndicator = styled.div`
   height: calc(100vh - 60px - env(safe-area-inset-top));
   width: 100%;
   color: var(--text-light);
-  scroll-snap-align: start;
 `;
 
 const ErrorMessage = styled.div`
@@ -80,7 +79,6 @@ const ErrorMessage = styled.div`
   width: 100%;
   color: var(--danger);
   padding: 20px;
-  scroll-snap-align: start;
 
   button {
     margin-top: 20px;
