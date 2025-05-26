@@ -18,19 +18,25 @@ const FeedContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-  padding-top: calc(60px + env(safe-area-inset-top)); // Ajuste para navbar e status bar
+  padding-top: calc(60px + env(safe-area-inset-top));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)); // menor espaçamento e respeita área inferior
 `;
 
 const FeedGrid = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
+  gap: 12px; // espaçamento menor entre posts
 `;
 
 const MemeWrapper = styled.div`
   width: 100%;
   min-height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
   position: relative;
+  background: var(--background);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  // Remova margens extras, o gap do FeedGrid já cuida do espaçamento
 `;
 
 const EmptyFeed = styled.div`
