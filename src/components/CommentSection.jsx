@@ -2077,51 +2077,73 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
   }, [currentReplyForMeme]);
 
   // Handlers complexos
-const handleSubmit = useCallback(async (e) => {
-  e.preventDefault();
-  
-  const formData = new FormData();
-  
-  // Adiciona o texto (mesmo que vazio para compatibilidade com o backend)
-  formData.append('text', commentText || '');
+  const handleSubmit = useCallback(async (e) => {
+    e.preventDefault();
 
-  if (commentMedia) {
-    formData.append('media', commentMedia);
-  }
-  
-  if (selectedMeme) {
-    // Envia apenas o ID do meme compartilhado
-    formData.append('sharedMeme', selectedMeme);
-  }
+    // Cria um comentário otimista
+    const tempId = `temp-${Date.now()}`;
+    const optimisticComment = {
+      _id: tempId,
+      text: commentText,
+      user: currentUser, // Certifique-se de ter currentUser no escopo
+      createdAt: new Date().toISOString(),
+      likes: [],
+      dislikes: [],
+      likesCount: 0,
+      dislikesCount: 0,
+      replies: [],
+      repliesCount: 0,
+      userReaction: null,
+      isOptimistic: true,
+      sharedMeme: selectedMeme ? {
+        _id: selectedMeme,
+        mediaUrl: userMemes?.find(m => m._id === selectedMeme)?.mediaUrl || '',
+        caption: userMemes?.find(m => m._id === selectedMeme)?.caption || ''
+      } : null
+    };
 
-  try {
-    setError(null);
-    const response = await api.post(`/memes/${memeId}/comments`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-    
-    const newCommentCount = response.data.length;
+    setComments(prev => [optimisticComment, ...prev]);
     if (onCommentCountChange) {
-      onCommentCountChange(newCommentCount);
+      onCommentCountChange(comments.length + 1);
     }
-    
-    setComments(prev => [response.data, ...prev]);
     setCommentText('');
     setCommentMedia(null);
     setSelectedMeme(null);
-    
-  } catch (error) {
-    console.error('Erro detalhado ao enviar comentário:', {
-      error: error,
-      response: error.response,
-      config: error.config
-    });
-    
-    setError(error.response?.data?.message || 'Erro ao enviar comentário');
-  }
-}, [commentText, commentMedia, selectedMeme, memeId, onCommentCountChange]);
+
+    const formData = new FormData();
+    formData.append('text', commentText || '');
+    if (commentMedia) {
+      formData.append('media', commentMedia);
+    }
+    if (selectedMeme) {
+      formData.append('sharedMeme', selectedMeme);
+    }
+
+    try {
+      setError(null);
+      const response = await api.post(`/memes/${memeId}/comments`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      // Substitui o comentário otimista pelo real
+      setComments(prev =>
+        prev.map(c => c._id === tempId ? response.data : c)
+      );
+
+      // Atualiza o contador de comentários com valor real, se necessário
+      if (onCommentCountChange) {
+        onCommentCountChange(prev => prev + 0); // ou busque o valor real se necessário
+      }
+
+    } catch (error) {
+      // Remove o comentário otimista em caso de erro
+      setComments(prev => prev.filter(c => c._id !== tempId));
+      setError(error.response?.data?.message || 'Erro ao enviar comentário');
+    }
+  }, [commentText, commentMedia, selectedMeme, memeId, onCommentCountChange, currentUser, userMemes, comments]);
+  // ...existing code...
 
   const handleReply = useCallback((commentId, parentId = null) => {
     setReplyingTo(prev => prev === commentId ? null : commentId);
