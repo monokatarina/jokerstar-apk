@@ -26,8 +26,7 @@ const FeedGrid = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 2px; // espaçamento menor entre posts
-  
+  gap: 0; // sem espaçamento entre posts
 `;
 
 const MemeWrapper = styled.div`
@@ -35,9 +34,7 @@ const MemeWrapper = styled.div`
   min-height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
   position: relative;
   background: var(--background);
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  // Remova margens extras, o gap do FeedGrid já cuida do espaçamento
+  // Removido border-radius e box-shadow para posts colarem um no outro
 `;
 
 const EmptyFeed = styled.div`
