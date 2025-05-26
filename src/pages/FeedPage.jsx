@@ -99,6 +99,8 @@ const ErrorMessage = styled.div`
   }
 `;
 
+const POSTS_PER_PAGE = 20;
+
 const FeedPage = () => {
   const [memes, setMemes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -106,6 +108,9 @@ const FeedPage = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
+  const [displayedMemes, setDisplayedMemes] = useState([]);
+  const [nextIndex, setNextIndex] = useState(0);
+  const [checkpoint, setCheckpoint] = useState(0);
 
   const fetchMemes = async () => {
     try {
@@ -132,9 +137,54 @@ const FeedPage = () => {
     setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
   };
 
+  // Carrega mais memes quando necessário
+  const loadMoreMemes = () => {
+    if (memes.length === 0) return;
+    let start = nextIndex;
+    let end = nextIndex + POSTS_PER_PAGE;
+    // Se chegou no fim, começa do início (loop infinito)
+    if (start >= memes.length) {
+      start = 0;
+      end = POSTS_PER_PAGE;
+    }
+    const newMemes = memes.slice(start, end);
+    setDisplayedMemes(prev => [...prev, ...newMemes]);
+    setNextIndex(end);
+  };
+
+  // Reset checkpoint e posts vistos
+  const handleCheckpoint = () => {
+    setCheckpoint(displayedMemes.length);
+  };
+
+  // Atualiza displayedMemes quando memes mudam
   useEffect(() => {
-    fetchMemes();
-  }, []);
+    setDisplayedMemes([]);
+    setNextIndex(0);
+  }, [memes]);
+
+  // Carrega os primeiros posts quando memes mudam
+  useEffect(() => {
+    if (memes.length > 0 && displayedMemes.length === 0) {
+      loadMoreMemes();
+    }
+    // eslint-disable-next-line
+  }, [memes, displayedMemes.length]);
+
+  // Scroll infinito: carrega mais quando chega perto do fim
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 300
+      ) {
+        loadMoreMemes();
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+    // eslint-disable-next-line
+  }, [displayedMemes, memes, nextIndex]);
 
   if (loading) {
     return (
@@ -160,15 +210,15 @@ const FeedPage = () => {
   return (
     <FeedContainer>
       <FeedGrid>
-        {memes.length === 0 ? (
+        {displayedMemes.length === 0 ? (
           <EmptyFeed>
             <h3>Nenhum meme encontrado</h3>
             <p>Seja o primeiro a compartilhar sua criação!</p>
             <UploadButton size="large" />
           </EmptyFeed>
         ) : (
-          memes.map((meme) => (
-            <MemeWrapper key={meme._id}>
+          displayedMemes.map((meme, idx) => (
+            <MemeWrapper key={meme._id + '-' + idx}>
               <MemeCard
                 meme={meme}
                 onDelete={handleMemeDeleted}
@@ -184,10 +234,45 @@ const FeedPage = () => {
                 style={{ width: '100%', height: '100%' }}
                 setCommentOpen={setCommentOpen}
               />
+              {/* Checkpoint visual */}
+              {idx + 1 === checkpoint && (
+                <div style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  background: 'var(--primary)',
+                  color: '#fff',
+                  padding: '4px 0',
+                  fontSize: '0.9rem'
+                }}>
+                  Checkpoint
+                </div>
+              )}
             </MemeWrapper>
           ))
         )}
       </FeedGrid>
+      {/* Botão para marcar checkpoint */}
+      {displayedMemes.length > 0 && (
+        <button
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 100,
+            background: 'var(--primary)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 24,
+            padding: '12px 20px',
+            fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            cursor: 'pointer'
+          }}
+          onClick={handleCheckpoint}
+        >
+          Marcar checkpoint
+        </button>
+      )}
     </FeedContainer>
   );
 };
