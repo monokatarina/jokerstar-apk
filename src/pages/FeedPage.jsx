@@ -9,9 +9,7 @@ import { FiRefreshCw } from 'react-icons/fi';
 
 const FeedContainer = styled.div`
   width: 100%;
-  height: 100vh;
   background-color: var(--background);
-  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   scrollbar-width: none;
