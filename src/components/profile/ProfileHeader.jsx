@@ -432,12 +432,12 @@ const Modal = styled.div`
 const ModalContent = styled.div`
   background: var(--card-bg);
   color: var(--text);
-  padding: 30px 15px;
+  padding: 24px 12px;
   border-radius: var(--radius-lg);
   width: 95%;
-  max-width: 100%;
-  max-height: 85vh;
-  overflow-y: auto;
+  max-width: 00px; // menor largura máxima
+  max-height: 70vh; // altura máxima menor
+  overflow-y: auto; // scroll interno
   box-shadow: var(--shadow-hover);
   position: relative;
   animation: ${fadeIn} 0.4s ease-out;
@@ -445,10 +445,10 @@ const ModalContent = styled.div`
   @media (max-width: 768px) {
     width: 100%;
     max-width: 100%;
-    height: 100%;
-    max-height: 100%;
+    height: auto;
+    max-height: 85vh;
     border-radius: 0;
-    padding: 20px 10px;
+    padding: 16px 6px;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
@@ -617,7 +617,7 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
     if (daysSinceJoin >= 365) return 'Veterano';
     if (daysSinceJoin >= 180) return 'Experiente';
     if (daysSinceJoin >= 30) return 'Membro Ativo';
-    return 'Novato';
+    return 'conta_de_poucos_dias kkkkkkk';
   };
 
   const handleFollow = async () => {
@@ -696,7 +696,7 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
           )}
         </AvatarContainer>
         
-        <Username>@{user.username}</Username>
+        <Username>{user.username}</Username>
         <Bio>{user.profile?.bio || 'Sem biografia ainda...'}</Bio>
         
         {statsLoading ? (
@@ -775,14 +775,15 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
               ×
             </CloseButton>
             <h2 style={{ 
-              marginBottom: '20px', 
+              marginBottom: '16px', 
               color: 'var(--text)',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: isMobile ? '16px' : '18px'
+              fontSize: '1.1rem', // menor
+              fontWeight: 700
             }}>
-              <FiUsers size={isMobile ? 18 : 22} /> Seguidores
+              <FiUsers size={18} /> Seguidores
             </h2>
             <UserFollowers userId={user._id} />
           </ModalContent>
@@ -799,14 +800,15 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
               ×
             </CloseButton>
             <h2 style={{ 
-              marginBottom: '20px', 
+              marginBottom: '16px', 
               color: 'var(--text)',
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: isMobile ? '16px' : '18px'
+              fontSize: '1.1rem', // menor
+              fontWeight: 700
             }}>
-              <FiUsers size={isMobile ? 18 : 22} /> Seguindo
+              <FiUsers size={18} /> Seguindo
             </h2>
             <UserFollowing userId={user._id} />
           </ModalContent>
