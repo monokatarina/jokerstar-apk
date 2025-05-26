@@ -18,8 +18,8 @@ const FeedContainer = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
-  padding-top: calc(60px + env(safe-area-inset-top));
-  padding-bottom: calc(16px + env(safe-area-inset-bottom)); // menor espaçamento e respeita área inferior
+  padding-top: calc(6px + env(safe-area-inset-top));
+  padding-bottom: calc(5px + env(safe-area-inset-bottom)); // menor espaçamento e respeita área inferior
 `;
 
 const FeedGrid = styled.div`
@@ -31,7 +31,7 @@ const FeedGrid = styled.div`
 
 const MemeWrapper = styled.div`
   width: 100%;
-  min-height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
+  min-height: calc(100vh - env(safe-area-inset-top)); // Altura total menos navbar
   position: relative;
   background: var(--background);
   // Removido border-radius e box-shadow para posts colarem um no outro
