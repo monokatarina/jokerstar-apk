@@ -1929,11 +1929,15 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
         }
         return comment;
       });
+      // Inclua os comentários otimistas ANTES dos vindos da API
+      const optimistic = getOptimisticComments(memeId);
+      
+
 
       console.log('First comment with sharedMeme:', 
         processedComments.find(c => c.sharedMeme));
       
-      setComments(processedComments);
+      setComments([...optimistic, ...processedComments]);
       
     } catch (err) {
       if (!isMounted) return;
@@ -2075,22 +2079,6 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
       setCommentMedia(null);
     }
   }, [currentReplyForMeme]);
-
-  useEffect(() => {
-    async function fetchComments() {
-      setLoading(true);
-      try {
-        const response = await api.get(`/memes/${memeId}/comments`);
-        const optimistic = getOptimisticComments(memeId);
-        setComments([...optimistic, ...response.data]);
-      } catch (e) {
-        setError('Erro ao carregar comentários');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchComments();
-  }, [memeId]);
 
   // Handlers complexos
   const handleSubmit = useCallback(async (e) => {
