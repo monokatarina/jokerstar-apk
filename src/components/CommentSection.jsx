@@ -2076,6 +2076,22 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
     }
   }, [currentReplyForMeme]);
 
+  useEffect(() => {
+    async function fetchComments() {
+      setLoading(true);
+      try {
+        const response = await api.get(`/memes/${memeId}/comments`);
+        const optimistic = getOptimisticComments(memeId);
+        setComments([...optimistic, ...response.data]);
+      } catch (e) {
+        setError('Erro ao carregar comentários');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchComments();
+  }, [memeId]);
+
   // Handlers complexos
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -2085,7 +2101,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
     const optimisticComment = {
       _id: tempId,
       text: commentText,
-      user: currentUser, // Certifique-se de ter currentUser no escopo
+      user: currentUser,
       createdAt: new Date().toISOString(),
       likes: [],
       dislikes: [],
@@ -2103,6 +2119,7 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
     };
 
     setComments(prev => [optimisticComment, ...prev]);
+    setOptimisticComments(memeId, [optimisticComment, ...getOptimisticComments(memeId)]);
     if (onCommentCountChange) {
       onCommentCountChange(comments.length + 1);
     }
@@ -2131,19 +2148,21 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
       setComments(prev =>
         prev.map(c => c._id === tempId ? response.data : c)
       );
+      removeOptimisticComment(memeId, tempId);
 
       // Atualiza o contador de comentários com valor real, se necessário
       if (onCommentCountChange) {
-        onCommentCountChange(prev => prev + 0); // ou busque o valor real se necessário
+        onCommentCountChange(prev => prev + 0);
       }
 
     } catch (error) {
       // Remove o comentário otimista em caso de erro
       setComments(prev => prev.filter(c => c._id !== tempId));
+      removeOptimisticComment(memeId, tempId);
       setError(error.response?.data?.message || 'Erro ao enviar comentário');
     }
   }, [commentText, commentMedia, selectedMeme, memeId, onCommentCountChange, currentUser, userMemes, comments]);
-  // ...existing code...
+
 
   const handleReply = useCallback((commentId, parentId = null) => {
     setReplyingTo(prev => prev === commentId ? null : commentId);
@@ -2161,6 +2180,27 @@ const CommentSection = ({ memeId, onCommentSubmit,  onCommentCountChange, setCom
       [commentId]: text
     }));
   }, []);
+
+  // Utilitários para comentários otimistas
+  const getOptimisticComments = (memeId) => {
+    try {
+      const data = localStorage.getItem(`optimistic-comments-${memeId}`);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const setOptimisticComments = (memeId, comments) => {
+    localStorage.setItem(`optimistic-comments-${memeId}`, JSON.stringify(comments));
+  };
+
+  const removeOptimisticComment = (memeId, tempId) => {
+    const comments = getOptimisticComments(memeId).filter(c => c._id !== tempId);
+    setOptimisticComments(memeId, comments);
+  };
+
+
   const handleReplySubmit = useCallback(async (commentId) => {
     const currentReplyText = replyTexts[commentId] || '';
     const currentReplyMeme = replySelectedMeme[commentId];
