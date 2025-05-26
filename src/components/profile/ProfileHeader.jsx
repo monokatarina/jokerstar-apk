@@ -654,9 +654,9 @@ const ProfileHeader = ({ user, isOwnProfile }) => {
 
   // Função para pegar o emoji do nível
   const getMemberLevelEmoji = () => {
-    if (daysSinceJoin >= 365) return '🏆';
-    if (daysSinceJoin >= 180) return '⭐';
-    if (daysSinceJoin >= 30) return '⚡';
+    if (daysSinceJoin >= 365) return '👿';
+    if (daysSinceJoin >= 180) return '☠️';
+    if (daysSinceJoin >= 30) return '🤓';
     return '😂';
   };
 
