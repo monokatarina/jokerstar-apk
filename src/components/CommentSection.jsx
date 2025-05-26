@@ -21,6 +21,12 @@ import {
   FiPlusCircle    
 } from 'react-icons/fi';
 import PropTypes from 'prop-types';
+import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
+
+
+
+
 const buildUrl = (url) => {
   if (!url) {
     console.warn('URL is empty or undefined');
@@ -2468,39 +2474,55 @@ useEffect(() => {
 useEffect(() => {
   if (typeof window === 'undefined') return;
 
-  // --- Parte 1: Configuração para apps nativos (Capacitor) ---
   let keyboardListeners = [];
-  
-  if (Capacitor.isNativePlatform()) {
-    const showListener = Keyboard.addListener('keyboardWillShow', (info) => {
-      setKeyboardHeight(info.keyboardHeight);
-      setKeyboardActive(true);
-    });
+  const isNative = Capacitor.isNativePlatform();
+  const isKeyboardAvailable = Capacitor.isPluginAvailable('Keyboard');
 
-    const hideListener = Keyboard.addListener('keyboardWillHide', () => {
-      setKeyboardActive(false);
-      setKeyboardHeight(0);
-    });
+  // Configuração para apps nativos
+  if (isNative && isKeyboardAvailable) {
+    try {
+      const showListener = Keyboard.addListener('keyboardWillShow', (info) => {
+        setKeyboardHeight(info.keyboardHeight);
+        setKeyboardActive(true);
+        
+        // Scroll automático para o campo de comentário
+        setTimeout(() => {
+          if (commentFormRef.current) {
+            commentFormRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'end'
+            });
+          }
+        }, 300);
+      });
 
-    keyboardListeners = [showListener, hideListener];
+      const hideListener = Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardActive(false);
+        setKeyboardHeight(0);
+      });
+
+      keyboardListeners = [showListener, hideListener];
+    } catch (error) {
+      console.warn('Keyboard plugin not available:', error);
+    }
   }
 
-  // --- Parte 2: Configuração para navegadores mobile ---
+  // Configuração para navegadores mobile (web)
   let visualViewportCleanup = () => {};
-
+  
   if (window.innerWidth <= 768) {
     const visualViewport = window.visualViewport;
     
-    const handleResize = () => {
-      if (visualViewport) {
-        const keyboardHeight = window.innerHeight - visualViewport.height;
-        const active = keyboardHeight > 50;
+    if (visualViewport) {
+      const handleResize = () => {
+        const viewportHeight = visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - viewportHeight;
         
-        setKeyboardActive(active);
-        setKeyboardHeight(active ? Math.max(keyboardHeight, 300) : 0);
+        setKeyboardHeight(Math.max(keyboardHeight, 250));
+        setKeyboardActive(keyboardHeight > 50);
         
-        // Scroll automático quando o teclado aparece
-        if (active && commentFormRef.current) {
+        if (keyboardHeight > 50 && commentFormRef.current) {
           setTimeout(() => {
             commentFormRef.current.scrollIntoView({
               behavior: 'smooth',
@@ -2508,21 +2530,15 @@ useEffect(() => {
             });
           }, 100);
         }
-      }
-    };
+      };
 
-    if (visualViewport) {
       visualViewport.addEventListener('resize', handleResize);
-    }
-
-    visualViewportCleanup = () => {
-      if (visualViewport) {
+      visualViewportCleanup = () => {
         visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
+      };
+    }
   }
 
-  // --- Cleanup unificado ---
   return () => {
     // Remove listeners do Capacitor
     keyboardListeners.forEach(listener => listener.remove());
@@ -2530,7 +2546,7 @@ useEffect(() => {
     // Remove listeners do VisualViewport
     visualViewportCleanup();
   };
-}, []); // Dependências vazias = executa apenas no mount/unmount
+}, []);
 
 useEffect(() => {
   if (!isMobile) return;
@@ -2568,25 +2584,24 @@ useEffect(() => {
 useEffect(() => {
   if (!isMobile) return;
 
-  const handleFocus = (e) => {
-    if (e.target.id === 'main-comment-input') {
-      setKeyboardActive(true);
-      setTimeout(() => {
-        if (commentFormRef.current) {
-          commentFormRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          });
-        }
-      }, 300);
-    }
+  const input = document.getElementById('main-comment-input');
+  
+  const handleFocus = () => {
+    setKeyboardActive(true);
+    setTimeout(() => {
+      if (commentFormRef.current) {
+        commentFormRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 300);
   };
 
   const handleBlur = () => {
     setKeyboardActive(false);
   };
 
-  const input = document.getElementById('main-comment-input');
   if (input) {
     input.addEventListener('focus', handleFocus);
     input.addEventListener('blur', handleBlur);
