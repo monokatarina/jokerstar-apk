@@ -26,7 +26,8 @@ const FeedGrid = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 12px; // espaçamento menor entre posts
+  gap: 2px; // espaçamento menor entre posts
+  
 `;
 
 const MemeWrapper = styled.div`
