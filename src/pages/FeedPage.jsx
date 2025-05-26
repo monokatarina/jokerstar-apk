@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import api from '../services/api';
 import MemeCard from '../components/MemeCard';
@@ -13,9 +13,7 @@ const FeedContainer = styled.div`
   background-color: var(--background);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
-  overscroll-behavior-y: contain;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -31,8 +29,7 @@ const FeedGrid = styled.div`
 
 const MemeWrapper = styled.div`
   width: 100%;
-  height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
-  scroll-snap-align: start;
+  min-height: calc(100vh - 60px - env(safe-area-inset-top)); // Altura total menos navbar
   position: relative;
 `;
 
@@ -99,14 +96,9 @@ const FeedPage = () => {
   const [memes, setMemes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const feedContainerRef = useRef(null);
-  const scrollTimeoutRef = useRef(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
-  const lastScrollPosition = useRef(0);
-  const isScrollingRef = useRef(false);
 
   const fetchMemes = async () => {
     try {
@@ -129,120 +121,67 @@ const FeedPage = () => {
     }
   };
 
-  const handleScroll = () => {
-    if (commentOpen) return;
-
-    // Lógica para snap mais preciso
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-
-    isScrollingRef.current = true;
-    scrollTimeoutRef.current = setTimeout(() => {
-      isScrollingRef.current = false;
-      if (feedContainerRef.current) {
-        const container = feedContainerRef.current;
-        const scrollTop = container.scrollTop;
-        const containerHeight = container.offsetHeight;
-        const index = Math.round(scrollTop / containerHeight);
-        
-        if (index !== currentIndex) {
-          setCurrentIndex(index);
-          container.scrollTo({
-            top: index * containerHeight,
-            behavior: 'smooth'
-          });
-        }
-      }
-    }, 150);
-  };
-
   const handleMemeDeleted = (deletedMemeId) => {
     setMemes(prev => prev.filter(meme => meme._id !== deletedMemeId));
-    
-    if (memes[currentIndex]?._id === deletedMemeId) {
-      const newIndex = Math.min(currentIndex, memes.length - 2);
-      setCurrentIndex(newIndex >= 0 ? newIndex : 0);
-    }
   };
-
-  useEffect(() => {
-    const container = feedContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [currentIndex, commentOpen]);
 
   useEffect(() => {
     fetchMemes();
   }, []);
 
-  useEffect(() => {
-    return () => {
-      setCommentOpen(false);
-    };
-  }, []);
-
   if (loading) {
     return (
-      <>
-        <FeedContainer ref={feedContainerRef}>
-          <LoadingIndicator>Carregando...</LoadingIndicator>
-        </FeedContainer>
-      </>
+      <FeedContainer>
+        <LoadingIndicator>Carregando...</LoadingIndicator>
+      </FeedContainer>
     );
   }
 
   if (error) {
     return (
-      <>
-        <FeedContainer ref={feedContainerRef}>
-          <ErrorMessage>
-            {error}
-            <button onClick={fetchMemes}>
-              <FiRefreshCw /> Tentar novamente
-            </button>
-          </ErrorMessage>
-        </FeedContainer>
-      </>
+      <FeedContainer>
+        <ErrorMessage>
+          {error}
+          <button onClick={fetchMemes}>
+            <FiRefreshCw /> Tentar novamente
+          </button>
+        </ErrorMessage>
+      </FeedContainer>
     );
   }
 
   return (
-    <>
-      <FeedContainer ref={feedContainerRef}>
-        <FeedGrid>
-          {memes.length === 0 ? (
-            <EmptyFeed>
-              <h3>Nenhum meme encontrado</h3>
-              <p>Seja o primeiro a compartilhar sua criação!</p>
-              <UploadButton size="large" />
-            </EmptyFeed>
-          ) : (
-            memes.map((meme, index) => (
-              <MemeWrapper key={meme._id}>
-                <MemeCard
-                  meme={meme}
-                  onDelete={handleMemeDeleted}
-                  onCommentCountChange={(newCount) => {
-                    setMemes(prev =>
-                      prev.map(m =>
-                        m._id === meme._id ? { ...m, commentCount: newCount } : m
-                      )
-                    );
-                  }}
-                  isSquareView={false}
-                  isActive={index === currentIndex}
-                  style={{ width: '100%', height: '100%' }}
-                  setCommentOpen={setCommentOpen}
-                />
-              </MemeWrapper>
-            ))
-          )}
-        </FeedGrid>
-      </FeedContainer>
-    </>
+    <FeedContainer>
+      <FeedGrid>
+        {memes.length === 0 ? (
+          <EmptyFeed>
+            <h3>Nenhum meme encontrado</h3>
+            <p>Seja o primeiro a compartilhar sua criação!</p>
+            <UploadButton size="large" />
+          </EmptyFeed>
+        ) : (
+          memes.map((meme) => (
+            <MemeWrapper key={meme._id}>
+              <MemeCard
+                meme={meme}
+                onDelete={handleMemeDeleted}
+                onCommentCountChange={(newCount) => {
+                  setMemes(prev =>
+                    prev.map(m =>
+                      m._id === meme._id ? { ...m, commentCount: newCount } : m
+                    )
+                  );
+                }}
+                isSquareView={false}
+                isActive={true}
+                style={{ width: '100%', height: '100%' }}
+                setCommentOpen={setCommentOpen}
+              />
+            </MemeWrapper>
+          ))
+        )}
+      </FeedGrid>
+    </FeedContainer>
   );
 };
 
