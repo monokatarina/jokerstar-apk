@@ -1,4 +1,3 @@
-// Substitua o conteúdo do arquivo por:
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { FaPlay } from 'react-icons/fa';
@@ -24,6 +23,16 @@ const ThumbnailImage = styled.img`
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s;
+`;
+
+const ThumbnailVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  border: none;
+  background: #eee;
+  display: block;
 `;
 
 const VideoOverlay = styled.div`
@@ -92,15 +101,30 @@ const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
         />
       )}
       
-      <ThumbnailImage 
-        src={getMediaUrl()}
-        alt={meme.caption || 'Meme thumbnail'}
-        crossOrigin="anonymous"
-        onError={(e) => {
-          e.target.src = 'https://placehold.co/600x400?text=Imagem+não+carregada';
-          e.target.onerror = null;
-        }}
-      />
+      {meme.mediaType === 'video' ? (
+        <ThumbnailVideo
+          src={getMediaUrl()}
+          alt={meme.caption || 'Meme video thumbnail'}
+          crossOrigin="anonymous"
+          preload="metadata"
+          muted
+          playsInline
+          // poster={meme.thumbnailUrl || 'https://placehold.co/600x400?text=Sem+thumbnail'}
+          onError={(e) => {
+            e.target.poster = 'https://placehold.co/600x400?text=Sem+thumbnail';
+          }}
+        />
+      ) : (
+        <ThumbnailImage 
+          src={getMediaUrl()}
+          alt={meme.caption || 'Meme thumbnail'}
+          crossOrigin="anonymous"
+          onError={(e) => {
+            e.target.src = 'https://placehold.co/600x400?text=Imagem+não+carregada';
+            e.target.onerror = null;
+          }}
+        />
+      )}
       
       {meme.mediaType === 'video' && (
         <VideoOverlay>
