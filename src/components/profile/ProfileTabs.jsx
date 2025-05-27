@@ -70,9 +70,9 @@ const ActiveIndicator = styled.div`
 const ProfileTabs = ({ activeTab, setActiveTab, showSettings = false }) => {
   const tabs = [
     { id: 'memes', label: 'Posts' },
-    { id: 'likes', label: 'Likes' },
-    { id: 'activity', label: 'Activity' },
-    ...(showSettings ? [{ id: 'settings', label: 'Settings' }] : [])
+    { id: 'likes', label: 'seus Likes' },
+    { id: 'activity', label: 'visitas' },
+    ...(showSettings ? [{ id: 'settings', label: 'configuraçoes' }] : [])
   ];
 
   return (

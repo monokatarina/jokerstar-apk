@@ -254,6 +254,11 @@ const DrawerActionButton = styled.button`
   }
 `;
 
+const bounce = keyframes`
+  0%, 100% { transform: translateY(0);}
+  50% { transform: translateY(-10px);}
+`;
+
 const emojiPop = keyframes`
   0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
   60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
@@ -269,11 +274,6 @@ const DaysEmoji = styled.span`
   animation: ${emojiPop} 0.7s, ${bounce} 1s 1 0.7s;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.12));
   will-change: transform, opacity;
-`;
-
-const bounce = keyframes`
-  0%, 100% { transform: translateY(0);}
-  50% { transform: translateY(-10px);}
 `;
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
