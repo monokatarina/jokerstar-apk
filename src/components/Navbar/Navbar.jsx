@@ -254,28 +254,6 @@ const DrawerActionButton = styled.button`
   }
 `;
 
-const bounce = keyframes`
-  0%, 100% { transform: translateY(0);}
-  50% { transform: translateY(-10px);}
-`;
-
-const emojiPop = keyframes`
-  0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
-  60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
-`;
-
-const DaysEmoji = styled.span`
-  display: inline-block;
-  box-shadow: 0 0 8px 2px #ffd70099;
-  text-shadow: 0 0 6px #ffd700, 0 0 12px #fff;
-  margin-right: 6px;
-  font-size: 1.2em;
-  animation: ${emojiPop} 0.7s, ${bounce} 1s 1 0.7s;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.12));
-  will-change: transform, opacity;
-`;
-
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
 
 const getImageUrl = (imagePath) => {
@@ -298,13 +276,6 @@ const calculateDaysSinceJoin = (createdAt) => {
   const joinDate = new Date(createdAt);
   const today = new Date();
   return Math.max(1, Math.floor((today - joinDate) / (1000 * 60 * 60 * 24)));
-};
-
-const getDaysEmoji = (days) => {
-  if (days >= 365) return '👿';
-  if (days >= 180) return '☠️';
-  if (days >= 30) return '🤓';
-  return '😂';
 };
 
 const Navbar = ({ navbarVisible }) => {
@@ -419,7 +390,6 @@ const Navbar = ({ navbarVisible }) => {
             <DrawerUserInfo>
               <DrawerUsername>{user.username}</DrawerUsername>
               <DrawerDaysBadge>
-                <DaysEmoji>{getDaysEmoji(daysSinceJoin)}</DaysEmoji>
                 {daysSinceJoin} dias
               </DrawerDaysBadge>
             </DrawerUserInfo>
