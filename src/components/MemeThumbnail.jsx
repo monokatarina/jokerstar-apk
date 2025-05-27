@@ -76,22 +76,12 @@ const RepostBadge = styled.div`
   z-index: 1;
 `;
 
-const isNativeApp = () => {
-  // Detecta se está rodando em um app Capacitor
-  return typeof window !== 'undefined' && window.Capacitor;
-};
-
 const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
-    
-    // Se a URL já é completa, converte para HTTPS se necessário
     if (meme.mediaUrl.startsWith('http')) {
-      // Substitui 'http://' por 'https://' se necessário
       return meme.mediaUrl.replace(/^http:\/\//i, 'https://');
     }
-    
-    // Para URLs relativas, monta a URL completa com HTTPS
     const cleanPath = meme.mediaUrl.startsWith('/') ? meme.mediaUrl : `/${meme.mediaUrl}`;
     return `https://api.jokesteronline.org${cleanPath}`;
   };
@@ -102,37 +92,22 @@ const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
         <MemeOptions 
           memeId={meme._id} 
           onDelete={onDelete}
-          onClick={(e) => e.preventDefault()} // Previne navegação ao clicar no menu
+          onClick={(e) => e.preventDefault()}
         />
       )}
       
       {meme.mediaType === 'video' ? (
-        isNativeApp() ? (
-          // Mostra imagem placeholder no app nativo
-          <ThumbnailImage 
-            src={meme.thumbnailUrl || 'https://placehold.co/600x400?text=Sem+thumbnail'}
-            alt={meme.caption || 'Meme video thumbnail'}
-            crossOrigin="anonymous"
-            onError={(e) => {
-              e.target.src = 'https://placehold.co/600x400?text=Sem+thumbnail';
-              e.target.onerror = null;
-            }}
-          />
-        ) : (
-          // Mostra <video> normalmente no navegador
-          <ThumbnailVideo
-            src={getMediaUrl()}
-            alt={meme.caption || 'Meme video thumbnail'}
-            crossOrigin="anonymous"
-            preload="metadata"
-            muted
-            playsInline
-            // poster={meme.thumbnailUrl || 'https://placehold.co/600x400?text=Sem+thumbnail'}
-            onError={(e) => {
-              e.target.poster = 'https://placehold.co/600x400?text=Sem+thumbnail';
-            }}
-          />
-        )
+        <ThumbnailVideo
+          src={getMediaUrl()}
+          alt={meme.caption || 'Meme video thumbnail'}
+          crossOrigin="anonymous"
+          preload="metadata"
+          muted
+          playsInline
+          onError={(e) => {
+            e.target.poster = 'https://placehold.co/600x400?text=Sem+thumbnail';
+          }}
+        />
       ) : (
         <ThumbnailImage 
           src={getMediaUrl()}
