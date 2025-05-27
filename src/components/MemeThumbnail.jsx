@@ -76,6 +76,11 @@ const RepostBadge = styled.div`
   z-index: 1;
 `;
 
+const isNativeApp = () => {
+  // Detecta se está rodando em um app Capacitor
+  return typeof window !== 'undefined' && window.Capacitor;
+};
+
 const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
@@ -102,18 +107,32 @@ const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
       )}
       
       {meme.mediaType === 'video' ? (
-        <ThumbnailVideo
-          src={getMediaUrl()}
-          alt={meme.caption || 'Meme video thumbnail'}
-          crossOrigin="anonymous"
-          preload="metadata"
-          muted
-          playsInline
-          // poster={meme.thumbnailUrl || 'https://placehold.co/600x400?text=Sem+thumbnail'}
-          onError={(e) => {
-            e.target.poster = 'https://placehold.co/600x400?text=Sem+thumbnail';
-          }}
-        />
+        isNativeApp() ? (
+          // Mostra imagem placeholder no app nativo
+          <ThumbnailImage 
+            src={meme.thumbnailUrl || 'https://placehold.co/600x400?text=Sem+thumbnail'}
+            alt={meme.caption || 'Meme video thumbnail'}
+            crossOrigin="anonymous"
+            onError={(e) => {
+              e.target.src = 'https://placehold.co/600x400?text=Sem+thumbnail';
+              e.target.onerror = null;
+            }}
+          />
+        ) : (
+          // Mostra <video> normalmente no navegador
+          <ThumbnailVideo
+            src={getMediaUrl()}
+            alt={meme.caption || 'Meme video thumbnail'}
+            crossOrigin="anonymous"
+            preload="metadata"
+            muted
+            playsInline
+            // poster={meme.thumbnailUrl || 'https://placehold.co/600x400?text=Sem+thumbnail'}
+            onError={(e) => {
+              e.target.poster = 'https://placehold.co/600x400?text=Sem+thumbnail';
+            }}
+          />
+        )
       ) : (
         <ThumbnailImage 
           src={getMediaUrl()}
