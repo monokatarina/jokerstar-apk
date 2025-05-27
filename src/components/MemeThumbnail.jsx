@@ -77,6 +77,7 @@ const RepostBadge = styled.div`
 `;
 
 const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
+  if (!meme) return null;
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
     if (meme.mediaUrl.startsWith('http')) {

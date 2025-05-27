@@ -1241,14 +1241,12 @@ const Comment = memo(({
                     <MemeThumbnail 
                       meme={{
                         ...comment.sharedMeme,
+                        _id: comment.sharedMeme._id || `shared-${comment._id}`,
                         mediaType: comment.sharedMeme.mediaType || 
-                                (comment.sharedMeme.mediaUrl.endsWith('.mp4') ? 'video' : 'image'),
-                        _id: `shared-${comment._id}`,
-                        originalMemeId: comment.sharedMeme._id
+                                (comment.sharedMeme.mediaUrl.endsWith('.mp4') ? 'video' : 'image')
                       }}
                       isOwner={false}
                       onDelete={() => {}}
-                      isShared={true}
                     />
                     {comment.sharedMeme.caption && (
                       <div style={{
