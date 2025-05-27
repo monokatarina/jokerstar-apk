@@ -390,7 +390,7 @@ const Navbar = ({ navbarVisible }) => {
             <DrawerUserInfo>
               <DrawerUsername>{user.username}</DrawerUsername>
               <DrawerDaysBadge>
-                {daysSinceJoin} dias
+                parabens vc está aqui há {daysSinceJoin} dias
               </DrawerDaysBadge>
             </DrawerUserInfo>
           </DrawerHeader>

@@ -755,7 +755,7 @@ const ReactionAnimation = styled.div`
   z-index: 10;
 `;
 
-const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFullScreen = false ,  setCommentOpen = () => {}}) => {
+const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFullScreen = false ,  setCommentOpen = () => {}, autoPlay = false}) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
@@ -1038,6 +1038,16 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
       }
     };
   }, [setCommentOpen]);
+
+  useEffect(() => {
+    if (meme.mediaType === 'video' && videoRef.current) {
+      if (autoPlay) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [autoPlay, meme.mediaType]);
 
   
   const handleTouchStart = (e) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import api from '../services/api';
 import MemeCard from '../components/MemeCard';
@@ -6,6 +6,7 @@ import UploadButton from '../components/UploadButton';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiRefreshCw } from 'react-icons/fi';
+
 
 const FeedContainer = styled.div`
   width: 100%;
@@ -106,6 +107,31 @@ const FeedPage = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [commentOpen, setCommentOpen] = useState(false);
+  const [visibleMemeId, setVisibleMemeId] = useState(null);
+  const memeRefs = useRef({});
+
+  useEffect(() => {
+    const observer = new window.IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setVisibleMemeId(entry.target.dataset.id);
+          }
+        });
+      },
+      {
+        threshold: 0.6, // 60% do card visível
+      }
+    );
+
+    Object.values(memeRefs.current).forEach(ref => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [memes]);
 
   const fetchMemes = async () => {
     try {
@@ -168,7 +194,11 @@ const FeedPage = () => {
           </EmptyFeed>
         ) : (
           memes.map((meme) => (
-            <MemeWrapper key={meme._id}>
+            <MemeWrapper
+              key={meme._id}
+              ref={el => (memeRefs.current[meme._id] = el)}
+              data-id={meme._id}
+            >
               <MemeCard
                 meme={meme}
                 onDelete={handleMemeDeleted}
@@ -183,6 +213,7 @@ const FeedPage = () => {
                 isActive={true}
                 style={{ width: '100%', height: '100%' }}
                 setCommentOpen={setCommentOpen}
+                autoPlay={visibleMemeId === meme._id} // <-- NOVO
               />
             </MemeWrapper>
           ))
