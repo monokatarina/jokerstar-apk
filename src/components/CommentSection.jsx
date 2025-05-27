@@ -673,6 +673,95 @@ const SharedMemeCaption = styled.p`
   border-top: 1px solid var(--border-light);
 `;
 
+
+
+const SharedMemeVideo = styled.video`
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--media-bg);
+  transition: all 0.2s ease;
+  position: relative;
+  
+  /* Estilo quando não tem controles */
+  &:not([controls]) {
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+    }
+
+    &:hover::before {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    &::after {
+      content: '▶';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 48px;
+      height: 48px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      opacity: 0.8;
+      transition: all 0.2s ease;
+    }
+
+    &:hover::after {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+  }
+
+  /* Estilo quando tem controles */
+  &[controls] {
+    &::before, &::after {
+      display: none;
+    }
+  }
+`;
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  
+  &::after {
+    content: '';
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
 const ActionButtons = styled.div`
   display: flex;
   align-items: center;
@@ -1256,25 +1345,38 @@ const Comment = memo(({
                     maxWidth: '100%'
                   }}>
                     {comment.sharedMeme.mediaType === 'video' || comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
-                      <video 
-                        controls 
-                        style={{ 
-                          width: '100%', 
-                          display: 'block',
-                          maxHeight: '200px'
-                        }}
-                        crossOrigin="anonymous"
-                      >
-                        <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
-                      </video>
+                      <div style={{ position: 'relative' }}>
+                        <SharedMemeVideo 
+                          onClick={(e) => {
+                            const video = e.currentTarget;
+                            if (video.paused) {
+                              video.play();
+                              video.setAttribute('controls', 'controls');
+                            } else {
+                              video.pause();
+                              video.removeAttribute('controls');
+                            }
+                          }}
+                          onWaiting={() => {
+                            // Mostrar loading quando o vídeo está buffering
+                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                          }}
+                          onPlaying={() => {
+                            // Esconder loading quando o vídeo começa a tocar
+                            e.currentTarget.nextElementSibling.style.display = 'none';
+                          }}
+                          crossOrigin="anonymous"
+                        >
+                          <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
+                        </SharedMemeVideo>
+                        <LoadingOverlay style={{ display: 'none' }} />
+                      </div>
+                    
                     ) : (
                       <SharedMeme 
                         src={buildUrl(comment.sharedMeme.mediaUrl)}
                         alt={comment.sharedMeme.caption || 'Meme compartilhado'}
                         crossOrigin="anonymous"
-                        style={{
-                          maxHeight: '200px'
-                        }}
                         onError={(e) => {
                           console.error('FAILED TO LOAD MEDIA:', {
                             commentId: comment._id,
