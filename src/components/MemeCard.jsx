@@ -810,6 +810,26 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
     }
   }, [meme, user]);
 
+  // Sincroniza isPlaying com o estado real do vídeo
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+
+    // Estado inicial
+    setIsPlaying(!video.paused && !video.ended);
+
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+    };
+  }, [autoPlay, meme.mediaType]);
+
   const handleDelete = async () => {
     setShowConfirmDialog(false);
     setIsDeleting(true);
@@ -1223,6 +1243,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
                 crossOrigin="anonymous"
               />
               
+              {/* Só mostra o PlayButton se NÃO estiver tocando */}
               {!isPlaying && (
                 <PlayButton onClick={(e) => {
                   e.stopPropagation();
