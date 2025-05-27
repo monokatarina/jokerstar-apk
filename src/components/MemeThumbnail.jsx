@@ -76,7 +76,7 @@ const RepostBadge = styled.div`
   z-index: 1;
 `;
 
-const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
+const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
     if (meme.mediaUrl.startsWith('http')) {
@@ -86,8 +86,16 @@ const MemeThumbnail = ({ meme, isOwner, onDelete }) => {
     return `https://api.jokesteronline.org${cleanPath}`;
   };
 
+  // Se for um meme compartilhado e tiver o ID original, usa esse ID no link
+  const getMemeLink = () => {
+    if (isShared && meme.originalMemeId) {
+      return `/memes/${meme.originalMemeId}`;
+    }
+    return `/memes/${meme._id}`;
+  };
+
   return (
-    <ThumbnailContainer to={`/memes/${meme._id}`}>
+    <ThumbnailContainer to={getMemeLink()}>
       {isOwner && (
         <MemeOptions 
           memeId={meme._id} 

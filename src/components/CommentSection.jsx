@@ -1243,10 +1243,12 @@ const Comment = memo(({
                         ...comment.sharedMeme,
                         mediaType: comment.sharedMeme.mediaType || 
                                 (comment.sharedMeme.mediaUrl.endsWith('.mp4') ? 'video' : 'image'),
-                        _id: `shared-${comment._id}`
+                        _id: `shared-${comment._id}`,
+                        originalMemeId: comment.sharedMeme._id
                       }}
                       isOwner={false}
                       onDelete={() => {}}
+                      isShared={true}
                     />
                     {comment.sharedMeme.caption && (
                       <div style={{
