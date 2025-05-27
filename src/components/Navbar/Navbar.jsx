@@ -192,21 +192,12 @@ const DrawerUsername = styled.div`
 `;
 
 const DrawerDaysBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--text-light);
-  background: ${({ days }) => {
-    if (days >= 365) return 'linear-gradient(135deg, #f39c12, #e67e22)';
-    if (days >= 180) return 'linear-gradient(135deg, #2ecc71, #27ae60)';
-    if (days >= 30) return 'linear-gradient(135deg, var(--secondary), #2980b9)';
-    return 'linear-gradient(135deg, #9b59b6, #8e44ad)';
-  }};
-  padding: 2px 8px;
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-weight: 500;
 `;
 
 const DrawerItem = styled(Link)`
@@ -263,6 +254,28 @@ const DrawerActionButton = styled.button`
   }
 `;
 
+const emojiPop = keyframes`
+  0% { transform: scale(0.7) rotate(-10deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+`;
+
+const DaysEmoji = styled.span`
+  display: inline-block;
+  box-shadow: 0 0 8px 2px #ffd70099;
+  text-shadow: 0 0 6px #ffd700, 0 0 12px #fff;
+  margin-right: 6px;
+  font-size: 1.2em;
+  animation: ${emojiPop} 0.7s, ${bounce} 1s 1 0.7s;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.12));
+  will-change: transform, opacity;
+`;
+
+const bounce = keyframes`
+  0%, 100% { transform: translateY(0);}
+  50% { transform: translateY(-10px);}
+`;
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jokesteronline.org';
 
 const getImageUrl = (imagePath) => {
@@ -287,11 +300,11 @@ const calculateDaysSinceJoin = (createdAt) => {
   return Math.max(1, Math.floor((today - joinDate) / (1000 * 60 * 60 * 24)));
 };
 
-const getBadgeIcon = (days) => {
-  if (days >= 365) return <FiAward size={12} />;
-  if (days >= 180) return <FiStar size={12} />;
-  if (days >= 30) return <FiZap size={12} />;
-  return <FiCalendar size={12} />;
+const getDaysEmoji = (days) => {
+  if (days >= 365) return '👿';
+  if (days >= 180) return '☠️';
+  if (days >= 30) return '🤓';
+  return '😂';
 };
 
 const Navbar = ({ navbarVisible }) => {
@@ -405,8 +418,8 @@ const Navbar = ({ navbarVisible }) => {
             </DrawerAvatar>
             <DrawerUserInfo>
               <DrawerUsername>{user.username}</DrawerUsername>
-              <DrawerDaysBadge days={daysSinceJoin}>
-                {getBadgeIcon(daysSinceJoin)}
+              <DrawerDaysBadge>
+                <DaysEmoji>{getDaysEmoji(daysSinceJoin)}</DaysEmoji>
                 {daysSinceJoin} dias
               </DrawerDaysBadge>
             </DrawerUserInfo>
@@ -421,7 +434,7 @@ const Navbar = ({ navbarVisible }) => {
                 $active={activeRoute === '/'}
               >
                 <FiHome />
-                Home
+                Destaques
               </DrawerItem>
 
               <DrawerItem 
@@ -429,7 +442,7 @@ const Navbar = ({ navbarVisible }) => {
                 $active={activeRoute === '/feed'}
               >
                 <FiTrendingUp />
-                Feed
+                Coletivo
               </DrawerItem>
 
               <DrawerItem 
@@ -437,7 +450,7 @@ const Navbar = ({ navbarVisible }) => {
                 $active={activeRoute === '/upload'}
               >
                 <FiPlus />
-                Create
+                Criar
               </DrawerItem>
 
               <DrawerItem 
@@ -445,7 +458,7 @@ const Navbar = ({ navbarVisible }) => {
                 $active={activeRoute === `/users/${user._id}`}
               >
                 <FiUser />
-                Profile
+                Perfil
               </DrawerItem>
             </>
           ) : (
@@ -472,7 +485,7 @@ const Navbar = ({ navbarVisible }) => {
           {user && (
             <DrawerActionButton onClick={handleLogout}>
               <FiLogOut />
-              Logout
+              Sair
             </DrawerActionButton>
           )}
         </DrawerFooter>
