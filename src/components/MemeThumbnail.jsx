@@ -2,6 +2,8 @@ import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { FaPlay } from 'react-icons/fa';
 import MemeOptions from './MemeOptions';
+import { useRef, useEffect } from 'react';
+
 
 const ThumbnailContainer = styled(Link)`
   display: block;
@@ -76,7 +78,21 @@ const RepostBadge = styled.div`
   z-index: 1;
 `;
 
+
 const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
+
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      try {
+        videoRef.current.load();
+      } catch (error) {
+        console.warn("Erro ao carregar vídeo:", error);
+      }
+    }
+  }, [meme.mediaUrl]);
+
   if (!meme) return null;
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
@@ -107,6 +123,7 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       
       {meme.mediaType === 'video' ? (
         <ThumbnailVideo
+          ref={videoRef}
           src={getMediaUrl()}
           alt={meme.caption || 'Meme video thumbnail'}
           crossOrigin="anonymous"
