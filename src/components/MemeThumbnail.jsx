@@ -10,7 +10,7 @@ const ThumbnailContainer = styled(Link)`
   overflow: hidden;
   position: relative;
   aspect-ratio: 1;
-  background: #222; /* Fundo escuro para combinar com vídeos */
+  background: #222;
   transition: transform 0.3s, box-shadow 0.3s;
   
   &:hover {
@@ -108,7 +108,6 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Detecta se é um dispositivo móvel
     const checkIfMobile = () => {
       setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
     };
@@ -124,8 +123,8 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       
       const handleLoadedData = () => {
         setVideoLoaded(true);
-        // Tenta dar play automaticamente (muted)
-        video.play().catch(e => console.log("Autoplay prevented:", e));
+        // Garante que o vídeo fique pausado
+        video.pause();
       };
       
       const handleError = () => {
@@ -136,7 +135,7 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       video.addEventListener('loadeddata', handleLoadedData);
       video.addEventListener('error', handleError);
       
-      // Configuração especial para mobile
+      // Configuração para mobile
       if (isMobile) {
         video.preload = 'metadata';
         video.playsInline = true;
@@ -188,7 +187,6 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       
       {meme.mediaType === 'video' ? (
         <>
-          {/* Estado de carregamento */}
           {!videoLoaded && (
             <VideoLoading>
               <PlayIcon>
@@ -197,7 +195,6 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
             </VideoLoading>
           )}
           
-          {/* Elemento de vídeo */}
           <ThumbnailVideo
             ref={videoRef}
             src={getMediaUrl()}
