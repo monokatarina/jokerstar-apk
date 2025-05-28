@@ -1635,16 +1635,36 @@ const MemeSelectorModal = ({
             return (
               <MemeItem key={meme._id} $isMobile={isMobile}>
                 {isVideo ? (
-                  <MemeVideo
-                    $isMobile={isMobile}
-                    $selected={selectedMeme === meme._id}
-                    onClick={() => onSelect(meme._id, isForReply)}
-                    crossOrigin="anonymous"
-                    controls
+                  <div 
+                    onClick={() => onSelect(meme._id, isForReply)} 
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: selectedMeme === meme._id ? '3px solid var(--primary)' : 'none',
+                      cursor: 'pointer'
+                    }}
                   >
-                    <source src={mediaUrl} type="video/mp4" />
-                    Seu navegador não suporta vídeos HTML5.
-                  </MemeVideo>
+                    <video
+                      src={mediaUrl}
+                      muted
+                      autoPlay
+                      loop
+                      playsInline
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block'
+                      }}
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <img
                     src={mediaUrl}
