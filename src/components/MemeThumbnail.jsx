@@ -122,13 +122,34 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       const video = videoRef.current;
       
       const handleLoadedData = () => {
-        setVideoLoaded(true);
-        // Garante que o vídeo fique pausado
-        video.pause();
+        // Inicia o pulso de play/pause
+        const pulseLoad = () => {
+          video.play().then(() => {
+            // Pausa rapidamente após o play para capturar o frame
+            setTimeout(() => {
+              video.pause();
+              setVideoLoaded(true);
+            }, 100);
+          }).catch(err => {
+            console.warn("Auto-play was prevented:", err);
+            // Fallback: apenas marca como carregado
+            setVideoLoaded(true);
+          });
+        };
+
+        // Se for mobile, tenta carregar com mute
+        if (isMobile) {
+          video.muted = true;
+          pulseLoad();
+        } else {
+          // Tenta primeiro sem mute (se o navegador permitir)
+          video.muted = false;
+          pulseLoad();
+        }
       };
       
       const handleError = () => {
-        console.warn("Erro ao carregar vídeo");
+        console.warn("Error loading video");
         setVideoLoaded(false);
       };
       
@@ -206,7 +227,7 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
             loop
             $loaded={videoLoaded}
             onError={(e) => {
-              console.error("Erro ao carregar vídeo:", e);
+              console.error("Error loading video:", e);
               setVideoLoaded(false);
             }}
           />
