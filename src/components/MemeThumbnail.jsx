@@ -2,8 +2,7 @@ import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { FaPlay } from 'react-icons/fa';
 import MemeOptions from './MemeOptions';
-import { useRef, useEffect } from 'react';
-
+import { useRef, useEffect, useState } from 'react';
 
 const ThumbnailContainer = styled(Link)`
   display: block;
@@ -35,6 +34,18 @@ const ThumbnailVideo = styled.video`
   border: none;
   background: #eee;
   display: block;
+  opacity: ${props => props.$show ? 1 : 0};
+  position: ${props => props.$show ? 'relative' : 'absolute'};
+`;
+
+const VideoFallback = styled.div`
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 const VideoOverlay = styled.div`
@@ -47,12 +58,9 @@ const VideoOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 0;
+  opacity: ${props => props.$isHovered ? 1 : 0};
   transition: opacity 0.3s;
-  
-  ${ThumbnailContainer}:hover & {
-    opacity: 1;
-  }
+  z-index: 2;
 `;
 
 const PlayIcon = styled.div`
@@ -75,25 +83,64 @@ const RepostBadge = styled.div`
   padding: 3px 6px;
   border-radius: 4px;
   font-size: 0.8rem;
+  z-index: 3;
+`;
+
+const VideoIndicator = styled.div`
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
   z-index: 1;
 `;
 
-
 const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
-
   const videoRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    if (videoRef.current) {
-      try {
-        videoRef.current.load();
-      } catch (error) {
-        console.warn("Erro ao carregar vídeo:", error);
+    // Detecta se é um dispositivo móvel
+    const checkIfMobile = () => {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current && meme.mediaType === 'video') {
+      const video = videoRef.current;
+      
+      // Tenta carregar o vídeo apenas se não for mobile ou se o usuário interagir
+      if (!isMobile || showVideo) {
+        video.load();
+        
+        // Tenta mostrar o vídeo após o metadata carregar
+        const onLoadedMetadata = () => {
+          setShowVideo(true);
+          video.play().catch(e => console.warn("Autoplay prevented:", e));
+        };
+        
+        video.addEventListener('loadedmetadata', onLoadedMetadata);
+        
+        return () => {
+          video.removeEventListener('loadedmetadata', onLoadedMetadata);
+        };
       }
     }
-  }, [meme.mediaUrl]);
+  }, [meme.mediaUrl, isMobile, showVideo]);
 
   if (!meme) return null;
+
   const getMediaUrl = () => {
     if (!meme.mediaUrl) return 'https://placehold.co/600x400?text=Imagem+não+carregada';
     if (meme.mediaUrl.startsWith('http')) {
@@ -103,7 +150,6 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
     return `https://api.jokesteronline.org${cleanPath}`;
   };
 
-  // Se for um meme compartilhado e tiver o ID original, usa esse ID no link
   const getMemeLink = () => {
     if (isShared && meme.originalMemeId) {
       return `/memes/${meme.originalMemeId}`;
@@ -111,8 +157,20 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
     return `/memes/${meme._id}`;
   };
 
+  const handleVideoClick = (e) => {
+    if (isMobile && !showVideo) {
+      e.preventDefault();
+      setShowVideo(true);
+    }
+  };
+
   return (
-    <ThumbnailContainer to={getMemeLink()}>
+    <ThumbnailContainer 
+      to={getMemeLink()}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleVideoClick}
+    >
       {isOwner && (
         <MemeOptions 
           memeId={meme._id} 
@@ -122,18 +180,39 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       )}
       
       {meme.mediaType === 'video' ? (
-        <ThumbnailVideo
-          ref={videoRef}
-          src={getMediaUrl()}
-          alt={meme.caption || 'Meme video thumbnail'}
-          crossOrigin="anonymous"
-          preload="metadata"
-          muted
-          playsInline
-          onError={(e) => {
-            e.target.poster = 'https://placehold.co/600x400?text=Sem+thumbnail';
-          }}
-        />
+        <>
+          {/* Fallback para mobile ou enquanto o vídeo não carrega */}
+          {(!showVideo || isMobile) && (
+            <VideoFallback>
+              <ThumbnailImage 
+                src={meme.thumbnailUrl || getMediaUrl().replace('.mp4', '.jpg') || 'https://placehold.co/600x400?text=Video'}
+                alt={meme.caption || 'Meme video thumbnail'}
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  e.target.src = 'https://placehold.co/600x400?text=Sem+thumbnail';
+                }}
+              />
+              <VideoIndicator>Vídeo</VideoIndicator>
+            </VideoFallback>
+          )}
+          
+          {/* Elemento de vídeo real */}
+          <ThumbnailVideo
+            ref={videoRef}
+            src={getMediaUrl()}
+            alt={meme.caption || 'Meme video thumbnail'}
+            crossOrigin="anonymous"
+            preload="none"
+            muted
+            playsInline
+            loop
+            $show={showVideo && !isMobile}
+            onError={(e) => {
+              console.error("Erro ao carregar vídeo:", e);
+              setShowVideo(false);
+            }}
+          />
+        </>
       ) : (
         <ThumbnailImage 
           src={getMediaUrl()}
@@ -147,7 +226,7 @@ const MemeThumbnail = ({ meme, isOwner, onDelete, isShared = false }) => {
       )}
       
       {meme.mediaType === 'video' && (
-        <VideoOverlay>
+        <VideoOverlay $isHovered={isHovered || (isMobile && !showVideo)}>
           <PlayIcon>
             <FaPlay size={14} />
           </PlayIcon>
