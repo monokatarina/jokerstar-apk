@@ -1630,6 +1630,7 @@ const MemeSelectorModal = ({
         <MemeGrid $isMobile={isMobile}>
           {memes.map(meme => {
             const isVideo = meme.mediaType === 'video' || meme.mediaUrl?.endsWith('.mp4');
+            const mediaUrl = buildUrl(meme.mediaUrl);
             
             return (
               <MemeItem key={meme._id} $isMobile={isMobile}>
@@ -1639,17 +1640,28 @@ const MemeSelectorModal = ({
                     $selected={selectedMeme === meme._id}
                     onClick={() => onSelect(meme._id, isForReply)}
                     crossOrigin="anonymous"
+                    controls
                   >
-                    <source src={buildUrl(meme.mediaUrl)} type="video/mp4" />
+                    <source src={mediaUrl} type="video/mp4" />
+                    Seu navegador não suporta vídeos HTML5.
                   </MemeVideo>
                 ) : (
-                  <MemeThumbnail 
-                    src={buildUrl(meme.mediaUrl)}
+                  <img
+                    src={mediaUrl}
                     onClick={() => onSelect(meme._id, isForReply)}
-                    $selected={selectedMeme === meme._id}
-                    $isMobile={isMobile}
-                    crossOrigin="anonymous"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: selectedMeme === meme._id ? '3px solid var(--primary)' : 'none',
+                      cursor: 'pointer'
+                    }}
                     alt={meme.caption || 'Meme'}
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      e.target.src = 'https://placehold.co/600x400?text=Imagem+não+carregada';
+                    }}
                   />
                 )}
                 {meme.caption && (
