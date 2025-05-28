@@ -29,7 +29,7 @@ const ThumbnailVideo = styled.video`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  pointer-events: none;
+  pointer-events: auto;
   border: none;
   background: #eee;
   display: block;
