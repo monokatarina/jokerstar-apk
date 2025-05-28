@@ -1238,53 +1238,16 @@ const Comment = memo(({
                     borderRadius: '8px',
                     overflow: 'hidden'
                   }}>
-                    <div style={{
-                      marginTop: '8px',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      background: '#000'
-                    }}>
-                      {comment.sharedMeme.mediaUrl.endsWith('.mp4') ? (
-                        <video
-                          controls
-                          playsInline
-                          preload="metadata"
-                          poster="https://placehold.co/600x400?text=Vídeo+do+comentário"
-                          style={{
-                            width: '100%',
-                            maxHeight: '300px',
-                            backgroundColor: '#000'
-                          }}
-                        >
-                          <source src={buildUrl(comment.sharedMeme.mediaUrl)} type="video/mp4" />
-                          Seu navegador não suporta vídeos HTML5.
-                        </video>
-                      ) : (
-                        <img
-                          src={buildUrl(comment.sharedMeme.mediaUrl)}
-                          alt={comment.sharedMeme.caption || 'Meme'}
-                          style={{
-                            width: '100%',
-                            maxHeight: '300px',
-                            objectFit: 'contain',
-                            display: 'block'
-                          }}
-                        />
-                      )}
-
-                      {comment.sharedMeme.caption && (
-                        <div style={{
-                          fontSize: '12px',
-                          padding: '8px',
-                          color: 'var(--text-muted)',
-                          background: '#f9f9f9',
-                          borderTop: '1px solid #ddd'
-                        }}>
-                          {comment.sharedMeme.caption}
-                        </div>
-                      )}
-                    </div>
-
+                    <MemeThumbnail 
+                      meme={{
+                        ...comment.sharedMeme,
+                        _id: comment.sharedMeme._id || `shared-${comment._id}`,
+                        mediaType: comment.sharedMeme.mediaType || 
+                                (comment.sharedMeme.mediaUrl.endsWith('.mp4') ? 'video' : 'image')
+                      }}
+                      isOwner={false}
+                      onDelete={() => {}}
+                    />
                     {comment.sharedMeme.caption && (
                       <div style={{
                         fontSize: '12px',
