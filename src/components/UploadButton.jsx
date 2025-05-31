@@ -7,8 +7,8 @@ import { FiPlus } from 'react-icons/fi';
 const Button = styled.button`
   position: fixed;
   bottom: 60px; 
-  right: 30px;
-  width: 30px;
+  right: 50px;
+  width: 50px;
   height: 30px;
   border-radius: 50%;
   background-color: #ff4500;
