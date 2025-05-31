@@ -252,7 +252,7 @@ const UploadPage = () => {
           return prev;
         }
         // Passos mais rápidos no início, mais lentos no final
-        const delay = nextStep.id < 3 ? 1500 : 2000;
+        const delay = nextStep.id < 3 ? 1500 : 5000;
         if (Date.now() - lastStepTime > delay) {
           lastStepTime = Date.now();
           return prev.map(step => 
@@ -325,12 +325,12 @@ const UploadPage = () => {
       completePlaceboAnimation();
 
       // Espera um pouco para mostrar a conclusão
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setUploadComplete(true);
       
       // Redireciona para a página do meme usando o padrão getMemeLink()
-      setTimeout(() => navigate(`/memes/${response.data._id}`), 1200);
+      setTimeout(() => navigate(`/memes/${response.data._id}`), 1500);
     } catch (err) {
       console.error('Upload failed:', err);
       setError(err.response?.data?.message || err.message || 'Erro ao fazer upload');
