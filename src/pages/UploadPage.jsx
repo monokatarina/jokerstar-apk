@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -126,6 +126,68 @@ const PreviewLabel = styled.p`
   color: var(--text-light);
 `;
 
+const ProcessingSteps = styled.div`
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--card-bg-light);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+`;
+
+const Step = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 0.75rem 0;
+  color: ${props => props.completed ? 'var(--success)' : 'var(--text-light)'};
+  transition: var(--transition);
+`;
+
+const StepIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
+  border-radius: 50%;
+  background: ${props => props.completed ? 'var(--success)' : 'var(--border)'};
+  color: white;
+  font-size: 0.8rem;
+`;
+
+const StepText = styled.span`
+  flex: 1;
+`;
+
+const ProgressBarContainer = styled.div`
+  height: 8px;
+  background: var(--border-light);
+  border-radius: 4px;
+  margin: 1rem 0;
+  overflow: hidden;
+`;
+
+const ProgressBar = styled.div`
+  height: 100%;
+  width: ${props => props.progress}%;
+  background: var(--primary);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+`;
+
+const FunMessages = [
+  "Otimizando pixels para máxima diversão...",
+  "Aplicando filtros de qualidade...",
+  "Preparando os memes para o sucesso...",
+  "Compactando bytes com carinho...",
+  "Quase lá! Só mais um pouquinho...",
+  "Renderizando a magia digital...",
+  "Ajustando o alinhamento cósmico dos memes...",
+  "Carregando doses de humor...",
+  "Codificando sorrisos...",
+  "Preparando para viralizar..."
+];
+
 const UploadPage = () => {
   const { user, loading: authLoading, initialCheckDone } = useAuth();
   const navigate = useNavigate();
@@ -136,8 +198,17 @@ const UploadPage = () => {
   const [caption, setCaption] = useState('');
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [processingSteps, setProcessingSteps] = useState([
+    { id: 1, text: "Verificando arquivo", completed: false },
+    { id: 2, text: "Otimizando mídia", completed: false },
+    { id: 3, text: "Preparando para publicação", completed: false },
+    { id: 4, text: "Gerando miniaturas", completed: false }
+  ]);
+  const [progress, setProgress] = useState(0);
+  const [funMessage, setFunMessage] = useState(FunMessages[0]);
+  const [showProcessing, setShowProcessing] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialCheckDone && !user && !authLoading) {
       navigate('/login', { state: { from: '/upload' } });
     }
@@ -160,6 +231,49 @@ const UploadPage = () => {
     }
   };
 
+  const startProcessingAnimation = () => {
+    // Animação de progresso
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        // Progresso não linear para parecer mais natural
+        const increment = prev < 50 ? 
+          Math.random() * 15 : 
+          Math.random() * 8;
+        return Math.min(prev + increment, 100);
+      });
+    }, 500);
+
+    // Atualiza os passos de processamento
+    const stepsInterval = setInterval(() => {
+      setProcessingSteps(prev => {
+        const nextStep = prev.find(step => !step.completed);
+        if (!nextStep) {
+          clearInterval(stepsInterval);
+          return prev;
+        }
+        return prev.map(step => 
+          step.id === nextStep.id ? {...step, completed: true} : step
+        );
+      });
+    }, 1500);
+
+    // Mensagens divertidas que mudam aleatoriamente
+    const messageInterval = setInterval(() => {
+      const randomIndex = Math.floor(Math.random() * FunMessages.length);
+      setFunMessage(FunMessages[randomIndex]);
+    }, 2500);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(stepsInterval);
+      clearInterval(messageInterval);
+    };
+  };
+
   const handleSubmit = async () => {
     if (!file) {
       setError('Selecione um arquivo para upload');
@@ -173,9 +287,15 @@ const UploadPage = () => {
 
     setIsUploading(true);
     setError(null);
+    setShowProcessing(true);
+    setProgress(0);
+    setProcessingSteps(prev => prev.map(step => ({...step, completed: false})));
+    
+    // Começa a animação placebo
+    const cleanupAnimation = startProcessingAnimation();
 
     try {
-      // Extrai menções da legenda
+      // Processamento real em paralelo
       const mentions = await extractMentions(caption);
       
       if (mentions.length > 5) {
@@ -190,16 +310,33 @@ const UploadPage = () => {
       const response = await api.post('/memes', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
+        },
+        onUploadProgress: (progressEvent) => {
+          // Podemos usar isso para sincronizar com a animação se quisermos
         }
       });
 
+      // Garante que a animação placebo termine antes de redirecionar
+      if (progress < 100) {
+        await new Promise(resolve => {
+          const interval = setInterval(() => {
+            if (progress >= 100) {
+              clearInterval(interval);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
       setUploadComplete(true);
-      setTimeout(() => navigate(`/memes/${response.data._id}`), 2000);
+      setTimeout(() => navigate(`/memes/${response.data._id}`), 1500);
     } catch (err) {
       console.error('Upload failed:', err);
       setError(err.response?.data?.message || err.message || 'Erro ao fazer upload');
+      setShowProcessing(false);
     } finally {
       setIsUploading(false);
+      cleanupAnimation();
     }
   };
 
@@ -229,7 +366,7 @@ const UploadPage = () => {
                 accept="image/*,video/*"
                 style={{ display: 'none' }}
               />
-              {file ? 'Arquivo selecionado' : 'Clique para selecionar imagem ou vídeo'}
+              {file ? 'Arquivo selecionado' : 'Clique para selecionar imagem ou vídeo, não é permetido arquivos grades'}
             </FileInputLabel>
             
             {filePreview && (
@@ -247,7 +384,7 @@ const UploadPage = () => {
           <MentionInput
             value={caption}
             onChange={setCaption}
-            placeholder="Adicione uma legenda... mencione usuários com @"
+            placeholder="Adicione uma legenda (mencione usuários com @)"
           />
 
           {caption && (
@@ -259,6 +396,37 @@ const UploadPage = () => {
             </PreviewContainer>
           )}
 
+          {showProcessing && (
+            <ProcessingSteps>
+              <h4 style={{ marginBottom: '1rem', color: 'var(--text)' }}>{funMessage}</h4>
+              
+              {processingSteps.map(step => (
+                <Step key={step.id} completed={step.completed}>
+                  <StepIcon completed={step.completed}>
+                    {step.completed ? '✓' : step.id}
+                  </StepIcon>
+                  <StepText>{step.text}</StepText>
+                </Step>
+              ))}
+              
+              <ProgressBarContainer>
+                <ProgressBar progress={progress} />
+              </ProgressBarContainer>
+              
+              <p style={{ 
+                textAlign: 'center', 
+                marginTop: '0.5rem', 
+                color: 'var(--text-light)', 
+                fontSize: '0.9rem',
+                fontStyle: 'italic'
+              }}>
+                {progress < 30 ? "Isso pode levar alguns instantes..." : 
+                 progress < 70 ? "Estamos quase lá! fica comigo..." : 
+                 "Finalizando... Obrigado pela paciência, servido caseiro é foda"}
+              </p>
+            </ProcessingSteps>
+          )}
+
           {error && <ErrorMessage>{error}</ErrorMessage>}
 
           <UploadButton 
@@ -268,7 +436,9 @@ const UploadPage = () => {
             {isUploading ? (
               <>
                 <span className="spinner"></span>
-                Enviando...
+                {progress < 30 ? "Processando..." : 
+                 progress < 70 ? "Quase pronto..." : 
+                 "Finalizando..."}
               </>
             ) : (
               'Publicar'
