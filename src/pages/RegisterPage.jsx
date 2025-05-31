@@ -1,67 +1,75 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { register } from '../services/auth';
 import styled from 'styled-components';
+import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
 
-// Componentes estilizados (podem ser movidos para um arquivo separado para reutilização)
+// Componentes estilizados otimizados para mobile
 const Container = styled.div`
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--background);
+  color: var(--text);
+  padding: ${Capacitor.isNativePlatform() ? 'env(safe-area-inset-top) 16px env(safe-area-inset-bottom)' : '0'};
 `;
 
 const FormContainer = styled.div`
   width: 100%;
-  max-width: 400px;
+  max-width: ${Capacitor.isNativePlatform() ? '100%' : '400px'};
   margin: auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: ${Capacitor.isNativePlatform() ? '2rem 1rem' : '2rem'};
+  background: var(--card-bg);
+  border-radius: ${Capacitor.isNativePlatform() ? '0' : '16px'};
+  box-shadow: ${Capacitor.isNativePlatform() ? 'none' : '0 10px 25px rgba(0, 0, 0, 0.1)'};
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 12px 16px;
+  padding: 16px;
   margin-bottom: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   font-size: 16px;
-  transition: border 0.3s ease;
-
+  background: var(--input-bg);
+  color: var(--text);
+  
   &:focus {
-    border-color: #4a90e2;
+    border-color: var(--primary);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    padding: 14px;
   }
 `;
 
 const Button = styled.button`
   width: 100%;
-  padding: 14px;
-  background-color: #4a90e2;
+  padding: 16px;
+  background-color: var(--primary);
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: opacity 0.2s;
   margin-top: 0.5rem;
-
-  &:hover {
-    background-color: #357ab8;
+  
+  &:active {
+    opacity: 0.9;
   }
 
   &:disabled {
-    background-color: #a0c4f7;
+    opacity: 0.7;
     cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.div`
-  color: #e74c3c;
-  background-color: #fdecea;
+  color: var(--danger);
+  background-color: rgba(231, 76, 60, 0.1);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -69,25 +77,21 @@ const ErrorMessage = styled.div`
 `;
 
 const Title = styled.h1`
-  color: #2c3e50;
+  color: var(--text);
   text-align: center;
   margin-bottom: 2rem;
-  font-size: 28px;
+  font-size: ${Capacitor.isNativePlatform() ? '24px' : '28px'};
 `;
 
 const FooterText = styled.p`
   text-align: center;
   margin-top: 1.5rem;
-  color: #7f8c8d;
+  color: var(--text-lighter);
 
   a {
-    color: #4a90e2;
+    color: var(--primary);
     text-decoration: none;
     font-weight: 600;
-
-    &:hover {
-      text-decoration: underline;
-    }
   }
 `;
 
@@ -95,7 +99,7 @@ const PasswordHint = styled.small`
   display: block;
   margin-top: -0.5rem;
   margin-bottom: 1rem;
-  color: #7f8c8d;
+  color: var(--text-lighter);
   font-size: 0.8rem;
 `;
 
@@ -107,7 +111,28 @@ const RegisterPage = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState('0px');
+  
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMobile = Capacitor.isNativePlatform();
+
+  // Configuração do teclado para mobile
+  useEffect(() => {
+    if (isMobile) {
+      Keyboard.addListener('keyboardWillShow', (info) => {
+        setKeyboardHeight(`${info.keyboardHeight}px`);
+      });
+
+      Keyboard.addListener('keyboardWillHide', () => {
+        setKeyboardHeight('0px');
+      });
+
+      return () => {
+        Keyboard.removeAllListeners();
+      };
+    }
+  }, [isMobile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,7 +142,14 @@ const RegisterPage = () => {
     try {
       const response = await register(userData);
       localStorage.setItem('token', response.token);
-      navigate('/feed', { replace: true });
+      
+      navigate(location.state?.from?.pathname || '/feed', { 
+        replace: true,
+        state: {
+          ...location.state,
+          isMobile
+        }
+      });
     } catch (err) {
       setError(err.type === 'CONFLICT' 
         ? err.message 
@@ -128,7 +160,10 @@ const RegisterPage = () => {
   };
 
   return (
-    <Container>
+    <Container style={{ 
+      paddingBottom: keyboardHeight,
+      transition: 'padding-bottom 0.3s ease'
+    }}>
       <FormContainer>
         <Title>Crie sua conta</Title>
         
@@ -142,6 +177,7 @@ const RegisterPage = () => {
             onChange={(e) => setUserData({...userData, username: e.target.value})}
             required
             minLength={3}
+            autoCapitalize="none"
           />
           
           <Input
@@ -150,6 +186,7 @@ const RegisterPage = () => {
             value={userData.email}
             onChange={(e) => setUserData({...userData, email: e.target.value})}
             required
+            autoCapitalize="none"
           />
           
           <Input
@@ -160,7 +197,7 @@ const RegisterPage = () => {
             required
             minLength={6}
           />
-          <PasswordHint>Mínimo de 8 caracteres e numeros</PasswordHint>
+          <PasswordHint>Mínimo de 6 caracteres</PasswordHint>
           
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Cadastrando...' : 'Criar conta'}
@@ -168,7 +205,7 @@ const RegisterPage = () => {
         </form>
         
         <FooterText>
-          Já tem conta? <Link to="/login">Faça login</Link>
+          Já tem conta? <Link to="/login" state={{ isMobile }}>Faça login</Link>
         </FooterText>
       </FormContainer>
     </Container>

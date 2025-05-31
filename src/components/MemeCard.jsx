@@ -1212,7 +1212,7 @@ const MemeCard = ({ meme, isRepost = false, onDelete, onCommentCountChange, isFu
           <Username 
             onClick={() => meme.author && navigate(`/users/${meme.author._id}`)}
           >
-            @{meme.author?.username || 'usuário desconhecido'}
+            {meme.author?.username || 'usuário desconhecido'}
           </Username>
         </Header>
         
