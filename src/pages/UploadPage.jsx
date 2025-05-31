@@ -232,6 +232,8 @@ const UploadPage = () => {
   };
 
   const startProcessingAnimation = () => {
+    let lastStepTime = Date.now();
+    
     // Animação de progresso
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -239,10 +241,10 @@ const UploadPage = () => {
           clearInterval(progressInterval);
           return 100;
         }
-        // Progresso não linear para parecer mais natural
-        const increment = prev < 50 ? 
-          Math.random() * 15 : 
-          Math.random() * 8;
+        // Progresso mais lento após 80%
+        const increment = prev < 80 ? 
+          Math.random() * 10 : 
+          Math.random() * 5;
         return Math.min(prev + increment, 100);
       });
     }, 500);
@@ -255,16 +257,21 @@ const UploadPage = () => {
           clearInterval(stepsInterval);
           return prev;
         }
-        return prev.map(step => 
-          step.id === nextStep.id ? {...step, completed: true} : step
-        );
+        // Passos mais rápidos no início, mais lentos no final
+        const delay = nextStep.id < 3 ? 1500 : 2000;
+        if (Date.now() - lastStepTime > delay) {
+          lastStepTime = Date.now();
+          return prev.map(step => 
+            step.id === nextStep.id ? {...step, completed: true} : step
+          );
+        }
+        return prev;
       });
-    }, 1500);
+    }, 1000);
 
     // Mensagens divertidas que mudam aleatoriamente
     const messageInterval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * FunMessages.length);
-      setFunMessage(FunMessages[randomIndex]);
+      setFunMessage(FunMessages[Math.floor(Math.random() * FunMessages.length)]);
     }, 2500);
 
     return () => {
@@ -272,6 +279,12 @@ const UploadPage = () => {
       clearInterval(stepsInterval);
       clearInterval(messageInterval);
     };
+  };
+
+  const completePlaceboAnimation = () => {
+    setProgress(100);
+    setProcessingSteps(prev => prev.map(step => ({...step, completed: true})));
+    setFunMessage("Publicação concluída com sucesso!");
   };
 
   const handleSubmit = async () => {
@@ -290,8 +303,8 @@ const UploadPage = () => {
     setShowProcessing(true);
     setProgress(0);
     setProcessingSteps(prev => prev.map(step => ({...step, completed: false})));
-    
-    // Começa a animação placebo
+
+    // Inicia a animação placebo
     const cleanupAnimation = startProcessingAnimation();
 
     try {
@@ -307,29 +320,21 @@ const UploadPage = () => {
       formData.append('caption', caption);
       formData.append('mentions', JSON.stringify(mentions));
 
+      // Faz o upload real
       const response = await api.post('/memes', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          // Podemos usar isso para sincronizar com a animação se quisermos
         }
       });
 
-      // Garante que a animação placebo termine antes de redirecionar
-      if (progress < 100) {
-        await new Promise(resolve => {
-          const interval = setInterval(() => {
-            if (progress >= 100) {
-              clearInterval(interval);
-              resolve();
-            }
-          }, 100);
-        });
-      }
+      // Completa a animação placebo
+      completePlaceboAnimation();
+
+      // Espera um pouco para mostrar a conclusão
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       setUploadComplete(true);
-      setTimeout(() => navigate(`/memes/${response.data._id}`), 1500);
+      setTimeout(() => navigate(`/memes/${response.data._id}`), 1200);
     } catch (err) {
       console.error('Upload failed:', err);
       setError(err.response?.data?.message || err.message || 'Erro ao fazer upload');
@@ -366,7 +371,7 @@ const UploadPage = () => {
                 accept="image/*,video/*"
                 style={{ display: 'none' }}
               />
-              {file ? 'Arquivo selecionado' : 'Clique para selecionar imagem ou vídeo, não é permetido arquivos grades'}
+              {file ? 'Arquivo selecionado' : 'Clique para selecionar imagem ou vídeo, pintos não seram tolerados'}
             </FileInputLabel>
             
             {filePreview && (
@@ -384,7 +389,7 @@ const UploadPage = () => {
           <MentionInput
             value={caption}
             onChange={setCaption}
-            placeholder="Adicione uma legenda (mencione usuários com @)"
+            placeholder="Adicione uma legenda se quiser "
           />
 
           {caption && (
@@ -421,8 +426,9 @@ const UploadPage = () => {
                 fontStyle: 'italic'
               }}>
                 {progress < 30 ? "Isso pode levar alguns instantes..." : 
-                 progress < 70 ? "Estamos quase lá! fica comigo..." : 
-                 "Finalizando... Obrigado pela paciência, servido caseiro é foda"}
+                 progress < 70 ? "Estamos quase lá! Continue conosco..." : 
+                 progress < 100 ? "Finalizando... Obrigado pela paciência!" :
+                 "Pronto! Redirecionando..."}
               </p>
             </ProcessingSteps>
           )}
@@ -438,7 +444,8 @@ const UploadPage = () => {
                 <span className="spinner"></span>
                 {progress < 30 ? "Processando..." : 
                  progress < 70 ? "Quase pronto..." : 
-                 "Finalizando..."}
+                 progress < 100 ? "Finalizando..." :
+                 "Concluído!"}
               </>
             ) : (
               'Publicar'
