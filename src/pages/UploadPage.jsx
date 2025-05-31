@@ -176,16 +176,10 @@ const ProgressBar = styled.div`
 `;
 
 const FunMessages = [
-  "Otimizando pixels para máxima diversão...",
-  "Aplicando filtros de qualidade...",
-  "Preparando os memes para o sucesso...",
-  "Compactando bytes com carinho...",
-  "Quase lá! Só mais um pouquinho...",
-  "Renderizando a magia digital...",
-  "Ajustando o alinhamento cósmico dos memes...",
-  "Carregando doses de humor...",
-  "Codificando sorrisos...",
-  "Preparando para viralizar..."
+  "vc sabia que vc não respirar vc morre ?",
+  "piorando seu video/imgem",
+  "vc sabia que sua mae deu pro seu pai ?",
+  "texto inutil , para efeito placebo"
 ];
 
 const UploadPage = () => {
@@ -199,9 +193,9 @@ const UploadPage = () => {
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [processingSteps, setProcessingSteps] = useState([
-    { id: 1, text: "Verificando arquivo", completed: false },
-    { id: 2, text: "Otimizando mídia", completed: false },
-    { id: 3, text: "Preparando para publicação", completed: false },
+    { id: 1, text: "Verificando arquivo, para ver ser não pinto", completed: false },
+    { id: 2, text: "Otimizando mídia'piorando imagem'", completed: false },
+    { id: 3, text: "te enrolando para não ver os bugs", completed: false },
     { id: 4, text: "Gerando miniaturas", completed: false }
   ]);
   const [progress, setProgress] = useState(0);
@@ -284,12 +278,12 @@ const UploadPage = () => {
   const completePlaceboAnimation = () => {
     setProgress(100);
     setProcessingSteps(prev => prev.map(step => ({...step, completed: true})));
-    setFunMessage("Publicação concluída com sucesso!");
+    setFunMessage("parabens seu post podre foi criado!");
   };
 
   const handleSubmit = async () => {
     if (!file) {
-      setError('Selecione um arquivo para upload');
+      setError('Selecione um arquivo para upload, pintos não seram tolerados');
       return;
     }
 
@@ -334,6 +328,8 @@ const UploadPage = () => {
       await new Promise(resolve => setTimeout(resolve, 800));
 
       setUploadComplete(true);
+      
+      // Redireciona para a página do meme usando o padrão getMemeLink()
       setTimeout(() => navigate(`/memes/${response.data._id}`), 1200);
     } catch (err) {
       console.error('Upload failed:', err);
@@ -371,7 +367,7 @@ const UploadPage = () => {
                 accept="image/*,video/*"
                 style={{ display: 'none' }}
               />
-              {file ? 'Arquivo selecionado' : 'Clique para selecionar imagem ou vídeo, pintos não seram tolerados'}
+              {file ? 'Arquivo selecionado' : 'Clique para selecionar imagem ou vídeo'}
             </FileInputLabel>
             
             {filePreview && (
@@ -389,7 +385,7 @@ const UploadPage = () => {
           <MentionInput
             value={caption}
             onChange={setCaption}
-            placeholder="Adicione uma legenda se quiser "
+            placeholder="Adicione uma legenda se quiser"
           />
 
           {caption && (
